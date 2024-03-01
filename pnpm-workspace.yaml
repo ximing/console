@@ -1,0 +1,9 @@
+packages:
+  - apps/*
+  - packages/*
+  - config/*
+
+onlyBuiltDependencies:
+  - bcrypt
+  - electron
+  - esbuild

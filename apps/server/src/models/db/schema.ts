@@ -1,0 +1,467 @@
+/**
+ * LanceDB Schema Definitions
+ * Explicitly define table schemas using Apache Arrow types
+ * Embedding dimensions are configured dynamically from environment variables
+ */
+
+import {
+  Schema,
+  Field,
+  Int32,
+  Utf8,
+  FixedSizeList,
+  Float32,
+  List,
+  Struct,
+  Timestamp,
+  TimeUnit,
+  Bool,
+} from 'apache-arrow';
+
+import { config } from '../../config/config.js';
+
+/**
+ * Get embedding dimensions from config
+ * Fallback to 1536 if not configured
+ */
+const getEmbeddingDimensions = (): number => {
+  return config.openai.embeddingDimensions || 1536;
+};
+
+/**
+ * Users table schema
+ * Stores user account information with explicit type definitions
+ */
+export const usersSchema = new Schema([
+  new Field('uid', new Utf8(), false), // non-nullable unique user id
+  new Field('email', new Utf8(), true), // nullable email
+  new Field('phone', new Utf8(), true), // nullable phone
+  new Field('password', new Utf8(), false), // non-nullable hashed password
+  new Field('salt', new Utf8(), false), // non-nullable password salt
+  new Field('nickname', new Utf8(), true), // nullable nickname
+  new Field('avatar', new Utf8(), true), // nullable avatar URL
+  new Field('status', new Int32(), false), // non-nullable status
+  new Field('createdAt', new Timestamp(TimeUnit.MILLISECOND), false), // non-nullable creation timestamp in milliseconds
+  new Field('updatedAt', new Timestamp(TimeUnit.MILLISECOND), false), // non-nullable update timestamp in milliseconds
+]);
+
+/**
+ * Memos table schema
+ * Stores memo content with embedding vectors for semantic search
+ * Attachments are stored as a list of attachment IDs only (URLs are generated at runtime)
+ * Embedding dimensions are configured from OPENAI_EMBEDDING_DIMENSIONS environment variable
+ */
+export const memosSchema = new Schema([
+  new Field('memoId', new Utf8(), false), // non-nullable unique memo id
+  new Field('uid', new Utf8(), false), // non-nullable user id
+  new Field('categoryId', new Utf8(), true), // nullable category id (undefined = uncategorized)
+  new Field('content', new Utf8(), false), // non-nullable memo content
+  new Field('type', new Utf8(), true), // nullable memo type: 'text' | 'audio' | 'video' (defaults to 'text' if not set)
+  new Field('source', new Utf8(), true), // nullable source URL (e.g., from Chrome extension)
+  new Field('attachments', new List(new Field('item', new Utf8(), true)), true), // nullable list of attachment IDs (URLs generated at runtime)
+  new Field('tagIds', new List(new Field('item', new Utf8(), true)), true), // nullable list of tag IDs (new primary field)
+  new Field('isPublic', new Bool(), true), // nullable boolean for public visibility (defaults to false)
+  new Field(
+    'embedding',
+    new FixedSizeList(getEmbeddingDimensions(), new Field('item', new Float32(), true)),
+    false
+  ), // dynamic-dim embedding vector
+  new Field('createdAt', new Timestamp(TimeUnit.MILLISECOND), false), // non-nullable creation timestamp in milliseconds
+  new Field('updatedAt', new Timestamp(TimeUnit.MILLISECOND), false), // non-nullable update timestamp in milliseconds
+]);
+
+/**
+ * Type definitions for records
+ */
+export interface UserRecord {
+  uid: string;
+  email?: string;
+  phone?: string;
+  password: string;
+  salt: string;
+  nickname?: string;
+  avatar?: string;
+  status: number;
+  createdAt: number; // timestamp in milliseconds
+  updatedAt: number; // timestamp in milliseconds
+}
+
+export interface MemoRecord {
+  memoId: string;
+  uid: string;
+  categoryId?: string; // optional category id (undefined = uncategorized)
+  content: string;
+  type?: string; // optional memo type: 'text' | 'audio' | 'video' (defaults to 'text' if not set)
+  source?: string; // optional source URL (e.g., from Chrome extension)
+  attachments?: string[]; // attachment IDs array (URLs generated at runtime)
+  tags?: string[]; // optional array of tag strings (legacy, for backward compatibility)
+  tagIds?: string[]; // optional array of tag IDs (new primary field)
+  isPublic?: boolean; // optional boolean for public visibility (defaults to false)
+  embedding: number[];
+  createdAt: number; // timestamp in milliseconds
+  updatedAt: number; // timestamp in milliseconds
+}
+
+/**
+ * Embedding cache table schema
+ * Stores cached embeddings to avoid redundant API calls for the same content
+ * Embedding dimensions are configured from OPENAI_EMBEDDING_DIMENSIONS environment variable
+ */
+export const embeddingCacheSchema = new Schema([
+  new Field('modelHash', new Utf8(), false), // non-nullable model identifier hash
+  new Field('contentHash', new Utf8(), false), // non-nullable content hash
+  new Field(
+    'embedding',
+    new FixedSizeList(getEmbeddingDimensions(), new Field('item', new Float32(), true)),
+    false
+  ), // dynamic-dim embedding vector
+  new Field('createdAt', new Timestamp(TimeUnit.MILLISECOND), false), // non-nullable creation timestamp in milliseconds
+]);
+
+/**
+ * Type definition for embedding cache records
+ */
+export interface EmbeddingCacheRecord {
+  modelHash: string;
+  contentHash: string;
+  embedding: number[];
+  createdAt: number; // timestamp in milliseconds
+}
+
+/**
+ * Multimodal embedding cache table schema
+ * Stores cached multimodal embeddings to avoid redundant API calls
+ * Supports text, image, and video modalities
+ */
+export const multimodalEmbeddingCacheSchema = new Schema([
+  new Field('modelHash', new Utf8(), false), // non-nullable model identifier hash
+  new Field('contentHash', new Utf8(), false), // non-nullable content hash
+  new Field('modalityType', new Utf8(), false), // non-nullable modality type: 'text' | 'image' | 'video'
+  new Field('embedding', new FixedSizeList(1024, new Field('item', new Float32(), true)), false), // fixed 1024-dim multimodal embedding
+  new Field('createdAt', new Timestamp(TimeUnit.MILLISECOND), false), // non-nullable creation timestamp in milliseconds
+]);
+
+/**
+ * Type definition for multimodal embedding cache records
+ */
+export interface MultimodalEmbeddingCacheRecord {
+  modelHash: string;
+  contentHash: string;
+  modalityType: 'text' | 'image' | 'video';
+  embedding: number[];
+  createdAt: number; // timestamp in milliseconds
+}
+
+/**
+ * Memo relations table schema
+ * Stores directed relations between memos (A -> B means A is related to B)
+ */
+export const memoRelationsSchema = new Schema([
+  new Field('relationId', new Utf8(), false), // non-nullable unique relation id
+  new Field('uid', new Utf8(), false), // non-nullable user id (for permission isolation)
+  new Field('sourceMemoId', new Utf8(), false), // non-nullable source memo id (who initiates the relation)
+  new Field('targetMemoId', new Utf8(), false), // non-nullable target memo id (what is being related)
+  new Field('createdAt', new Timestamp(TimeUnit.MILLISECOND), false), // non-nullable creation timestamp in milliseconds
+]);
+
+/**
+ * Categories table schema
+ * Stores memo categories per user
+ */
+export const categoriesSchema = new Schema([
+  new Field('categoryId', new Utf8(), false), // non-nullable unique category id
+  new Field('uid', new Utf8(), false), // non-nullable user id
+  new Field('name', new Utf8(), false), // non-nullable category name
+  new Field('color', new Utf8(), true), // nullable color hex code for UI display
+  new Field('createdAt', new Timestamp(TimeUnit.MILLISECOND), false), // non-nullable creation timestamp in milliseconds
+  new Field('updatedAt', new Timestamp(TimeUnit.MILLISECOND), false), // non-nullable update timestamp in milliseconds
+]);
+
+/**
+ * Tags table schema
+ * Stores tags per user with usage count
+ */
+export const tagsSchema = new Schema([
+  new Field('tagId', new Utf8(), false), // non-nullable unique tag id
+  new Field('uid', new Utf8(), false), // non-nullable user id
+  new Field('name', new Utf8(), false), // non-nullable tag name
+  new Field('color', new Utf8(), true), // nullable color hex code for UI display
+  new Field('usageCount', new Int32(), false), // non-nullable usage count
+  new Field('createdAt', new Timestamp(TimeUnit.MILLISECOND), false), // non-nullable creation timestamp in milliseconds
+  new Field('updatedAt', new Timestamp(TimeUnit.MILLISECOND), false), // non-nullable update timestamp in milliseconds
+]);
+
+/**
+ * Attachments table schema
+ * Stores file attachments with metadata
+ * For images and videos, multimodalEmbedding stores the fusion vector from multimodal embedding service
+ * Storage metadata (bucket, prefix, endpoint, region, isPublicBucket) is stored for URL reconstruction and link generation
+ * URLs are generated dynamically at runtime based on storage type and bucket configuration
+ */
+export const attachmentsSchema = new Schema([
+  new Field('attachmentId', new Utf8(), false), // non-nullable unique attachment id
+  new Field('uid', new Utf8(), false), // non-nullable user id
+  new Field('filename', new Utf8(), false), // non-nullable original filename
+  new Field('type', new Utf8(), false), // non-nullable MIME type
+  new Field('size', new Int32(), false), // non-nullable file size in bytes
+  new Field('storageType', new Utf8(), false), // non-nullable storage type: 'local' | 's3' | 'oss'
+  new Field('path', new Utf8(), false), // non-nullable full storage path: {type}/{uid}/{YYYY-MM-DD}/{nanoid24}.{ext}
+  new Field('bucket', new Utf8(), true), // nullable bucket name (for s3/oss)
+  new Field('prefix', new Utf8(), true), // nullable prefix/folder name (for s3/oss)
+  new Field('endpoint', new Utf8(), true), // nullable endpoint URL (for s3/oss custom endpoints)
+  new Field('region', new Utf8(), true), // nullable region (for s3/oss)
+  new Field('isPublicBucket', new Utf8(), true), // nullable: 'true' | 'false' - whether bucket is public (for URL generation)
+  new Field(
+    'multimodalEmbedding',
+    new FixedSizeList(1024, new Field('item', new Float32(), true)),
+    true
+  ), // nullable multimodal embedding vector (1024-dim)
+  new Field('multimodalModelHash', new Utf8(), true), // nullable model hash for multimodal embedding
+  new Field('properties', new Utf8(), true), // nullable JSON string for properties: audio(duration), image(width,height), video(duration)
+  new Field('createdAt', new Timestamp(TimeUnit.MILLISECOND), false), // non-nullable creation timestamp in milliseconds
+]);
+
+/**
+ * Type definition for category records
+ */
+export interface CategoryRecord {
+  categoryId: string;
+  uid: string;
+  name: string;
+  color?: string; // optional color hex code for UI display
+  createdAt: number; // timestamp in milliseconds
+  updatedAt: number; // timestamp in milliseconds
+}
+
+/**
+ * Type definition for tag records
+ */
+export interface TagRecord {
+  tagId: string;
+  uid: string;
+  name: string;
+  color?: string; // optional color hex code for UI display
+  usageCount: number;
+  createdAt: number; // timestamp in milliseconds
+  updatedAt: number; // timestamp in milliseconds
+}
+
+/**
+ * Type definition for memo relation records
+ */
+export interface MemoRelationRecord {
+  relationId: string;
+  uid: string;
+  sourceMemoId: string;
+  targetMemoId: string;
+  createdAt: number; // timestamp in milliseconds
+}
+
+/**
+ * Type definition for attachment records
+ */
+export interface AttachmentRecord {
+  attachmentId: string;
+  uid: string;
+  filename: string;
+  type: string; // MIME type
+  size: number; // file size in bytes
+  storageType: 'local' | 's3' | 'oss'; // storage type
+  path: string; // full storage path: {type}/{uid}/{YYYY-MM-DD}/{nanoid24}.{ext}
+  bucket?: string; // bucket name (for s3/oss)
+  prefix?: string; // prefix/folder name (for s3/oss)
+  endpoint?: string; // endpoint URL (for s3/oss custom endpoints)
+  region?: string; // region (for s3/oss)
+  isPublicBucket?: string; // 'true' | 'false' - whether bucket is public
+  multimodalEmbedding?: number[]; // optional multimodal embedding vector for images and videos
+  multimodalModelHash?: string; // optional model hash for multimodal embedding
+  properties?: string; // optional JSON string for properties: audio(duration), image(width,height), video(duration)
+  createdAt: number; // timestamp in milliseconds
+}
+
+/**
+ * Table Migrations Metadata schema
+ * Stores version information for each table's schema
+ * Used by migration system to track which versions have been applied
+ */
+export const tableMigrationsSchema = new Schema([
+  new Field('tableName', new Utf8(), false), // non-nullable unique table name
+  new Field('currentVersion', new Int32(), false), // non-nullable current schema version
+  new Field('lastMigratedAt', new Timestamp(TimeUnit.MILLISECOND), false), // non-nullable last migration timestamp in milliseconds
+]);
+
+/**
+ * Type definition for table migration records
+ */
+export interface TableMigrationRecord {
+  tableName: string;
+  currentVersion: number;
+  lastMigratedAt: number; // timestamp in milliseconds
+}
+
+/**
+ * AI Conversations table schema
+ * Stores AI conversation sessions with metadata
+ */
+export const aiConversationsSchema = new Schema([
+  new Field('conversationId', new Utf8(), false), // non-nullable unique conversation id
+  new Field('uid', new Utf8(), false), // non-nullable user id
+  new Field('title', new Utf8(), false), // non-nullable conversation title
+  new Field('createdAt', new Timestamp(TimeUnit.MILLISECOND), false), // non-nullable creation timestamp in milliseconds
+  new Field('updatedAt', new Timestamp(TimeUnit.MILLISECOND), false), // non-nullable update timestamp in milliseconds
+]);
+
+/**
+ * Type definition for AI conversation records
+ */
+export interface AIConversationRecord {
+  conversationId: string;
+  uid: string;
+  title: string;
+  createdAt: number; // timestamp in milliseconds
+  updatedAt: number; // timestamp in milliseconds
+}
+
+/**
+ * AI Messages table schema
+ * Stores messages within AI conversations
+ * Sources field stores references to related memos/quotes
+ */
+export const aiMessagesSchema = new Schema([
+  new Field('messageId', new Utf8(), false), // non-nullable unique message id
+  new Field('conversationId', new Utf8(), false), // non-nullable conversation id (foreign key)
+  new Field('role', new Utf8(), false), // non-nullable role: 'user' | 'assistant'
+  new Field('content', new Utf8(), false), // non-nullable message content
+  new Field(
+    'sources',
+    new List(
+      new Field(
+        'item',
+        new Struct([
+          new Field('memoId', new Utf8(), true),
+          new Field('content', new Utf8(), true),
+          new Field('similarity', new Float32(), true),
+        ]),
+        true
+      )
+    ),
+    true
+  ), // nullable list of source references
+  new Field('createdAt', new Timestamp(TimeUnit.MILLISECOND), false), // non-nullable creation timestamp in milliseconds
+]);
+
+/**
+ * Type definition for AI message source references
+ */
+export interface AIMessageSource {
+  memoId?: string;
+  content?: string;
+  similarity?: number;
+}
+
+/**
+ * Type definition for AI message records
+ */
+export interface AIMessageRecord {
+  messageId: string;
+  conversationId: string;
+  role: 'user' | 'assistant';
+  content: string;
+  sources?: AIMessageSource[];
+  createdAt: number; // timestamp in milliseconds
+}
+
+/**
+ * Daily recommendations table schema
+ * Stores cached daily memo recommendations per user
+ */
+export const dailyRecommendationsSchema = new Schema([
+  new Field('recommendationId', new Utf8(), false), // non-nullable unique recommendation id
+  new Field('uid', new Utf8(), false), // non-nullable user id
+  new Field('date', new Utf8(), false), // non-nullable date in YYYY-MM-DD format
+  new Field('memoIds', new List(new Field('item', new Utf8(), true)), false), // non-nullable list of recommended memo IDs
+  new Field('createdAt', new Timestamp(TimeUnit.MILLISECOND), false), // non-nullable creation timestamp in milliseconds
+]);
+
+/**
+ * Type definition for daily recommendation records
+ */
+export interface DailyRecommendationRecord {
+  recommendationId: string;
+  uid: string;
+  date: string; // YYYY-MM-DD format
+  memoIds: string[];
+  createdAt: number; // timestamp in milliseconds
+}
+
+/**
+ * Push Rules table schema
+ * Stores user push notification rule configurations
+ */
+export const pushRulesSchema = new Schema([
+  new Field('id', new Utf8(), false), // non-nullable unique rule id
+  new Field('uid', new Utf8(), false), // non-nullable user id
+  new Field('name', new Utf8(), false), // non-nullable rule name
+  new Field('pushTime', new Int32(), false), // non-nullable push hour (0-23)
+  new Field('contentType', new Utf8(), false), // non-nullable content type: 'daily_pick' | 'daily_memos'
+  new Field('channels', new Utf8(), true), // nullable JSON string for channel configurations
+  new Field('enabled', new Int32(), false), // non-nullable enabled flag (0 or 1)
+  new Field('createdAt', new Timestamp(TimeUnit.MILLISECOND), false), // non-nullable creation timestamp in milliseconds
+  new Field('updatedAt', new Timestamp(TimeUnit.MILLISECOND), false), // non-nullable update timestamp in milliseconds
+]);
+
+/**
+ * Type definition for push rule records
+ */
+export interface PushRuleRecord {
+  id: string;
+  uid: string;
+  name: string;
+  pushTime: number; // 0-23
+  contentType: 'daily_pick' | 'daily_memos';
+  channels?: string; // JSON string for channel configurations
+  enabled: number; // 0 or 1
+  createdAt: number; // timestamp in milliseconds
+  updatedAt: number; // timestamp in milliseconds
+}
+
+/**
+ * Memo Vectors table schema (Vector-only table)
+ * Stores only memo embeddings for semantic search
+ * Scalar memo data is stored in MySQL
+ */
+/**
+ * DEPRECATED: Vector-only tables are no longer used
+ * We now keep complete memos and attachments tables in LanceDB (scalar + vector)
+ * This allows for efficient filtering during vector search
+ */
+
+/*
+export const memoVectorsSchema = new Schema([
+  new Field('memoId', new Utf8(), false), // non-nullable unique memo id (primary key, references MySQL memos.memoId)
+  new Field(
+    'embedding',
+    new FixedSizeList(getEmbeddingDimensions(), new Field('item', new Float32(), true)),
+    false
+  ), // dynamic-dim embedding vector
+]);
+
+export interface MemoVectorRecord {
+  memoId: string;
+  embedding: number[];
+}
+
+export const attachmentVectorsSchema = new Schema([
+  new Field('attachmentId', new Utf8(), false), // non-nullable unique attachment id (primary key, references MySQL attachments.attachmentId)
+  new Field(
+    'multimodalEmbedding',
+    new FixedSizeList(1024, new Field('item', new Float32(), true)),
+    false
+  ), // fixed 1024-dim multimodal embedding vector
+]);
+
+export interface AttachmentVectorRecord {
+  attachmentId: string;
+  multimodalEmbedding: number[];
+}
+*/

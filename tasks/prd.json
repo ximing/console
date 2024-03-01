@@ -1,0 +1,661 @@
+{
+  "project": "Console Simplification",
+  "branchName": "ralph/project-simplification",
+  "description": "Simplify project from full-featured AI note-taking system to minimal auth-only boilerplate with MySQL",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Remove all memo-related database schemas",
+      "description": "As a developer, I need to remove memo, attachment, category, tag, and relation schemas so only users table remains.",
+      "acceptanceCriteria": [
+        "Delete apps/server/src/db/schema/memos.ts",
+        "Delete apps/server/src/db/schema/attachments.ts",
+        "Delete apps/server/src/db/schema/categories.ts",
+        "Delete apps/server/src/db/schema/tags.ts",
+        "Delete apps/server/src/db/schema/memo-relations.ts",
+        "Keep only apps/server/src/db/schema/users.ts",
+        "Update apps/server/src/db/schema/index.ts to export only users schema",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Remove all AI-related database schemas",
+      "description": "As a developer, I need to remove AI conversation, message, and recommendation schemas.",
+      "acceptanceCriteria": [
+        "Delete apps/server/src/db/schema/ai-conversations.ts",
+        "Delete apps/server/src/db/schema/ai-messages.ts",
+        "Delete apps/server/src/db/schema/daily-recommendations.ts",
+        "Delete apps/server/src/db/schema/push-rules.ts",
+        "Update apps/server/src/db/schema/index.ts exports",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Simplify users table schema to essential fields only",
+      "description": "As a developer, I need users table with only id, email, password, username, avatar, timestamps.",
+      "acceptanceCriteria": [
+        "Update apps/server/src/db/schema/users.ts to keep only: id, email, password, username, avatar, createdAt, updatedAt",
+        "Remove phone, settings, or other non-essential fields",
+        "Ensure email has unique constraint",
+        "Ensure timestamps have proper defaults",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Delete all old migration files",
+      "description": "As a developer, I need to remove all existing migration files for a clean slate.",
+      "acceptanceCriteria": [
+        "Delete all files in apps/server/drizzle/ directory",
+        "Keep the drizzle/ directory itself",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Generate fresh migration for users table only",
+      "description": "As a developer, I need a single clean migration that creates only the users table.",
+      "acceptanceCriteria": [
+        "Run pnpm build in apps/server to compile schemas",
+        "Run pnpm migrate:generate to create new migration",
+        "Verify migration SQL creates only users table",
+        "Verify migration includes email unique constraint",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Delete all old migration scripts in src/migrations/scripts",
+      "description": "As a developer, I need to remove the custom migration system scripts.",
+      "acceptanceCriteria": [
+        "Delete all files in apps/server/src/migrations/scripts/ except index.ts",
+        "Update apps/server/src/migrations/scripts/index.ts to export empty array",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Remove LanceDB source file",
+      "description": "As a developer, I need to delete LanceDB integration code.",
+      "acceptanceCriteria": [
+        "Delete apps/server/src/sources/lancedb.ts",
+        "Typecheck passes (expect errors in services - will fix later)"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Remove embedding services",
+      "description": "As a developer, I need to delete all embedding and vector-related services.",
+      "acceptanceCriteria": [
+        "Delete apps/server/src/services/embedding.service.ts",
+        "Delete apps/server/src/services/multimodal-embedding.service.ts",
+        "Typecheck passes (expect errors in other services - will fix later)"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Remove AI and recommendation services",
+      "description": "As a developer, I need to delete AI conversation, recommendation, and explore services.",
+      "acceptanceCriteria": [
+        "Delete apps/server/src/services/ai-conversation.service.ts",
+        "Delete apps/server/src/services/ai.service.ts",
+        "Delete apps/server/src/services/recommendation.service.ts",
+        "Delete apps/server/src/services/explore.service.ts",
+        "Typecheck passes (expect errors in controllers - will fix later)"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Remove memo and related services",
+      "description": "As a developer, I need to delete memo, attachment, category, tag, and relation services.",
+      "acceptanceCriteria": [
+        "Delete apps/server/src/services/memo.service.ts",
+        "Delete apps/server/src/services/memo-relation.service.ts",
+        "Delete apps/server/src/services/attachment.service.ts",
+        "Delete apps/server/src/services/category.service.ts",
+        "Delete apps/server/src/services/tag.service.ts",
+        "Typecheck passes (expect errors in controllers - will fix later)"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "Remove OCR, ASR, and other specialized services",
+      "description": "As a developer, I need to delete OCR, ASR, push rule, scheduler, and notification services.",
+      "acceptanceCriteria": [
+        "Delete apps/server/src/services/ocr/ directory",
+        "Delete apps/server/src/services/asr.service.ts",
+        "Delete apps/server/src/services/push-rule.service.ts",
+        "Delete apps/server/src/services/scheduler.service.ts",
+        "Delete apps/server/src/services/channels/ directory",
+        "Delete apps/server/src/services/avatar.service.ts",
+        "Delete apps/server/src/services/github-release.service.ts",
+        "Typecheck passes (expect errors in controllers - will fix later)"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "Remove all controllers except auth and user",
+      "description": "As a developer, I need to delete all non-authentication controllers.",
+      "acceptanceCriteria": [
+        "Delete apps/server/src/controllers/v1/memo.controller.ts",
+        "Delete apps/server/src/controllers/v1/memo.ba.controller.ts",
+        "Delete apps/server/src/controllers/v1/attachment.controller.ts",
+        "Delete apps/server/src/controllers/v1/attachment.ba.controller.ts",
+        "Delete apps/server/src/controllers/v1/category.controller.ts",
+        "Delete apps/server/src/controllers/v1/tag.controller.ts",
+        "Delete apps/server/src/controllers/v1/ai.controller.ts",
+        "Delete apps/server/src/controllers/v1/explore.controller.ts",
+        "Delete apps/server/src/controllers/v1/insights.controller.ts",
+        "Delete apps/server/src/controllers/v1/ocr.controller.ts",
+        "Delete apps/server/src/controllers/v1/asr.controller.ts",
+        "Delete apps/server/src/controllers/v1/push-rule.controller.ts",
+        "Delete apps/server/src/controllers/v1/system.controller.ts",
+        "Delete apps/server/src/controllers/v1/debug.ba.controller.ts",
+        "Delete apps/server/src/controllers/static.controller.ts",
+        "Keep only: auth.controller.ts and user.controller.ts",
+        "Typecheck passes"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "Update user.service.ts to minimal implementation",
+      "description": "As a developer, I need UserService with only essential methods for auth.",
+      "acceptanceCriteria": [
+        "Keep only: createUser(), getUserByEmail(), getUserById() methods in user.service.ts",
+        "Remove all other methods and unused imports",
+        "Ensure methods use Drizzle queries correctly",
+        "Typecheck passes"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "Create RegisterDto and LoginDto in packages/dto",
+      "description": "As a developer, I need auth DTOs defined for registration and login.",
+      "acceptanceCriteria": [
+        "Create RegisterDto with email, password, username fields",
+        "Create LoginDto with email and password fields",
+        "Add to packages/dto/src/index.ts exports",
+        "Rebuild DTO package: pnpm --filter @aimo-console/dto build",
+        "Typecheck passes"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Implement user registration endpoint",
+      "description": "As a user, I want to register a new account with email, username, and password.",
+      "acceptanceCriteria": [
+        "Add POST /api/v1/auth/register endpoint in auth.controller.ts",
+        "Validate email format and uniqueness",
+        "Hash password with bcrypt before storing",
+        "Return JWT token and user info on success",
+        "Return appropriate error codes for validation failures",
+        "Typecheck passes"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-016",
+      "title": "Implement user login endpoint",
+      "description": "As a user, I want to log in with email and password.",
+      "acceptanceCriteria": [
+        "Add POST /api/v1/auth/login endpoint in auth.controller.ts",
+        "Verify password with bcrypt",
+        "Return JWT token and user info on success",
+        "Return 401 for invalid credentials",
+        "Typecheck passes"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-017",
+      "title": "Update auth middleware for MySQL user lookup",
+      "description": "As a developer, I need auth middleware to query MySQL instead of LanceDB.",
+      "acceptanceCriteria": [
+        "Update apps/server/src/middlewares/auth-handler.ts to use UserService",
+        "Remove any LanceDB references",
+        "Verify JWT token and attach user to request",
+        "Return 401 for missing/invalid tokens",
+        "Typecheck passes"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-018",
+      "title": "Remove LanceDB dependencies from package.json",
+      "description": "As a developer, I need to remove LanceDB, vectordb, and Apache Arrow packages.",
+      "acceptanceCriteria": [
+        "Remove vectordb, apache-arrow, @lancedb/* from apps/server/package.json",
+        "Run pnpm install to update lockfile",
+        "Typecheck passes",
+        "Build succeeds"
+      ],
+      "priority": 18,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-019",
+      "title": "Remove OpenAI and AI SDK dependencies",
+      "description": "As a developer, I need to remove all AI-related packages.",
+      "acceptanceCriteria": [
+        "Remove openai, ai, @ai-sdk/* from apps/server/package.json",
+        "Run pnpm install to update lockfile",
+        "Typecheck passes",
+        "Build succeeds"
+      ],
+      "priority": 19,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-020",
+      "title": "Remove OCR, ASR, and image processing dependencies",
+      "description": "As a developer, I need to remove OCR, ASR, and image processing packages.",
+      "acceptanceCriteria": [
+        "Remove tesseract.js, sharp, jimp, or similar image processing libs",
+        "Remove any ASR/speech recognition packages",
+        "Remove zhipu or other OCR SDKs",
+        "Run pnpm install to update lockfile",
+        "Typecheck passes",
+        "Build succeeds"
+      ],
+      "priority": 20,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-021",
+      "title": "Remove S3 and OSS storage adapter dependencies",
+      "description": "As a developer, I need to remove cloud storage SDKs.",
+      "acceptanceCriteria": [
+        "Remove @aws-sdk/*, ali-oss, or similar cloud storage packages",
+        "Delete apps/server/src/sources/unified-storage-adapter/ directory",
+        "Run pnpm install to update lockfile",
+        "Typecheck passes",
+        "Build succeeds"
+      ],
+      "priority": 21,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-022",
+      "title": "Update server environment configuration",
+      "description": "As a developer, I need .env.example with only MySQL and JWT variables.",
+      "acceptanceCriteria": [
+        "Update apps/server/.env.example to include only: DATABASE_URL, JWT_SECRET, PORT, CORS_ORIGIN, NODE_ENV",
+        "Remove all LanceDB, OpenAI, S3, OSS, AI-related variables",
+        "Add comments explaining each variable",
+        "Typecheck passes"
+      ],
+      "priority": 22,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-023",
+      "title": "Update server startup to remove LanceDB and scheduler",
+      "description": "As a developer, I need server startup to initialize only MySQL.",
+      "acceptanceCriteria": [
+        "Update apps/server/src/index.ts to remove LanceDB initialization",
+        "Remove scheduler initialization",
+        "Keep only: IOC → MySQL → Migrations → Express server",
+        "Update graceful shutdown to close only MySQL connections",
+        "Typecheck passes",
+        "Server starts successfully"
+      ],
+      "priority": 23,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-024",
+      "title": "Remove all memo-related DTOs from packages/dto",
+      "description": "As a developer, I need to remove memo, attachment, category, tag DTOs.",
+      "acceptanceCriteria": [
+        "Delete all memo-related DTO files in packages/dto/src/",
+        "Delete attachment, category, tag, relation DTO files",
+        "Keep only user-related DTOs",
+        "Update packages/dto/src/index.ts exports",
+        "Rebuild DTO package: pnpm --filter @aimo-console/dto build",
+        "Typecheck passes"
+      ],
+      "priority": 24,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-025",
+      "title": "Remove all AI-related DTOs from packages/dto",
+      "description": "As a developer, I need to remove AI conversation, message, and recommendation DTOs.",
+      "acceptanceCriteria": [
+        "Delete AI-related DTO files in packages/dto/src/",
+        "Delete push-rule, insight, explore DTOs",
+        "Update packages/dto/src/index.ts exports",
+        "Rebuild DTO package: pnpm --filter @aimo-console/dto build",
+        "Typecheck passes"
+      ],
+      "priority": 25,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-026",
+      "title": "Remove gallery, ai-explore, and settings pages from frontend",
+      "description": "As a developer, I need to delete all non-auth pages.",
+      "acceptanceCriteria": [
+        "Delete apps/web/src/pages/gallery/ directory",
+        "Delete apps/web/src/pages/ai-explore/ directory",
+        "Delete apps/web/src/pages/settings/ directory (will recreate minimal version later)",
+        "Keep only: auth, home, landing, not-found pages",
+        "Typecheck passes (expect errors in router - will fix later)"
+      ],
+      "priority": 26,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-027",
+      "title": "Remove memo-related components from frontend",
+      "description": "As a developer, I need to delete all memo, attachment, and related components.",
+      "acceptanceCriteria": [
+        "Delete apps/web/src/components/memo-editor-form.tsx",
+        "Delete apps/web/src/components/attachment-uploader.tsx",
+        "Delete apps/web/src/components/attachment-preview-modal.tsx",
+        "Delete apps/web/src/components/calendar-heatmap.tsx",
+        "Delete apps/web/src/components/tag-input.tsx",
+        "Delete apps/web/src/components/tag-context-menu.tsx",
+        "Delete apps/web/src/components/ai/ directory",
+        "Typecheck passes (expect errors in pages - will fix later)"
+      ],
+      "priority": 27,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-028",
+      "title": "Remove all home page components except minimal structure",
+      "description": "As a developer, I need to delete all memo-related home page components.",
+      "acceptanceCriteria": [
+        "Delete all files in apps/web/src/pages/home/components/ except user-menu.tsx",
+        "Keep user-menu.tsx for logout functionality",
+        "Typecheck passes (expect errors in home page - will fix later)"
+      ],
+      "priority": 28,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-029",
+      "title": "Remove all frontend services except auth and theme",
+      "description": "As a developer, I need to delete all memo, AI, and attachment services.",
+      "acceptanceCriteria": [
+        "Delete apps/web/src/services/memo.service.ts",
+        "Delete apps/web/src/services/memo-polling.service.ts",
+        "Delete apps/web/src/services/attachment.service.ts",
+        "Delete apps/web/src/services/category.service.ts",
+        "Delete apps/web/src/services/tag.service.ts",
+        "Delete apps/web/src/services/ai-tools.service.ts",
+        "Delete apps/web/src/services/explore.service.ts",
+        "Delete apps/web/src/services/import.service.ts",
+        "Delete apps/web/src/services/export.service.ts",
+        "Delete apps/web/src/services/draft.service.ts",
+        "Keep only: auth.service.ts, theme.service.ts, toast.service.ts",
+        "Typecheck passes (expect errors in pages - will fix later)"
+      ],
+      "priority": 29,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-030",
+      "title": "Remove all frontend API calls except auth and user",
+      "description": "As a developer, I need to delete all non-auth API modules.",
+      "acceptanceCriteria": [
+        "Delete all files in apps/web/src/api/ except auth.ts and user.ts",
+        "Update auth.ts to keep only register and login endpoints",
+        "Update user.ts to keep only getCurrentUser endpoint",
+        "Typecheck passes"
+      ],
+      "priority": 30,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-031",
+      "title": "Simplify home page to welcome screen",
+      "description": "As a user, I want to see a simple welcome page after logging in.",
+      "acceptanceCriteria": [
+        "Update apps/web/src/pages/home/home.tsx to show Welcome message with username",
+        "Display user avatar if available",
+        "Include logout button (use user-menu component)",
+        "Remove all memo-related functionality",
+        "Works in both light and dark themes",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 31,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-032",
+      "title": "Verify registration page works with new backend",
+      "description": "As a user, I want to register a new account through the UI.",
+      "acceptanceCriteria": [
+        "Verify apps/web/src/pages/auth/components/register-form.tsx calls correct endpoint",
+        "Test registration flow end-to-end",
+        "Verify JWT token stored in localStorage",
+        "Verify redirect to home page after registration",
+        "Works in both light and dark themes",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 32,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-033",
+      "title": "Verify login page works with new backend",
+      "description": "As a user, I want to log in through the UI.",
+      "acceptanceCriteria": [
+        "Verify apps/web/src/pages/auth/components/login-form.tsx calls correct endpoint",
+        "Test login flow end-to-end",
+        "Verify JWT token stored in localStorage",
+        "Verify redirect to home page after login",
+        "Works in both light and dark themes",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 33,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-034",
+      "title": "Verify theme toggle functionality",
+      "description": "As a user, I want to switch between light and dark themes.",
+      "acceptanceCriteria": [
+        "Verify theme.service.ts persists theme to localStorage",
+        "Verify theme toggle button exists in layout/navbar",
+        "Test theme switching in browser",
+        "Verify theme persists across page refreshes",
+        "Verify all pages respect theme setting",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 34,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-035",
+      "title": "Update frontend router to remove unused routes",
+      "description": "As a developer, I need router with only auth, home, and landing routes.",
+      "acceptanceCriteria": [
+        "Update apps/web/src/App.tsx or router config to remove gallery, ai-explore, settings routes",
+        "Keep only: /, /auth, /home routes",
+        "Verify protected route redirects to login when not authenticated",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 35,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-036",
+      "title": "Remove unused frontend dependencies",
+      "description": "As a developer, I need to remove packages no longer used by simplified frontend.",
+      "acceptanceCriteria": [
+        "Review apps/web/package.json for unused dependencies",
+        "Remove packages related to: charts, graphs, rich text editors, file upload widgets, etc.",
+        "Keep core: React, React Router, Vite, Tailwind, axios, @rabjs/react",
+        "Run pnpm install to update lockfile",
+        "Typecheck passes",
+        "Build succeeds"
+      ],
+      "priority": 36,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-037",
+      "title": "Remove Electron client application",
+      "description": "As a developer, I need to delete the Electron desktop client.",
+      "acceptanceCriteria": [
+        "Delete apps/client/ directory completely",
+        "Update root package.json to remove client workspace reference if exists",
+        "Update turbo.json to remove client pipeline if exists",
+        "Run pnpm install to update workspace",
+        "Typecheck passes",
+        "Build succeeds"
+      ],
+      "priority": 37,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-038",
+      "title": "Update Docker configuration for simplified stack",
+      "description": "As a developer, I need Docker files updated to only include MySQL and app.",
+      "acceptanceCriteria": [
+        "Update docker-compose.yml to remove LanceDB, add MySQL service",
+        "Update Dockerfile to remove LanceDB setup steps",
+        "Delete Dockerfile.migrate and docker-compose.migrate.yml",
+        "Update Makefile to remove migration-specific commands",
+        "Test docker build succeeds",
+        "Typecheck passes"
+      ],
+      "priority": 38,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-039",
+      "title": "Clean up task and documentation artifacts",
+      "description": "As a developer, I need to remove old PRDs and task files.",
+      "acceptanceCriteria": [
+        "Keep tasks/archive/ directory (already archived)",
+        "Delete tasks/prd-lancedb-to-mysql-migration.md",
+        "Delete tasks/prd-task-scheduler-system.md",
+        "Delete DOCKER_MIGRATION_GUIDE.md",
+        "Delete QUICK_START.md, QUICK_START_MIGRATION.md",
+        "Delete PRODUCTION_DEPLOYMENT.md",
+        "Delete scripts/ralph/ directory",
+        "Delete scripts/export_memos.py",
+        "Typecheck passes"
+      ],
+      "priority": 39,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-040",
+      "title": "Update README.md for simplified project",
+      "description": "As a developer, I need README.md describing the minimal auth-only project.",
+      "acceptanceCriteria": [
+        "Update README.md to describe project as minimal auth boilerplate",
+        "Remove references to memo, AI, vector search features",
+        "Update setup instructions to mention MySQL requirement",
+        "Update feature list to show only user registration and login",
+        "Keep tech stack section accurate",
+        "Typecheck passes"
+      ],
+      "priority": 40,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-041",
+      "title": "Create comprehensive CLAUDE.md documentation",
+      "description": "As a developer, I need detailed documentation for future development.",
+      "acceptanceCriteria": [
+        "Create new CLAUDE.md with project overview (minimal auth boilerplate)",
+        "Document monorepo structure and package architecture",
+        "Document all development commands (dev, build, test, lint)",
+        "Explain frontend architecture (React 19, routing, state management, theming)",
+        "Explain backend architecture (Express, controllers, services, DI, MySQL/Drizzle)",
+        "Document MySQL setup and migration workflow",
+        "Include TypeScript config and code style guidelines",
+        "Provide examples for common tasks (adding endpoints, DTOs, migrations)",
+        "List all environment variables with descriptions",
+        "Typecheck passes"
+      ],
+      "priority": 41,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
