@@ -10,3 +10,28 @@
 - Build order: DTO package builds first, then apps can build in parallel
 
 ---
+
+## 2026-03-04 16:58 - US-001
+- Deleted all memo-related database schema files (memos, attachments, categories, tags, memo-relations)
+- Updated apps/server/src/db/schema/index.ts to only export: users, ai-conversations, ai-messages, daily-recommendations, push-rules, table-migrations
+- Files changed:
+  - Deleted: apps/server/src/db/schema/{memos,attachments,categories,tags,memo-relations}.ts
+  - Modified: apps/server/src/db/schema/index.ts
+- **Learnings for future iterations:**
+  - This is a brand new git repository (first commit created the baseline)
+  - Typecheck errors in services and migration scripts are expected and will be resolved in subsequent stories (US-006 through US-012)
+  - The schema deletion is complete even though downstream code shows errors - this is intentional
+  - Always verify file deletions with `ls` to confirm they're gone
+---
+
+## 2026-03-04 17:00 - US-002
+- Deleted all AI-related database schema files (ai-conversations, ai-messages, daily-recommendations, push-rules)
+- Updated apps/server/src/db/schema/index.ts to remove AI schema exports
+- Files changed:
+  - Deleted: apps/server/src/db/schema/{ai-conversations,ai-messages,daily-recommendations,push-rules}.ts
+  - Modified: apps/server/src/db/schema/index.ts (now only exports users and table-migrations)
+- **Learnings for future iterations:**
+  - Typecheck errors in services (ai-conversation.service.ts, recommendation.service.ts, push-rule.service.ts) and migration scripts are expected
+  - These errors will be resolved when we delete the services in US-009
+  - Schema cleanup is progressing in order: memos → AI → services → controllers
+---
