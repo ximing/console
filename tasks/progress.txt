@@ -67,3 +67,24 @@
   - These errors will be resolved in US-013 (user.service.ts), US-017 (auth middleware), and US-012 (controller cleanup)
 ---
 
+
+## 2026-03-04 17:15 - US-005
+- Generated fresh Drizzle migration for users table only
+- Files changed:
+  - Created: apps/server/drizzle/0000_new_jigsaw.sql
+  - Created: apps/server/drizzle/meta/0000_snapshot.json
+  - Created: apps/server/drizzle/meta/_journal.json
+- Migration SQL verified:
+  - Creates users table with: id, email, password, username, avatar, created_at, updated_at
+  - Email has unique constraint (users_email_unique)
+  - Email has index (email_idx)
+  - Also creates table_migrations table for tracking migrations
+- **Learnings for future iterations:**
+  - drizzle-kit generate reads from dist/db/schema/index.js (compiled schemas)
+  - Can use existing compiled schemas if full build fails due to expected errors elsewhere
+  - Migration generation works even when typecheck fails in services/controllers
+  - drizzle.config.ts specifies: schema path (dist/), output directory (./drizzle), dialect (mysql)
+  - Migration files include SQL and JSON metadata for Drizzle's tracking system
+  - The migration is ready to run but won't be applied until we run the migrate command
+---
+
