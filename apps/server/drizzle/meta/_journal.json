@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1772615632705,
+      "tag": "0000_new_jigsaw",
+      "breakpoints": true
+    }
+  ]
+}
