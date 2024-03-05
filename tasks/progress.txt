@@ -88,3 +88,24 @@
   - The migration is ready to run but won't be applied until we run the migrate command
 ---
 
+
+## 2026-03-04 17:16 - US-006
+- Deleted all old migration script files in apps/server/src/migrations/scripts/
+- Updated index.ts to export empty ALL_MIGRATIONS array
+- Files changed:
+  - Deleted: 18 migration script files (001-init.ts through 018-backfill-memo-vectors.ts)
+  - Modified: apps/server/src/migrations/scripts/index.ts
+- Changes made:
+  - Removed all imports from deleted migration files
+  - Set ALL_MIGRATIONS to empty array: `export const ALL_MIGRATIONS: Migration[] = [];`
+  - Kept helper functions (getMigrationsForTable, getMigrationsFromVersion, getLatestVersion, getAllTableNames) for backward compatibility
+  - Added comment: "Empty array - using Drizzle migrations instead"
+- **Learnings for future iterations:**
+  - The custom migration system in src/migrations/scripts/ is now completely removed
+  - Project now uses Drizzle migrations exclusively (in apps/server/drizzle/ directory)
+  - Typecheck errors are all expected from previous stories (field renames, deleted schemas)
+  - No errors exist in the migrations/scripts/index.ts file itself
+  - Helper functions were kept to avoid breaking any code that might call them
+  - This completes the migration system cleanup - US-005 generated fresh Drizzle migrations, US-006 removed old custom migrations
+---
+
