@@ -109,3 +109,18 @@
   - This completes the migration system cleanup - US-005 generated fresh Drizzle migrations, US-006 removed old custom migrations
 ---
 
+
+## 2026-03-04 17:20 - US-007
+- Deleted LanceDB source file
+- Files changed:
+  - Deleted: apps/server/src/sources/lancedb.ts
+- **Learnings for future iterations:**
+  - The lancedb.ts file contained ~339 lines of LanceDB integration code
+  - Expected typecheck errors appear in multiple files that import lancedb:
+    - Services: embedding.service.ts, multimodal-embedding.service.ts, explore.service.ts, scheduler.service.ts, attachment.service.ts, tag.service.ts, daily-content.generator.ts
+    - Controllers: debug.ba.controller.ts
+    - App: app.ts (main application initialization)
+    - Scripts: migrate-lancedb-to-mysql.ts
+  - These errors are intentional and will be resolved when we delete the services (US-008 through US-011) and controllers (US-012)
+  - The sources/unified-storage-adapter/ directory still exists and will be removed in US-021
+---
