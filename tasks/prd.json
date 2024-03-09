@@ -115,8 +115,8 @@
         "Typecheck passes (expect errors in other services - will fix later)"
       ],
       "priority": 8,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed - Deleted embedding.service.ts and multimodal-embedding.service.ts. Expected typecheck errors in services that import these (explore.service.ts, scheduler.service.ts, attachment.service.ts, tag.service.ts, daily-content.generator.ts) and in app.ts, debug.ba.controller.ts. These will be resolved in US-009 through US-012."
     },
     {
       "id": "US-009",
