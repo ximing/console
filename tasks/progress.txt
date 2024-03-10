@@ -143,3 +143,25 @@
   - These services will be deleted in US-009 through US-011, which will resolve these errors
   - The embedding services were core to the vector search functionality that's being removed
 ---
+
+## 2026-03-04 17:26 - US-009
+- Deleted AI conversation, recommendation, and explore service files
+- Files changed:
+  - Deleted: apps/server/src/services/ai-conversation.service.ts (374 lines)
+  - Deleted: apps/server/src/services/ai.service.ts (171 lines)
+  - Deleted: apps/server/src/services/explore.service.ts (1123 lines)
+  - Deleted: apps/server/src/services/recommendation.service.ts (299 lines)
+- Total: 1967 lines removed
+- **Learnings for future iterations:**
+  - These services were the core AI functionality of the original system
+  - ai-conversation.service.ts handled AI chat conversations
+  - ai.service.ts provided AI text generation capabilities
+  - explore.service.ts handled semantic search and content exploration using embeddings
+  - recommendation.service.ts generated daily content recommendations
+  - Expected typecheck errors now appear in controllers that import these services:
+    - ai.controller.ts (imports ai.service)
+    - explore.controller.ts (imports ai-conversation.service, explore.service)
+    - insights.controller.ts (imports recommendation.service)
+  - These controller errors are intentional and will be resolved in US-012 when controllers are deleted
+  - The services deletion completes the removal of AI capabilities from the backend
+---
