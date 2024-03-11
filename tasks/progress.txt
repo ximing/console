@@ -165,3 +165,30 @@
   - These controller errors are intentional and will be resolved in US-012 when controllers are deleted
   - The services deletion completes the removal of AI capabilities from the backend
 ---
+
+## 2026-03-04 17:35 - US-010
+- Deleted memo and related service files
+- Files changed:
+  - Deleted: apps/server/src/services/memo.service.ts (50K)
+  - Deleted: apps/server/src/services/memo-relation.service.ts (4.8K)
+  - Deleted: apps/server/src/services/attachment.service.ts (18K)
+  - Deleted: apps/server/src/services/category.service.ts (6.2K)
+  - Deleted: apps/server/src/services/tag.service.ts (11K)
+- Total: 3040 lines removed
+- **Learnings for future iterations:**
+  - memo.service.ts was the core service for memo CRUD operations and contained ~50K of code
+  - memo-relation.service.ts handled relationships between memos (forward relations and backlinks)
+  - attachment.service.ts handled file uploads and storage (local/S3/OSS)
+  - category.service.ts managed memo categories
+  - tag.service.ts managed memo tags
+  - Expected typecheck errors now appear in controllers that import these services:
+    - memo.controller.ts (imports memo.service, memo-relation.service)
+    - memo.ba.controller.ts (imports memo.service, category.service)
+    - attachment.controller.ts (imports attachment.service)
+    - attachment.ba.controller.ts (imports attachment.service)
+    - category.controller.ts (imports category.service)
+    - tag.controller.ts (imports tag.service)
+    - insights.controller.ts (imports memo.service)
+  - These controller errors are intentional and will be resolved in US-012 when controllers are deleted
+  - The services deletion completes the removal of memo-related functionality from the backend
+---
