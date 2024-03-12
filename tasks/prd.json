@@ -164,8 +164,8 @@
         "Typecheck passes (expect errors in controllers - will fix later)"
       ],
       "priority": 11,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed - Deleted OCR directory (4 files), ASR service, push-rule service, scheduler service, channels directory (6 files), avatar service, and github-release service. Total: 1974 lines removed. Expected typecheck errors in app.ts (imports scheduler/lancedb), controllers (import deleted services), user.service.ts (uses old field names). These will be resolved in US-012 (controllers), US-013 (user.service), US-017 (auth middleware), US-023 (app.ts)."
     },
     {
       "id": "US-012",
