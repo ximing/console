@@ -254,3 +254,26 @@
   - The backend now only has authentication and user management endpoints
 ---
 
+## 2026-03-04 - US-013
+- Simplified user.service.ts to minimal implementation with only 3 essential methods
+- Files changed:
+  - Modified: apps/server/src/services/user.service.ts (13 insertions, 161 deletions)
+- Changes made:
+  - Kept only: createUser(), getUserByEmail(), getUserById() methods
+  - Removed CategoryService dependency (no longer creating default categories)
+  - Removed bcrypt helper methods (hashPassword, verifyPassword) - these will be added to auth.controller.ts in US-015/US-016
+  - Removed phone lookup method (findUserByPhone)
+  - Removed update, delete, and changePassword methods
+  - Updated field names: uid → id, nickname → username
+  - All methods use Drizzle queries correctly (eq, select, from, where, limit)
+- **Learnings for future iterations:**
+  - user.service.ts now has minimal auth-only methods - no business logic beyond CRUD
+  - Password hashing logic will move to auth.controller.ts (US-015/US-016) where registration/login are implemented
+  - Expected typecheck errors in:
+    - auth.controller.ts: calls hashPassword, verifyPassword, findUserByEmail (old names) - will be fixed in US-015/US-016
+    - user.controller.ts: calls findUserByUid, updateUser, changePassword, imports deleted avatar.service - will be fixed later
+    - auth-handler.ts: calls findUserByUid (old name) - will be fixed in US-017
+  - The service is now ready for auth endpoints to be implemented
+  - No typecheck errors exist in user.service.ts itself
+---
+
