@@ -236,8 +236,8 @@
         "Typecheck passes"
       ],
       "priority": 15,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed - Implemented registration endpoint with email validation, bcrypt password hashing (10 rounds), JWT token generation (90-day expiration), and LoginResponseDto response. Sets httpOnly cookie. Returns appropriate error codes for validation failures and duplicate emails. No typecheck errors in auth.controller.ts."
     },
     {
       "id": "US-016",
@@ -251,8 +251,8 @@
         "Typecheck passes"
       ],
       "priority": 16,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed - Implemented login endpoint with bcrypt password verification, JWT token generation (90-day expiration), and LoginResponseDto response. Returns 401 for invalid credentials (USER_NOT_FOUND, PASSWORD_ERROR). Sets httpOnly cookie. No typecheck errors in auth.controller.ts."
     },
     {
       "id": "US-017",
