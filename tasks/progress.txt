@@ -338,3 +338,50 @@
   - No typecheck errors exist in auth.controller.ts itself
 ---
 
+## 2026-03-04 18:45 - US-017
+- Updated auth middleware to use MySQL user lookup instead of LanceDB
+- Files changed:
+  - Modified: apps/server/src/middlewares/auth-handler.ts (5 insertions, 4 deletions)
+- Changes made:
+  - Changed JWT payload field from `uid` to `id` (line 60)
+  - Updated UserService method call from `findUserByUid(decoded.uid)` to `getUserById(decoded.id)` (line 65)
+  - Updated request.user object to use new field names:
+    - `uid` → `id`
+    - `nickname` → `username`
+    - Added `avatar` field
+  - All fields use `?? undefined` to convert null to undefined for DTO compatibility
+- **Learnings for future iterations:**
+  - Auth middleware now correctly uses UserService.getUserById() which was simplified in US-013
+  - JWT token payload must match what auth.controller.ts generates (uses `id` field, set in US-015/US-016)
+  - request.user type is defined in apps/server/src/types/express.ts as UserInfoDto (updated in US-014)
+  - No typecheck errors exist in auth-handler.ts itself
+  - Expected typecheck errors remain in:
+    - app.ts (imports deleted scheduler/lancedb) - will be fixed in US-023
+    - user.controller.ts (uses old field names and deleted methods) - will be fixed later
+    - migrate-lancedb-to-mysql.ts (references deleted schemas) - can be deleted later
+  - Auth middleware is now fully compatible with the simplified MySQL-only backend
+---
+
+## 2026-03-04 19:00 - US-018
+- Removed LanceDB and Apache Arrow dependencies from package.json
+- Files changed:
+  - Modified: apps/server/package.json (removed @lancedb/lancedb, apache-arrow)
+  - Modified: pnpm-lock.yaml (removed 17 packages)
+- Changes made:
+  - Removed `@lancedb/lancedb` from dependencies
+  - Removed `apache-arrow` from dependencies
+  - Ran `pnpm install` to update lockfile
+  - Total: 17 packages removed from lockfile
+- **Learnings for future iterations:**
+  - LanceDB packages are now completely removed from the project dependencies
+  - Expected typecheck/build errors remain in files that still import these packages:
+    - src/migrations/executor.ts (imports @lancedb/lancedb)
+    - src/migrations/index.ts (imports @lancedb/lancedb)
+    - src/migrations/types.ts (imports @lancedb/lancedb)
+    - src/models/db/schema.ts (imports apache-arrow)
+    - src/scripts/migrate-lancedb-to-mysql.ts (imports lancedb.ts which was deleted in US-007)
+  - These migration files are part of the old custom migration system and can be cleaned up later
+  - The main errors in app.ts and user.controller.ts will be resolved in US-023
+  - Package removal is complete - no more LanceDB/vectordb dependencies in the project
+---
+
