@@ -418,3 +418,28 @@
   - Typecheck errors remain the same as US-019 (expected from previous stories)
 ---
 
+## 2026-03-04 19:25 - US-021
+- Removed S3 and OSS storage adapter dependencies and source files
+- Files changed:
+  - Modified: apps/server/package.json (removed 3 packages)
+  - Deleted: apps/server/src/sources/unified-storage-adapter/ directory (6 files)
+  - Modified: pnpm-lock.yaml (removed 123 packages)
+- Packages removed:
+  - @aws-sdk/client-s3
+  - @aws-sdk/s3-request-presigner
+  - ali-oss
+- Files deleted:
+  - base.adapter.ts
+  - factory.ts
+  - index.ts
+  - local.adapter.ts
+  - oss.adapter.ts
+  - s3.adapter.ts
+- **Learnings for future iterations:**
+  - The unified-storage-adapter directory contained adapters for local, S3, and OSS storage
+  - Removing these packages freed up 123 dependencies from the lockfile
+  - The attachment service (deleted in US-010) was the only consumer of these adapters
+  - Typecheck errors remain the same as previous stories (app.ts, user.controller.ts, migration files)
+  - This completes the removal of cloud storage capabilities from the backend
+---
+
