@@ -18,8 +18,6 @@ import { runMigrations } from './db/migrate.js';
 import { initIOC } from './ioc.js';
 import { authHandler } from './middlewares/auth-handler.js';
 import { errorHandler } from './middlewares/error-handler.js';
-import { SchedulerService } from './services/scheduler.service.js';
-import { LanceDbService as LanceDatabaseService } from './sources/lancedb.js';
 import { logger } from './utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -46,18 +44,6 @@ export async function createApp() {
   } catch (error) {
     logger.error('Failed to run database migrations:', error);
     throw error;
-  }
-
-  await Container.get(LanceDatabaseService).init();
-
-  // Initialize scheduler service for periodic tasks
-  try {
-    const schedulerService = Container.get(SchedulerService);
-    await schedulerService.init();
-    logger.info('Scheduler service initialized');
-  } catch (error) {
-    logger.error('Failed to initialize scheduler service:', error);
-    // Continue app startup even if scheduler service fails to initialize
   }
 
   const app: any = express();
@@ -125,17 +111,8 @@ export async function createApp() {
     logger.info(`Received ${signal}, shutting down gracefully...`);
     server.close(async () => {
       try {
-        // Stop scheduler service
-        const schedulerService = Container.get(SchedulerService);
-        if (schedulerService.isReady()) {
-          await schedulerService.stop();
-        }
-
         // Close MySQL connection pool
         await closeDatabase();
-
-        // Close LanceDB connections and release resources
-        await Container.get(LanceDatabaseService).close();
         logger.info('All resources cleaned up');
         process.exit(0);
       } catch (error) {
