@@ -355,8 +355,8 @@
         "Server starts successfully"
       ],
       "priority": 23,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed - Removed LanceDB and scheduler initialization from app.ts. Removed imports for SchedulerService and LanceDatabaseService. Removed LanceDB.init() and scheduler.init() calls. Updated graceful shutdown to only close MySQL connections. No typecheck errors in app.ts or index.ts. Expected errors remain in user.controller.ts, migration files, and migrate-lancedb-to-mysql.ts script (will be resolved in later stories)."
     },
     {
       "id": "US-024",

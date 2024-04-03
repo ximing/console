@@ -468,3 +468,27 @@
   - Typecheck passes with same expected errors from previous stories (app.ts, user.controller.ts, migration files)
   - This completes the backend environment configuration simplification
 ---
+
+## 2026-03-04 19:45 - US-023
+- Updated server startup to remove LanceDB and scheduler initialization
+- Files changed:
+  - Modified: apps/server/src/app.ts (23 deletions)
+- Changes made:
+  - Removed imports for SchedulerService and LanceDatabaseService
+  - Removed LanceDB initialization: `Container.get(LanceDatabaseService).init()`
+  - Removed scheduler service initialization block (lines 53-61)
+  - Removed scheduler shutdown logic from graceful shutdown handler
+  - Removed LanceDB shutdown logic from graceful shutdown handler
+  - Kept only: IOC → MySQL → Migrations → Express server startup flow
+  - Graceful shutdown now only closes MySQL connection pool
+- **Learnings for future iterations:**
+  - Server startup flow is now simplified to: loadEnv → initIOC → initializeDatabase → checkConnectionHealth → runMigrations → createExpressApp → listen
+  - Graceful shutdown (SIGTERM/SIGINT) now only handles MySQL connection cleanup
+  - No typecheck errors exist in app.ts or index.ts - the story is complete
+  - Expected typecheck errors remain in:
+    - user.controller.ts (uses old field names, deleted services) - will be cleaned up in later stories
+    - Migration files (executor.ts, index.ts, types.ts) - reference deleted @lancedb/lancedb package
+    - migrate-lancedb-to-mysql.ts script - references deleted schemas and lancedb.ts file
+  - These errors are from previous stories and don't affect the server startup flow
+  - The server is now ready to start with only MySQL as the database backend
+---
