@@ -525,3 +525,26 @@
   - This story was effectively a verification/documentation step rather than an implementation step
   - Same pattern as US-024 - both memo and AI DTOs were cleaned up earlier in the process
 ---
+
+## 2026-03-04 18:17 - US-026
+- Deleted gallery, ai-explore, and settings page directories from frontend
+- Files changed:
+  - Deleted: apps/web/src/pages/gallery/ directory (7 files)
+  - Deleted: apps/web/src/pages/ai-explore/ directory (7 files)
+  - Deleted: apps/web/src/pages/settings/ directory (12 files)
+  - Total: 26 files deleted, 4049 lines removed
+- Pages remaining:
+  - auth/ (login/register forms)
+  - home/ (main page after login)
+  - landing/ (public landing page)
+  - not-found/ (404 page)
+  - share/ (public share page)
+- **Learnings for future iterations:**
+  - Gallery page contained image grid, timeline, filter, and search components
+  - AI-explore page contained relationship graph, markdown with citations, and source card components
+  - Settings page contained account settings, push-rule configuration, import/export data, and about sections
+  - The settings page had a complex push-rule service (local state management) that was deleted
+  - Typecheck passes with no errors after deletion - the router likely doesn't have hard references to these pages
+  - Expected errors in router will appear when we try to navigate to these routes (will be fixed in US-035)
+  - Frontend is now simplified to only auth, home, landing, not-found, and share pages
+---
