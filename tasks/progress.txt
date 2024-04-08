@@ -548,3 +548,25 @@
   - Expected errors in router will appear when we try to navigate to these routes (will be fixed in US-035)
   - Frontend is now simplified to only auth, home, landing, not-found, and share pages
 ---
+
+## 2026-03-04 18:20 - US-027
+- Deleted all memo-related frontend components
+- Files changed:
+  - Deleted: apps/web/src/components/memo-editor-form.tsx (54274 bytes)
+  - Deleted: apps/web/src/components/attachment-uploader.tsx (3317 bytes)
+  - Deleted: apps/web/src/components/attachment-preview-modal.tsx (9355 bytes)
+  - Deleted: apps/web/src/components/calendar-heatmap.tsx (7925 bytes)
+  - Deleted: apps/web/src/components/tag-input.tsx (8248 bytes)
+  - Deleted: apps/web/src/components/tag-context-menu.tsx (2002 bytes)
+  - Deleted: apps/web/src/components/ai/ directory (3 files: ai-tool-selector-modal.tsx, index.ts, tag-generator-modal.tsx)
+- Total: 9 files deleted, 2918 lines removed
+- **Learnings for future iterations:**
+  - memo-editor-form.tsx was the largest component (54KB) - handled rich text editing, attachments, tags, and categories
+  - attachment components handled file uploads and preview modals
+  - calendar-heatmap.tsx displayed memo creation activity over time
+  - tag components handled tag input with autocomplete and context menus
+  - AI directory contained tool selector and tag generator modals
+  - Typecheck passes with no errors after deletion - no other components depend on these
+  - Only layout.tsx, protected-route.tsx, and toast/ components remain in apps/web/src/components/
+  - Next story (US-028) will clean up home page components
+---
