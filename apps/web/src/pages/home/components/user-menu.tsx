@@ -60,7 +60,7 @@ export const UserMenu = view(({ onLogout }: UserMenuProps) => {
     onLogout();
   };
 
-  const userName = authService.user?.nickname || authService.user?.email?.split('@')[0] || 'User';
+  const userName = authService.user?.username || authService.user?.email?.split('@')[0] || 'User';
   const userEmail = authService.user?.email || '';
 
   return (

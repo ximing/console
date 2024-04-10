@@ -1,11 +1,5 @@
 import { Service } from '@rabjs/react';
-import type {
-  LoginDto,
-  RegisterDto,
-  UpdateUserDto,
-  UserInfoDto,
-  ChangePasswordDto,
-} from '@aimo-console/dto';
+import type { LoginDto, RegisterDto, UserInfoDto } from '@aimo-console/dto';
 import * as authApi from '../api/auth';
 import * as userApi from '../api/user';
 
@@ -148,88 +142,6 @@ export class AuthService extends Service {
       console.error('Check auth error:', error);
       this.clearAuthState();
       return false;
-    }
-  }
-
-  /**
-   * Update user info (nickname/avatar metadata)
-   */
-  async updateUserInfo(data: UpdateUserDto) {
-    try {
-      const response = await userApi.updateUserInfo(data);
-
-      if (response.code === 0 && response.data?.user) {
-        this.user = response.data.user;
-        localStorage.setItem('aimo_user', JSON.stringify(response.data.user));
-        return { success: true, message: response.data.message, user: response.data.user };
-      }
-
-      return {
-        success: false,
-        message: response.data?.message || 'User info update failed',
-      };
-    } catch (error: unknown) {
-      console.error('Update user info error:', error);
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : 'User info update failed',
-      };
-    }
-  }
-
-  /**
-   * Upload and update user avatar
-   */
-  async updateAvatar(file: File) {
-    try {
-      const response = await userApi.uploadAvatar(file);
-
-      if (response.code === 0 && response.data) {
-        // Update local user state with new avatar
-        if (this.user) {
-          this.user = {
-            ...this.user,
-            avatar: response.data.avatar,
-          };
-          localStorage.setItem('aimo_user', JSON.stringify(this.user));
-        }
-        return { success: true, avatar: response.data.avatar };
-      } else {
-        return {
-          success: false,
-          message: 'Avatar upload failed',
-        };
-      }
-    } catch (error: unknown) {
-      console.error('Upload avatar error:', error);
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : 'Avatar upload failed',
-      };
-    }
-  }
-
-  /**
-   * Change user password
-   */
-  async changePassword(data: ChangePasswordDto) {
-    try {
-      const response = await userApi.changePassword(data);
-
-      if (response.code === 0 && response.data) {
-        return { success: true, message: response.data.message };
-      }
-
-      return {
-        success: false,
-        message: response.data?.message || 'Password change failed',
-      };
-    } catch (error: unknown) {
-      console.error('Change password error:', error);
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : 'Password change failed',
-      };
     }
   }
 }
