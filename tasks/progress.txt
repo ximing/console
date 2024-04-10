@@ -590,3 +590,35 @@
   - Typecheck passes with no errors - no other components depend on these
   - Next story (US-029) will clean up frontend services
 ---
+
+## 2026-03-04 18:24 - US-029
+- Deleted 10 frontend service files from apps/web/src/services/
+- Files changed:
+  - Deleted: memo.service.ts (537 lines)
+  - Deleted: memo-polling.service.ts (140 lines)
+  - Deleted: attachment.service.ts (217 lines)
+  - Deleted: category.service.ts (128 lines)
+  - Deleted: tag.service.ts (83 lines)
+  - Deleted: ai-tools.service.ts (358 lines)
+  - Deleted: explore.service.ts (602 lines)
+  - Deleted: import.service.ts (481 lines)
+  - Deleted: export.service.ts (361 lines)
+  - Deleted: draft.service.ts (139 lines)
+- Total: 3046 lines removed
+- Services remaining:
+  - auth.service.ts (handles login/register/logout)
+  - theme.service.ts (handles dark/light theme switching)
+  - toast.service.ts (handles toast notifications)
+- **Learnings for future iterations:**
+  - memo.service.ts was the main service for memo CRUD operations using @rabjs/react observables
+  - memo-polling.service.ts handled real-time polling for memo updates
+  - attachment.service.ts managed file uploads and attachments
+  - category.service.ts and tag.service.ts managed memo categorization
+  - ai-tools.service.ts provided AI-powered tools (summarization, translation, etc.)
+  - explore.service.ts handled semantic search and content exploration
+  - import.service.ts and export.service.ts handled data import/export (Markdown, JSON, etc.)
+  - draft.service.ts managed draft memos in localStorage
+  - Typecheck passes with no errors - no components currently depend on these deleted services
+  - Expected errors may appear in pages that still import these services (will be fixed in US-031 when home page is simplified)
+  - Frontend is now minimal with only auth, theme, and toast services
+---
