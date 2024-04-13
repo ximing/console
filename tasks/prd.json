@@ -485,8 +485,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 31,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed - Simplified home page to welcome screen with user avatar, username, and email. Updated all field names from nickname to username. Removed unused auth service methods. Typecheck and lint pass."
     },
     {
       "id": "US-032",

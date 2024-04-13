@@ -639,3 +639,30 @@
   - Frontend now has only 2 API modules: auth (register/login) and user (getUserInfo)
   - Next story (US-031) will simplify the home page to a welcome screen
 ---
+
+## 2026-03-04 20:45 - US-031
+- Simplified home page to welcome screen
+- Files changed:
+  - Modified: apps/web/src/pages/home/home.tsx (405 lines deleted, 52 lines added)
+  - Modified: apps/web/src/pages/home/components/user-menu.tsx (changed nickname to username)
+  - Modified: apps/web/src/components/layout.tsx (changed nickname to username)
+  - Modified: apps/web/src/services/auth.service.ts (removed unused methods and imports)
+- Changes made:
+  - Replaced complex memo list interface with simple welcome screen
+  - Shows user avatar (or initial letter if no avatar)
+  - Displays welcome message with username
+  - Shows user info card with username and email
+  - Updated field names from nickname to username in all components (user-menu.tsx, layout.tsx, home.tsx)
+  - Removed unused UpdateUserDto and ChangePasswordDto imports from auth.service.ts
+  - Removed unused methods from AuthService: updateUserInfo, updateAvatar, changePassword
+  - Kept only essential auth methods: login, register, logout, checkAuth
+  - Works in both light and dark themes with proper styling
+- **Learnings for future iterations:**
+  - The home page now serves as a simple welcome screen instead of a memo management interface
+  - UserInfoDto uses username field (not nickname) - this matches the backend schema change from US-003
+  - AuthService should only contain authentication-related methods, not user profile management
+  - The Layout component provides the user menu with logout functionality
+  - Theme toggle is available in the sidebar (from Layout component)
+  - Typecheck and lint both pass with no errors
+  - Total: 457 lines removed, 52 lines added (net reduction of 405 lines)
+---

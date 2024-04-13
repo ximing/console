@@ -7,7 +7,7 @@ export const RegisterForm = view(() => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [nickname, setNickname] = useState('');
+  const [username, setUsername] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -21,7 +21,7 @@ export const RegisterForm = view(() => {
     setSuccess(false);
 
     // Validation
-    if (!email || !password || !confirmPassword) {
+    if (!email || !password || !confirmPassword || !username) {
       setError('Please fill in all required fields');
       return;
     }
@@ -46,7 +46,7 @@ export const RegisterForm = view(() => {
     const result = await authService.register({
       email,
       password,
-      nickname: nickname || undefined,
+      username,
     });
 
     setLoading(false);
@@ -56,7 +56,7 @@ export const RegisterForm = view(() => {
       setEmail('');
       setPassword('');
       setConfirmPassword('');
-      setNickname('');
+      setUsername('');
 
       // Auto navigate to login page after successful registration
       navigate('/auth?mode=login', { replace: true });
@@ -99,16 +99,16 @@ export const RegisterForm = view(() => {
 
       <div>
         <label
-          htmlFor="nickname"
+          htmlFor="username"
           className="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-2"
         >
-          Nickname <span className="text-gray-400 dark:text-dark-500 text-xs">(optional)</span>
+          Username <span className="text-red-500">*</span>
         </label>
         <input
-          id="nickname"
+          id="username"
           type="text"
-          value={nickname}
-          onChange={(e) => setNickname(e.target.value)}
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
           className="w-full px-4 py-3 border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all placeholder-gray-500 dark:placeholder-dark-400"
           placeholder="Your name"
           disabled={loading}
