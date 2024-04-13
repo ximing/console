@@ -666,3 +666,32 @@
   - Typecheck and lint both pass with no errors
   - Total: 457 lines removed, 52 lines added (net reduction of 405 lines)
 ---
+
+## 2026-03-04 21:00 - US-032
+- Fixed registration form to use 'username' field instead of 'nickname'
+- Simplified user.controller.ts to only have getUser() method
+- Files changed:
+  - Modified: apps/web/src/pages/auth/components/register-form.tsx
+  - Modified: apps/server/src/controllers/v1/user.controller.ts
+  - Regenerated: apps/server/drizzle/0000_calm_blacklash.sql (migration renamed)
+- Changes made to register-form.tsx:
+  - Renamed state variable from `nickname` to `username`
+  - Updated validation to require username (not optional)
+  - Updated field label from "Nickname (optional)" to "Username *"
+  - Updated authService.register() call to pass `username` instead of `nickname`
+- Changes made to user.controller.ts:
+  - Removed all imports for deleted services (AvatarService, multer, UpdateUserDto, ChangePasswordDto)
+  - Removed dependency injection of AvatarService from constructor
+  - Kept only getUser() method with @Get('/info') endpoint
+  - Updated getUser() to use new field names: id (not uid), username (not nickname)
+  - Removed updateUser(), changePassword(), and uploadAvatar() methods
+- **Learnings for future iterations:**
+  - RegisterDto uses 'username' field (not 'nickname') - this was defined in US-014
+  - Frontend forms must match backend DTO field names exactly
+  - UserService.getUserById() returns user with new field names (id, username, email, avatar)
+  - user.controller.ts is now minimal with only one endpoint: GET /api/v1/user/info
+  - Frontend typecheck and lint both pass with no errors
+  - Backend has migration state issue (users table already exists from previous run) - this is a known issue from US-005 migration generation
+  - For full end-to-end testing, the migration tracking table needs to be manually fixed or database reset
+  - The code changes are correct and ready for use once migration state is resolved
+---
