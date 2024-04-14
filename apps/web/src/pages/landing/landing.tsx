@@ -3,7 +3,6 @@ import { useService } from '@rabjs/react';
 import { useState, useEffect } from 'react';
 import { ThemeService } from '../../services/theme.service';
 import { AuthService } from '../../services/auth.service';
-import { getAppVersions } from '../../api/system';
 import {
   Sun,
   Moon,
@@ -31,7 +30,6 @@ import screenshot02 from '../../assets/landing/02.png';
 import screenshot03 from '../../assets/landing/03.png';
 import screenshot04 from '../../assets/landing/04.png';
 import screenshot05 from '../../assets/landing/05.png';
-import type { AllVersionsResponseDto } from '@aimo-console/dto';
 
 const navItems = [
   { id: 'features', label: '功能' },
@@ -127,7 +125,6 @@ export function LandingPage() {
   const authService = useService(AuthService);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [versions, setVersions] = useState<AllVersionsResponseDto | undefined>(undefined);
   const [currentScreenshot, setCurrentScreenshot] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
@@ -146,21 +143,6 @@ export function LandingPage() {
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
-    // Fetch app versions from GitHub releases
-    const fetchVersions = async () => {
-      try {
-        const response = await getAppVersions();
-        if (response.code === 200 && response.data) {
-          setVersions(response.data);
-        }
-      } catch {
-        // Silently fail - UI will handle undefined versions
-      }
-    };
-    fetchVersions();
   }, []);
 
   const handleThemeToggle = () => {
@@ -805,11 +787,6 @@ export function LandingPage() {
             <div className="flex items-center gap-2 mb-6">
               <Monitor className="w-5 h-5 text-slate-600 dark:text-slate-400" />
               <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">桌面端</h3>
-              {versions?.desktop.version && (
-                <span className="px-2 py-0.5 text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full">
-                  v{versions.desktop.version}
-                </span>
-              )}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <DownloadCard
@@ -846,11 +823,6 @@ export function LandingPage() {
             <div className="flex items-center gap-2 mb-6">
               <Smartphone className="w-5 h-5 text-slate-600 dark:text-slate-400" />
               <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">移动端</h3>
-              {versions?.apk.version && (
-                <span className="px-2 py-0.5 text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full">
-                  v{versions.apk.version}
-                </span>
-              )}
             </div>
             <div className="max-w-xs">
               <DownloadCard
