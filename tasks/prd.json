@@ -519,8 +519,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 33,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed - Fixed App.tsx to remove deleted page routes, fixed main.tsx to remove deleted service registrations, fixed landing page to remove deleted API imports. Tested login flow end-to-end successfully. JWT token (171 chars) and user info stored in localStorage. Redirect to home page works correctly. Frontend typecheck and lint pass."
     },
     {
       "id": "US-034",
