@@ -8,6 +8,13 @@
       "when": 1772626390499,
       "tag": "0000_absent_molly_hayes",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1772627667095,
+      "tag": "0001_tearful_yellow_claw",
+      "breakpoints": true
     }
   ]
 }
