@@ -10,11 +10,4 @@ CREATE TABLE `users` (
 	CONSTRAINT `users_email_unique` UNIQUE(`email`)
 );
 --> statement-breakpoint
-CREATE TABLE `table_migrations` (
-	`table_name` varchar(191) NOT NULL,
-	`current_version` int NOT NULL,
-	`last_migrated_at` timestamp(3) NOT NULL DEFAULT (now()),
-	CONSTRAINT `table_migrations_table_name` PRIMARY KEY(`table_name`)
-);
---> statement-breakpoint
 CREATE INDEX `email_idx` ON `users` (`email`);
