@@ -161,3 +161,28 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - Keyboard shortcuts in modals: Enter to submit, Escape to cancel for better UX
   - Position dropdown menus with `absolute right-0 top-full mt-1` for proper alignment
 ---
+
+## 2026-03-04 20:35:00 - US-001 (Task Orchestration)
+- Created task and execution_log tables using Drizzle ORM in apps/server/src/db/schema/
+- Added task table schema with fields: id, name, triggerType, cronExpression, enabled, actionId, actionConfig, createdBy, createdAt, updatedAt
+- Added execution_log table schema with fields: id, taskId, status, startedAt, finishedAt, errorMessage, errorType, result
+- Added foreign key from execution_log.taskId to task.id with cascade delete
+- Generated migration using drizzle-kit (pnpm migrate:generate)
+- Migration ran successfully creating tables in MySQL
+- Typecheck and build pass
+- Files changed:
+  - apps/server/src/db/schema/tasks.ts (new)
+  - apps/server/src/db/schema/execution-logs.ts (new)
+  - apps/server/src/db/schema/index.ts (updated to export new schemas)
+  - apps/server/drizzle/0001_tearful_yellow_claw.sql (new migration)
+  - apps/server/drizzle/meta/0001_snapshot.json (new)
+  - apps/server/drizzle/meta/_journal.json (updated)
+- **Learnings for future iterations:**
+  - Database uses Drizzle ORM with MySQL, not LanceDB (LanceDB is for vector search)
+  - Schema files are in apps/server/src/db/schema/ using mysqlTable() from drizzle-orm/mysql-core
+  - Migration generation: pnpm build && pnpm migrate:generate
+  - Migration runs automatically on server start or manually with pnpm migrate
+  - VARCHAR(191) limit for keys due to MySQL utf8mb4 index limit
+  - Foreign keys use .references() with cascade delete rules
+  - JSON columns: Use `.$type<T>()` for type safety
+  - Enum columns: Use mysqlEnum() from drizzle-orm/mysql-core
