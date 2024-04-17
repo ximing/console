@@ -15,6 +15,7 @@ function findFileNamesFromGlob(globString: string) {
 
 export async function initIOC() {
   for (const globString of [
+    `${__dirname}/actions/**/*.${isProduction ? 'js' : 'ts'}`,
     `${__dirname}/cron/**/*.${isProduction ? 'js' : 'ts'}`,
     `${__dirname}/modules/**/*.${isProduction ? 'js' : 'ts'}`,
     `${__dirname}/sources/**/*.${isProduction ? 'js' : 'ts'}`,
