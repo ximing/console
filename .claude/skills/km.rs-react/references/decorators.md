@@ -5,7 +5,7 @@ RSJS 提供了多个装饰器来简化常见模式。
 ## @Inject - 依赖注入
 
 ```typescript
-import { Service, Inject } from "@osgfe/rs-react";
+import { Service, Inject } from "@rabjs/react";
 
 export class LoggerService extends Service {
   log(message: string) {
@@ -31,7 +31,7 @@ bindServices(Component, [LoggerService, UserService]);
 ## @Debounce - 防抖
 
 ```typescript
-import { Service, Debounce } from "@osgfe/rs-react";
+import { Service, Debounce } from "@rabjs/react";
 
 export class SearchService extends Service {
   query = "";
@@ -58,7 +58,7 @@ export class SearchService extends Service {
 ## @Throttle - 节流
 
 ```typescript
-import { Service, Throttle } from "@osgfe/rs-react";
+import { Service, Throttle } from "@rabjs/react";
 
 export class ScrollService extends Service {
   scrollPosition = 0;
@@ -74,7 +74,7 @@ export class ScrollService extends Service {
 ## @Memo - 缓存计算属性
 
 ```typescript
-import { Service, Memo } from "@osgfe/rs-react";
+import { Service, Memo } from "@rabjs/react";
 
 export class DataService extends Service {
   data: any[] = [];
@@ -94,7 +94,7 @@ export class DataService extends Service {
 ## @On - 自动监听事件
 
 ```typescript
-import { Service, On } from "@osgfe/rs-react";
+import { Service, On } from "@rabjs/react";
 
 export class NotificationService extends Service {
   notifications: string[] = [];
@@ -116,7 +116,7 @@ export class NotificationService extends Service {
 ## 完整示例
 
 ```typescript
-import { Service, Inject, Debounce, Throttle, Memo, On } from "@osgfe/rs-react";
+import { Service, Inject, Debounce, Throttle, Memo, On } from "@rabjs/react";
 
 export class CompleteService extends Service {
   // 依赖注入

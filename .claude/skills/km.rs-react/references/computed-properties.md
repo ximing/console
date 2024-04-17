@@ -5,7 +5,7 @@
 计算属性会自动追踪依赖并在依赖变化时重新计算：
 
 ```typescript
-import { Service } from "@osgfe/rs-react";
+import { Service } from "@rabjs/react";
 
 export class ShoppingCartService extends Service {
   items: Array<{ id: string; price: number; quantity: number }> = [];
@@ -48,7 +48,7 @@ export class ShoppingCartService extends Service {
 对于计算成本高的属性，可以使用 `@Memo` 装饰器缓存结果：
 
 ```typescript
-import { Service, Memo } from "@osgfe/rs-react";
+import { Service, Memo } from "@rabjs/react";
 
 export class DataService extends Service {
   data: any[] = [];

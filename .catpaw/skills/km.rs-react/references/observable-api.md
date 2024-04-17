@@ -5,7 +5,7 @@
 ## 创建 Observable
 
 ```typescript
-import { observable, raw, isObservable } from "@osgfe/rs-react";
+import { observable, raw, isObservable } from "@rabjs/react";
 
 // 创建 observable 对象
 const state = observable({ count: 0 });
@@ -21,7 +21,7 @@ isObservable(rawObj); // false
 ## 观察者
 
 ```typescript
-import { observe, unobserve } from "@osgfe/rs-react";
+import { observe, unobserve } from "@rabjs/react";
 
 const state = observable({ count: 0 });
 
@@ -37,7 +37,7 @@ unobserve(reaction);
 ## 完整示例
 
 ```typescript
-import { observable, observe, unobserve } from "@osgfe/rs-react";
+import { observable, observe, unobserve } from "@rabjs/react";
 
 // 创建响应式状态
 const state = observable({

@@ -17,7 +17,7 @@ RSJS 提供了强大的事件系统用于 Service 之间的通信，支持容器
 ### 容器级别事件（默认）
 
 ```typescript
-import { Service } from "@osgfe/rs-react";
+import { Service } from "@rabjs/react";
 
 // 发送方
 export class ChatService extends Service {
@@ -112,7 +112,7 @@ class MyService extends Service {
 ## 使用 @On 装饰器
 
 ```typescript
-import { Service, On } from "@osgfe/rs-react";
+import { Service, On } from "@rabjs/react";
 
 export class NotificationService extends Service {
   notifications: string[] = [];

@@ -5,7 +5,7 @@
 Service 会自动为所有异步方法创建 `loading` 和 `error` 状态，通过 `$model` 访问：
 
 ```typescript
-import { Service } from "@osgfe/rs-react";
+import { Service } from "@rabjs/react";
 
 export class UserService extends Service {
   users: any[] = [];
@@ -23,7 +23,7 @@ export class UserService extends Service {
 }
 
 // 在组件中使用
-import { observer, useService, bindServices } from "@osgfe/rs-react";
+import { observer, useService, bindServices } from "@rabjs/react";
 
 const UserListContent = observer(() => {
   const service = useService(UserService);

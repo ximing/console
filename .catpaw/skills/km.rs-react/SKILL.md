@@ -1,11 +1,11 @@
 ---
 name: reactive-state-react
-description: Quick reference for @osgfe/rs-react (RSJS) - a React reactive state management library. Use this skill when working with @osgfe/rs-react, implementing reactive components, creating Service classes, using dependency injection, or managing observable state in React applications. Covers observer/view patterns, useService/useObserver hooks, bindServices, Service lifecycle, async state tracking, event systems, and domain architecture.
+description: Quick reference for @rabjs/react (RSJS) - a React reactive state management library. Use this skill when working with @rabjs/react, implementing reactive components, creating Service classes, using dependency injection, or managing observable state in React applications. Covers observer/view patterns, useService/useObserver hooks, bindServices, Service lifecycle, async state tracking, event systems, and domain architecture.
 ---
 
-# @osgfe/rs-react 快速参考
+# @rabjs/react 快速参考
 
-这是为大模型优化的 `@osgfe/rs-react` (RSJS) 快速参考指南，聚焦最核心的使用模式。
+这是为大模型优化的 `@rabjs/react` (RSJS) 快速参考指南，聚焦最核心的使用模式。
 
 ## 🎯 五大核心概念
 
@@ -14,7 +14,7 @@ description: Quick reference for @osgfe/rs-react (RSJS) - a React reactive state
 **基本规则**：组件必须使用 `observer` 或 `view` 包裹才能自动响应状态变化。
 
 ```typescript·
-import { observer, view } from "@osgfe/rs-react";
+import { observer, view } from "@rabjs/react";
 
 // ✅ 方式 1：observer（推荐用于函数组件）
 const Counter = observer(() => {
@@ -49,7 +49,7 @@ const Counter = () => {
 **基本规则**：所有业务逻辑都应该封装在 Service 类中，包括组件内的操作方法。
 
 ```typescript
-import { Service } from "@osgfe/rs-react";
+import { Service } from "@rabjs/react";
 
 export class CounterService extends Service {
   // 属性自动是 observable
@@ -100,7 +100,7 @@ const Component = observer(() => {
 **基本规则**：使用 `bindServices` 注册 Service，使用 `useService` 获取 Service 实例。
 
 ```typescript
-import { observer, useService, bindServices } from "@osgfe/rs-react";
+import { observer, useService, bindServices } from "@rabjs/react";
 
 // 1. 定义组件内容
 const CounterContent = observer(() => {
@@ -141,7 +141,7 @@ export default bindServices(PageContent, [
 #### 全局单例 Service（应用级）
 
 ```typescript
-import { register, resolve, Service } from "@osgfe/rs-react";
+import { register, resolve, Service } from "@rabjs/react";
 
 // 定义全局 Service
 export class AppService extends Service {
@@ -208,7 +208,7 @@ export default bindServices(PageContent, [PageService]);
 **核心原则**：Service 内部使用其他 Service 时，使用 getter + `resolve()` 获取依赖。
 
 ```typescript
-import { Service, register } from "@osgfe/rs-react";
+import { Service, register } from "@rabjs/react";
 
 // 依赖的 Service
 export class LoggerService extends Service {
@@ -317,7 +317,7 @@ export default bindServices(ComponentContent, [ComponentService]);
 **依赖注入的替代方式（使用装饰器）**：
 
 ```typescript
-import { Service, Inject } from "@osgfe/rs-react";
+import { Service, Inject } from "@rabjs/react";
 
 export class UserService extends Service {
   // 使用 @Inject 装饰器自动注入
@@ -451,7 +451,7 @@ src/
 
 ```typescript
 // main.tsx
-import { register } from "@osgfe/rs-react";
+import { register } from "@rabjs/react";
 import { LoggerService } from "./services/logger.service";
 import { ApiService } from "./services/api.service";
 import { AuthService } from "./services/auth.service";
@@ -470,7 +470,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(<App />);
 
 ```typescript
 // services/logger.service.ts
-import { Service } from "@osgfe/rs-react";
+import { Service } from "@rabjs/react";
 
 export class LoggerService extends Service {
   log(message: string) {
@@ -487,7 +487,7 @@ export class LoggerService extends Service {
 
 ```typescript
 // pages/home/index.tsx
-import { observer, useService, bindServices } from "@osgfe/rs-react";
+import { observer, useService, bindServices } from "@rabjs/react";
 import { HomeService } from "./home.service";
 import { UserInfo } from "@/components/user-info";
 
@@ -511,7 +511,7 @@ export default bindServices(HomeContent, [HomeService]);
 
 ```typescript
 // pages/home/home.service.ts
-import { Service } from "@osgfe/rs-react";
+import { Service } from "@rabjs/react";
 import { LoggerService } from "@/services/logger.service";
 import { ApiService } from "@/services/api.service";
 
@@ -540,7 +540,7 @@ export class HomeService extends Service {
 
 ```typescript
 // components/user-info/index.tsx
-import { observer, useService, bindServices } from "@osgfe/rs-react";
+import { observer, useService, bindServices } from "@rabjs/react";
 import { UserInfoService } from "./user-info.service";
 
 const UserInfoContent = observer(() => {
@@ -562,7 +562,7 @@ export const UserInfo = bindServices(UserInfoContent, [UserInfoService]);
 
 ```typescript
 // components/user-info/user-info.service.ts
-import { Service } from "@osgfe/rs-react";
+import { Service } from "@rabjs/react";
 import { AuthService } from "@/services/auth.service";
 
 export class UserInfoService extends Service {
