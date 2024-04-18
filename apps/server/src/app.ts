@@ -18,6 +18,7 @@ import { runMigrations } from './db/migrate.js';
 import { initIOC } from './ioc.js';
 import { authHandler } from './middlewares/auth-handler.js';
 import { errorHandler } from './middlewares/error-handler.js';
+import { SchedulerService } from './services/scheduler.service.js';
 import { logger } from './utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -44,6 +45,15 @@ export async function createApp() {
   } catch (error) {
     logger.error('Failed to run database migrations:', error);
     throw error;
+  }
+
+  // Start task scheduler
+  const schedulerService = Container.get(SchedulerService);
+  try {
+    await schedulerService.start();
+  } catch (error) {
+    logger.error('Failed to start task scheduler:', error);
+    // Don't throw - scheduler failure shouldn't block server startup
   }
 
   const app: any = express();
@@ -111,6 +121,10 @@ export async function createApp() {
     logger.info(`Received ${signal}, shutting down gracefully...`);
     server.close(async () => {
       try {
+        // Stop task scheduler
+        const schedulerService = Container.get(SchedulerService);
+        schedulerService.stop();
+
         // Close MySQL connection pool
         await closeDatabase();
         logger.info('All resources cleaned up');
