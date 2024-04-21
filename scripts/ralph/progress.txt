@@ -209,3 +209,49 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - Auto-load actions by adding `${__dirname}/actions/**/*.ts` to IOC glob patterns
   - Built-in actions are registered in register.ts when imported by IOC
   - Action configuration is stored as JSON in the database (actionConfig field)
+---
+
+## 2026-03-04 11:30:00 - US-003 (Task Orchestration)
+- Implemented task scheduler service with:
+  - TaskService for CRUD operations and task execution
+  - SchedulerService using node-cron with start() and stop() methods
+  - Registers enabled scheduled tasks on startup
+  - Executes task actions when cron triggers
+  - Graceful shutdown on app stop
+- Typecheck passes
+- Files changed:
+  - apps/server/src/services/task.service.ts (new)
+  - apps/server/src/services/scheduler.service.ts (new)
+  - apps/server/src/app.ts (integrated scheduler startup/shutdown)
+- **Learnings for future iterations:**
+  - Use node-cron package with @types/node-cron for TypeScript support
+  - Services are auto-loaded by IOC from services directory
+  - Use Container.get() to retrieve TypeDI services in app.ts
+  - Scheduler failure shouldn't block server startup (log error but don't throw)
+  - Tasks are stored in Drizzle schema, not LanceDB (LanceDB is for vector search)
+---
+
+## 2026-03-04 14:30:00 - US-004 (Task Orchestration)
+- Implemented task CRUD API endpoints with:
+  - TaskController with all CRUD operations
+  - POST /api/v1/tasks - Create task
+  - GET /api/v1/tasks - List all tasks for current user
+  - GET /api/v1/tasks/:id - Get task details
+  - PATCH /api/v1/tasks/:id - Update task fields
+  - DELETE /api/v1/tasks/:id - Delete task and related logs
+  - GET /api/v1/tasks/actions/list - Get available actions
+- Created task DTOs in packages/dto/src/task.ts
+- Added cron expression validation for scheduled tasks
+- Integrated with SchedulerService to register/unregister tasks on CRUD operations
+- Typecheck passes
+- Files changed:
+  - apps/server/src/controllers/v1/task.controller.ts (new)
+  - apps/server/src/controllers/index.ts (updated to export TaskController)
+  - packages/dto/src/task.ts (new)
+  - packages/dto/src/index.ts (updated to export task DTOs)
+- **Learnings for future iterations:**
+  - DTOs are defined in packages/dto/src/ and exported from index.ts
+  - Controllers need to be explicitly exported from controllers/index.ts
+  - Use cron.validate() from node-cron for validating cron expressions
+  - Import Task type from db schema for proper type conversion
+  - Helper functions convert between DB model types and DTOs
