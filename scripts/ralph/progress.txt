@@ -255,3 +255,31 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - Use cron.validate() from node-cron for validating cron expressions
   - Import Task type from db schema for proper type conversion
   - Helper functions convert between DB model types and DTOs
+---
+
+## 2026-03-04 16:00:00 - US-005 (Task Orchestration)
+- Added POST /api/v1/tasks/:id/trigger endpoint to manually trigger tasks
+- Verifies task belongs to user before executing
+- Uses existing TaskService.executeTask() method for execution
+- Returns execution result with success status, data, and error info
+- Execution log is automatically recorded in TaskService.executeTask()
+- Typecheck passes
+- Files changed:
+  - apps/server/src/controllers/v1/task.controller.ts (added trigger endpoint)
+- **Learnings for future iterations:**
+  - TaskService already has executeTask() method that handles execution and logging
+  - Use TaskTriggerResultDto for the response type
+  - Reuse existing error handling patterns from other endpoints
+---
+
+## 2026-03-04 21:30:00 - US-006 (Task Orchestration)
+- Added PATCH /api/v1/tasks/:id/toggle endpoint to TaskController
+- Reuses existing TaskService.toggleTask() method for toggling enabled status
+- Scheduler automatically registers/unregisters task based on enabled status after toggle
+- Typecheck passes
+- Files changed:
+  - apps/server/src/controllers/v1/task.controller.ts (added toggle endpoint)
+- **Learnings for future iterations:**
+  - TaskService already has toggleTask() method that handles the enabled field flip
+  - Use SchedulerService.registerTask/unregisterTask to sync scheduler with task enabled status
+  - Pattern: always check if scheduler is running before calling register/unregister
