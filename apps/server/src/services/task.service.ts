@@ -1,5 +1,5 @@
 import { Service } from 'typedi';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, count } from 'drizzle-orm';
 
 import { getDatabase } from '../db/connection.js';
 import { tasks, type Task, type NewTask } from '../db/schema/tasks.js';
@@ -201,13 +201,18 @@ export class TaskService {
   /**
    * Get execution logs for a task
    */
-  async getExecutionLogs(taskId: string, userId: string, limit = 20, offset = 0): Promise<any[]> {
+  async getExecutionLogs(
+    taskId: string,
+    userId: string,
+    limit = 20,
+    offset = 0
+  ): Promise<{ logs: any[]; total: number }> {
     const db = getDatabase();
 
     // Verify task belongs to user
     const task = await this.getTask(taskId, userId);
     if (!task) {
-      return [];
+      return { logs: [], total: 0 };
     }
 
     const results = await db
@@ -217,6 +222,14 @@ export class TaskService {
       .limit(limit)
       .offset(offset);
 
-    return results;
+    // Get total count
+    const countResult = await db
+      .select({ count: count() })
+      .from(executionLogs)
+      .where(eq(executionLogs.taskId, taskId));
+
+    const total = countResult[0]?.count ?? 0;
+
+    return { logs: results, total };
   }
 }
