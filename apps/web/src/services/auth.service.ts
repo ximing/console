@@ -127,12 +127,12 @@ export class AuthService extends Service {
     }
 
     try {
-      const response = await userApi.getUserInfo();
+      const user = await userApi.getUserInfo();
 
-      if (response.code === 0 && response.data) {
-        this.user = response.data;
+      if (user) {
+        this.user = user;
         this.isAuthenticated = true;
-        localStorage.setItem('aimo_user', JSON.stringify(response.data));
+        localStorage.setItem('aimo_user', JSON.stringify(user));
         return true;
       } else {
         this.clearAuthState();

@@ -1,133 +1,193 @@
-import { Service } from 'typedi';
-import * as Minio from 'minio';
-import { config } from '../config/config.js';
-import { logger } from '../utils/logger.js';
+import {
+  CreateBucketCommand,
+  DeleteObjectCommand,
+  GetObjectCommand,
+  HeadBucketCommand,
+  PutObjectCommand,
+  S3Client,
+  type CreateBucketCommandInput,
+  type S3ClientConfig,
+} from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { nanoid } from 'nanoid';
 import path from 'path';
+import { Service } from 'typedi';
+
+import { config } from '../config/config.js';
+import { logger } from '../utils/logger.js';
+
+const MAX_PRESIGNED_URL_EXPIRY_SECONDS = 7 * 24 * 60 * 60;
 
 @Service()
 export class StorageService {
-  private minioClient: Minio.Client | null = null;
+  private s3Client: S3Client | null = null;
   private bucketName: string;
+  private objectPrefix: string;
 
   constructor() {
-    this.bucketName = config.minio?.bucket || 'avatars';
-    this.initializeMinIO();
+    this.bucketName = config.s3?.bucket || 'avatars';
+    this.objectPrefix = this.normalizeObjectPrefix(config.s3?.prefix || 'avatars');
+    this.initializeS3();
   }
 
   /**
-   * Initialize MinIO client
+   * Initialize S3 client (compatible with AWS S3 and MinIO)
    */
-  private initializeMinIO() {
+  private initializeS3() {
     try {
-      if (!config.minio?.endpoint) {
-        logger.warn('MinIO not configured, avatar upload will be disabled');
+      if (!config.s3) {
+        logger.warn('S3 not configured, avatar upload will be disabled');
         return;
       }
 
-      this.minioClient = new Minio.Client({
-        endPoint: config.minio.endpoint,
-        port: config.minio.port,
-        useSSL: config.minio.useSSL,
-        accessKey: config.minio.accessKey,
-        secretKey: config.minio.secretKey,
-      });
+      const clientConfig: S3ClientConfig = {
+        region: config.s3.region,
+        credentials: {
+          accessKeyId: config.s3.accessKeyId,
+          secretAccessKey: config.s3.secretAccessKey,
+        },
+        forcePathStyle: config.s3.forcePathStyle,
+      };
 
-      // Ensure bucket exists
-      this.ensureBucket();
+      if (config.s3.endpoint) {
+        clientConfig.endpoint = config.s3.endpoint;
+      }
 
-      logger.info('MinIO client initialized successfully', {
-        endpoint: config.minio.endpoint,
+      this.s3Client = new S3Client(clientConfig);
+
+      // Ensure bucket exists for upload operations
+      void this.ensureBucket();
+
+      logger.info('S3 client initialized successfully', {
+        endpoint: config.s3.endpoint,
         bucket: this.bucketName,
+        objectPrefix: this.objectPrefix,
+        forcePathStyle: config.s3.forcePathStyle,
       });
     } catch (error) {
-      logger.error('Failed to initialize MinIO client', { error });
+      logger.error('Failed to initialize S3 client', { error });
     }
+  }
+
+  private isBucketNotFoundError(error: any): boolean {
+    const statusCode = error?.$metadata?.httpStatusCode;
+    const code = error?.name || error?.Code;
+    return statusCode === 404 || code === 'NotFound' || code === 'NoSuchBucket';
+  }
+
+  private getS3ClientOrThrow(): S3Client {
+    if (!this.s3Client) {
+      throw new Error('S3 client not initialized');
+    }
+    return this.s3Client;
+  }
+
+  private normalizeObjectPrefix(prefix: string): string {
+    return prefix
+      .split('/')
+      .map((segment) => segment.trim())
+      .filter(Boolean)
+      .join('/');
+  }
+
+  private buildObjectName(fileName: string): string {
+    return this.objectPrefix ? `${this.objectPrefix}/${fileName}` : fileName;
   }
 
   /**
    * Ensure bucket exists, create if not
    */
   private async ensureBucket() {
-    if (!this.minioClient) return;
+    const s3Client = this.s3Client;
+    if (!s3Client) return;
 
     try {
-      const exists = await this.minioClient.bucketExists(this.bucketName);
-      if (!exists) {
-        await this.minioClient.makeBucket(this.bucketName, 'us-east-1');
-        logger.info(`Bucket ${this.bucketName} created`);
-
-        // Set bucket policy to private
-        const policy = {
-          Version: '2012-10-17',
-          Statement: [
-            {
-              Effect: 'Allow',
-              Principal: { AWS: ['*'] },
-              Action: ['s3:GetObject'],
-              Resource: [`arn:aws:s3:::${this.bucketName}/*`],
-            },
-          ],
-        };
-        // Note: We'll generate presigned URLs instead of making bucket public
-      }
+      await s3Client.send(
+        new HeadBucketCommand({
+          Bucket: this.bucketName,
+        })
+      );
+      return;
     } catch (error) {
-      logger.error('Failed to ensure bucket exists', { error });
+      if (!this.isBucketNotFoundError(error)) {
+        logger.error('Failed to check bucket existence', {
+          error,
+          bucket: this.bucketName,
+        });
+        return;
+      }
+    }
+
+    try {
+      const createInput: CreateBucketCommandInput = {
+        Bucket: this.bucketName,
+      };
+
+      if (config.s3 && config.s3.region !== 'us-east-1') {
+        createInput.CreateBucketConfiguration = {
+          LocationConstraint: config.s3.region as NonNullable<
+            CreateBucketCommandInput['CreateBucketConfiguration']
+          >['LocationConstraint'],
+        };
+      }
+
+      await s3Client.send(new CreateBucketCommand(createInput));
+      logger.info('Bucket created successfully', { bucket: this.bucketName });
+    } catch (error) {
+      logger.error('Failed to create bucket', {
+        error,
+        bucket: this.bucketName,
+      });
     }
   }
 
   /**
-   * Upload file to MinIO
-   * @param buffer File buffer
-   * @param originalName Original file name
-   * @param contentType File content type
-   * @returns Object key in MinIO
+   * Upload file to S3 storage
    */
-  async uploadFile(
-    buffer: Buffer,
-    originalName: string,
-    contentType: string
-  ): Promise<string> {
-    if (!this.minioClient) {
-      throw new Error('MinIO client not initialized');
-    }
+  async uploadFile(buffer: Buffer, originalName: string, contentType: string): Promise<string> {
+    const s3Client = this.getS3ClientOrThrow();
 
     // Generate unique file name
     const ext = path.extname(originalName);
     const fileName = `${nanoid()}${ext}`;
-    const objectName = `avatars/${fileName}`;
+    const objectName = this.buildObjectName(fileName);
 
     try {
-      await this.minioClient.putObject(this.bucketName, objectName, buffer, buffer.length, {
-        'Content-Type': contentType,
-      });
+      await s3Client.send(
+        new PutObjectCommand({
+          Bucket: this.bucketName,
+          Key: objectName,
+          Body: buffer,
+          ContentType: contentType,
+        })
+      );
 
-      logger.info('File uploaded to MinIO', { objectName });
+      logger.info('File uploaded to S3', { objectName });
       return objectName;
     } catch (error) {
-      logger.error('Failed to upload file to MinIO', { error });
+      logger.error('Failed to upload file to S3', { error });
       throw new Error('Failed to upload file');
     }
   }
 
   /**
    * Generate presigned URL for object (temporary access)
-   * @param objectName Object key in MinIO
-   * @param expirySeconds URL expiry time in seconds (default 7 days)
-   * @returns Presigned URL
    */
-  async getPresignedUrl(objectName: string, expirySeconds: number = 7 * 24 * 60 * 60): Promise<string> {
-    if (!this.minioClient) {
-      throw new Error('MinIO client not initialized');
-    }
+  async getPresignedUrl(objectName: string, expirySeconds: number = MAX_PRESIGNED_URL_EXPIRY_SECONDS) {
+    const s3Client = this.getS3ClientOrThrow();
 
     try {
-      const url = await this.minioClient.presignedGetObject(
-        this.bucketName,
-        objectName,
-        expirySeconds
+      const safeExpiry = Math.max(
+        1,
+        Math.min(Math.floor(expirySeconds), MAX_PRESIGNED_URL_EXPIRY_SECONDS)
       );
-      return url;
+
+      const command = new GetObjectCommand({
+        Bucket: this.bucketName,
+        Key: objectName,
+      });
+
+      return await getSignedUrl(s3Client, command, { expiresIn: safeExpiry });
     } catch (error) {
       logger.error('Failed to generate presigned URL', { error, objectName });
       throw new Error('Failed to generate presigned URL');
@@ -135,27 +195,29 @@ export class StorageService {
   }
 
   /**
-   * Delete file from MinIO
-   * @param objectName Object key in MinIO
+   * Delete file from S3 storage
    */
   async deleteFile(objectName: string): Promise<void> {
-    if (!this.minioClient) {
-      throw new Error('MinIO client not initialized');
-    }
+    const s3Client = this.getS3ClientOrThrow();
 
     try {
-      await this.minioClient.removeObject(this.bucketName, objectName);
-      logger.info('File deleted from MinIO', { objectName });
+      await s3Client.send(
+        new DeleteObjectCommand({
+          Bucket: this.bucketName,
+          Key: objectName,
+        })
+      );
+      logger.info('File deleted from S3', { objectName });
     } catch (error) {
-      logger.error('Failed to delete file from MinIO', { error, objectName });
+      logger.error('Failed to delete file from S3', { error, objectName });
       // Don't throw error for delete failures
     }
   }
 
   /**
-   * Check if MinIO is available
+   * Check if S3 storage is available
    */
   isAvailable(): boolean {
-    return this.minioClient !== null;
+    return this.s3Client !== null;
   }
 }

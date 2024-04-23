@@ -139,7 +139,7 @@ export class UserV1Controller {
         return ResponseUtility.error(ErrorCode.PARAMS_ERROR, 'No file uploaded');
       }
 
-      // Check if MinIO is available
+      // Check if avatar S3 storage is available
       if (!this.storageService.isAvailable()) {
         return ResponseUtility.error(
           ErrorCode.STORAGE_ERROR,
@@ -153,7 +153,7 @@ export class UserV1Controller {
         return ResponseUtility.error(ErrorCode.USER_NOT_FOUND);
       }
 
-      // Upload new avatar to MinIO
+      // Upload new avatar to S3 storage
       const objectName = await this.storageService.uploadFile(
         file.buffer,
         file.originalname,

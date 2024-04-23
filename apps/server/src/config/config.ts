@@ -88,13 +88,25 @@ export interface MySQLConfig {
   connectionLimit?: number; // Connection pool size
 }
 
-export interface MinIOConfig {
-  endpoint: string;
+export interface RedisConfig {
+  enabled: boolean;
+  host: string;
   port: number;
-  useSSL: boolean;
-  accessKey: string;
-  secretKey: string;
+  password?: string;
+  db: number; // Database number (0-15)
+  keyPrefix: string; // Key prefix for all Redis keys
+  connectTimeout: number; // Connection timeout in ms
+  maxRetriesPerRequest: number; // Max retries per request
+}
+
+export interface AvatarS3Config {
   bucket: string;
+  prefix: string;
+  region: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+  endpoint?: string;
+  forcePathStyle: boolean;
 }
 
 export interface Config {
@@ -107,7 +119,8 @@ export interface Config {
     secret: string;
   };
   mysql: MySQLConfig;
-  minio?: MinIOConfig;
+  s3?: AvatarS3Config;
+  redis?: RedisConfig;
   lancedb: {
     storageType: StorageType;
     path: string; // local: "./lancedb_data" or s3: "s3://bucket/path/to/database"
@@ -163,16 +176,30 @@ export const config: Config = {
     database: process.env.MYSQL_DATABASE || 'aimo',
     connectionLimit: Number(process.env.MYSQL_CONNECTION_LIMIT) || 10,
   },
-  minio: process.env.MINIO_ENDPOINT
-    ? {
-        endpoint: process.env.MINIO_ENDPOINT,
-        port: Number(process.env.MINIO_PORT) || 9000,
-        useSSL: process.env.MINIO_USE_SSL === 'true',
-        accessKey: process.env.MINIO_ACCESS_KEY || '',
-        secretKey: process.env.MINIO_SECRET_KEY || '',
-        bucket: process.env.MINIO_BUCKET || 'avatars',
-      }
-    : undefined,
+  s3:
+    process.env.S3_BUCKET && process.env.S3_ACCESS_KEY_ID && process.env.S3_SECRET_ACCESS_KEY
+      ? {
+          bucket: process.env.S3_BUCKET,
+          prefix: process.env.S3_PREFIX || 'avatars',
+          region: process.env.S3_REGION || 'us-east-1',
+          accessKeyId: process.env.S3_ACCESS_KEY_ID,
+          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+          endpoint: process.env.S3_ENDPOINT,
+          forcePathStyle: process.env.S3_FORCE_PATH_STYLE
+            ? process.env.S3_FORCE_PATH_STYLE === 'true'
+            : Boolean(process.env.S3_ENDPOINT),
+        }
+      : undefined,
+  redis: {
+    enabled: process.env.REDIS_ENABLED === 'true',
+    host: process.env.REDIS_HOST || 'localhost',
+    port: Number(process.env.REDIS_PORT) || 6379,
+    password: process.env.REDIS_PASSWORD || undefined,
+    db: Number(process.env.REDIS_DB) || 0,
+    keyPrefix: process.env.REDIS_KEY_PREFIX || 'aimo:',
+    connectTimeout: Number(process.env.REDIS_CONNECT_TIMEOUT) || 10000,
+    maxRetriesPerRequest: Number(process.env.REDIS_MAX_RETRIES) || 3,
+  },
   lancedb: {
     storageType: (process.env.LANCEDB_STORAGE_TYPE || 'local') as StorageType,
     path:
@@ -185,9 +212,10 @@ export const config: Config = {
         ? {
             bucket: process.env.LANCEDB_S3_BUCKET || '',
             prefix: process.env.LANCEDB_S3_PREFIX || 'lancedb',
-            awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID,
-            awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-            region: process.env.AWS_REGION || 'us-east-1',
+            awsAccessKeyId: process.env.LANCEDB_S3_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID,
+            awsSecretAccessKey:
+              process.env.LANCEDB_S3_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY,
+            region: process.env.LANCEDB_S3_REGION || process.env.AWS_REGION || 'us-east-1',
             endpoint: process.env.LANCEDB_S3_ENDPOINT,
           }
         : undefined,

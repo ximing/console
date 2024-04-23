@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router';
 import { view, useService } from '@rabjs/react';
 import { AuthService } from '../services/auth.service';
 import { ThemeService } from '../services/theme.service';
-import { Zap, Sun, Moon, LogOut, Settings, Sparkles, Images } from 'lucide-react';
+import { Zap, Sun, Moon, LogOut, Settings, Sparkles, Images, ListTodo } from 'lucide-react';
 import logoUrl from '../assets/logo.png';
 import logoDarkUrl from '../assets/logo-dark.png';
 import { isElectron, isMacOS } from '../electron/isElectron';
@@ -25,6 +25,7 @@ export const Layout = view(({ children }: LayoutProps) => {
   const isAIExplorePage = location.pathname === '/ai-explore';
   const isGalleryPage = location.pathname === '/gallery';
   const isSettingsPage = location.pathname.startsWith('/settings');
+  const isTasksPage = location.pathname.startsWith('/tasks');
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -142,6 +143,23 @@ export const Layout = view(({ children }: LayoutProps) => {
             aria-label="图廊"
           >
             <Images className="w-6 h-6" />
+          </button>
+
+          {/* Tasks Navigation */}
+          <button
+            onClick={() => {
+              const search = location.search;
+              navigate(`/tasks${search}`);
+            }}
+            className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors ${
+              isTasksPage
+                ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-800'
+            }`}
+            title="任务编排"
+            aria-label="任务编排"
+          >
+            <ListTodo className="w-6 h-6" />
           </button>
         </nav>
 

@@ -4,6 +4,7 @@ import { useService } from '@rabjs/react';
 import AuthPage from './pages/auth';
 import HomePage from './pages/home';
 import SettingsPage from './pages/settings';
+import TasksPage from './pages/tasks';
 import NotFoundPage from './pages/not-found';
 import { ProtectedRoute } from './components/protected-route';
 import { ToastContainer } from './components/toast';
@@ -57,6 +58,14 @@ function App() {
           element={
             <ProtectedRoute>
               <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tasks/*"
+          element={
+            <ProtectedRoute>
+              <TasksPage />
             </ProtectedRoute>
           }
         />
