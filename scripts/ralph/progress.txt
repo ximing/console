@@ -283,3 +283,34 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - TaskService already has toggleTask() method that handles the enabled field flip
   - Use SchedulerService.registerTask/unregisterTask to sync scheduler with task enabled status
   - Pattern: always check if scheduler is running before calling register/unregister
+---
+
+## 2026-03-04 22:00:00 - US-008 (Task Orchestration)
+- Created task list frontend page with:
+  - TaskService for state management with @rabjs/react
+  - task.ts API module with all endpoints (CRUD, toggle, trigger, executions)
+  - tasks.tsx page with table showing tasks, enable/disable toggle, delete button
+  - Task route added to App.tsx
+  - Task navigation added to Layout sidebar (ListTodo icon)
+- Added ApiResponseDto type to DTO package for API response typing
+- Fixed pre-existing build errors:
+  - auth.service.ts: Fixed checkAuth to use correct API return type
+  - home.tsx: Fixed date arithmetic with Number() conversion
+- Typecheck and build pass
+- Files changed:
+  - apps/web/src/api/task.ts (new)
+  - apps/web/src/services/task.service.ts (new)
+  - apps/web/src/pages/tasks/tasks.tsx (new)
+  - apps/web/src/pages/tasks/index.tsx (new)
+  - apps/web/src/App.tsx (added route)
+  - apps/web/src/components/layout.tsx (added nav)
+  - packages/dto/src/response.ts (new)
+  - packages/dto/src/index.ts (export response)
+  - apps/web/src/services/auth.service.ts (fixed)
+  - apps/web/src/pages/home/home.tsx (fixed)
+- **Learnings for future iterations:**
+  - Use @rabjs/react Service class with plain properties (not observable wrapper) for state
+  - API wrapper returns axios response, but response interceptor returns data directly
+  - Use ApiResponse<T> interface for API wrapper typing
+  - Services call API and extract data before returning to components
+  - UI uses toastService.success() and toastService.error() methods (not showSuccess/showError)
