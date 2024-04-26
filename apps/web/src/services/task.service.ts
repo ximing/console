@@ -1,6 +1,12 @@
 import { Service } from '@rabjs/react';
 import { taskApi } from '../api/task';
-import type { TaskDto, CreateTaskDto, UpdateTaskDto, AvailableActionDto } from '@aimo-console/dto';
+import type {
+  TaskDto,
+  CreateTaskDto,
+  UpdateTaskDto,
+  AvailableActionDto,
+  ExecutionLogDto,
+} from '@aimo-console/dto';
 
 /**
  * Task Service
@@ -10,7 +16,10 @@ export class TaskService extends Service {
   // State
   tasks: TaskDto[] = [];
   availableActions: AvailableActionDto[] = [];
+  executions: ExecutionLogDto[] = [];
+  executionsTotal = 0;
   isLoading = false;
+  isLoadingExecutions = false;
   error: string | null = null;
 
   /**
@@ -123,6 +132,23 @@ export class TaskService extends Service {
       const message = 'Failed to trigger task';
       console.error('Trigger task error:', err);
       return { success: false, message };
+    }
+  }
+
+  /**
+   * Load execution logs for a task
+   */
+  async loadTaskExecutions(taskId: string, limit = 20, offset = 0): Promise<void> {
+    this.isLoadingExecutions = true;
+
+    try {
+      const result = await taskApi.getTaskExecutions(taskId, limit, offset);
+      this.executions = result.executions;
+      this.executionsTotal = result.total;
+    } catch (err) {
+      console.error('Load executions error:', err);
+    } finally {
+      this.isLoadingExecutions = false;
     }
   }
 }

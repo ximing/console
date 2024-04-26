@@ -14,6 +14,7 @@ import {
   X,
   ChevronDown,
   Loader2,
+  History,
 } from 'lucide-react';
 import type { TaskDto, CreateTaskDto } from '@aimo-console/dto';
 
@@ -394,6 +395,8 @@ export const TasksPage = view(() => {
   const [triggeringTaskId, setTriggeringTaskId] = useState<string | null>(null);
   const [formModalOpen, setFormModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskDto | null>(null);
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [historyTask, setHistoryTask] = useState<TaskDto | null>(null);
 
   // Load tasks on mount
   useEffect(() => {
@@ -455,6 +458,13 @@ export const TasksPage = view(() => {
   const openDeleteModal = (taskId: string) => {
     setTaskToDelete(taskId);
     setDeleteModalOpen(true);
+  };
+
+  // Open execution history modal
+  const openHistoryModal = (task: TaskDto) => {
+    setHistoryTask(task);
+    setHistoryModalOpen(true);
+    taskService.loadTaskExecutions(task.id);
   };
 
   // Format date
@@ -622,6 +632,13 @@ export const TasksPage = view(() => {
                         <td className="px-6 py-4 whitespace-nowrap text-right">
                           <div className="flex items-center justify-end gap-2">
                             <button
+                              onClick={() => openHistoryModal(task)}
+                              className="p-2 text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
+                              title="执行历史"
+                            >
+                              <History className="w-4 h-4" />
+                            </button>
+                            <button
                               onClick={() => openEditTaskModal(task)}
                               className="p-2 text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
                               title="编辑任务"
@@ -704,6 +721,126 @@ export const TasksPage = view(() => {
                 className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
               >
                 删除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Execution History Modal */}
+      {historyModalOpen && historyTask && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setHistoryModalOpen(false)}
+          />
+
+          {/* Modal */}
+          <div className="relative bg-white dark:bg-dark-800 rounded-xl shadow-xl w-full max-w-2xl mx-4 border border-gray-200 dark:border-dark-700 max-h-[80vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-dark-700">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  执行历史
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  {historyTask.name}
+                </p>
+              </div>
+              <button
+                onClick={() => setHistoryModalOpen(false)}
+                className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {taskService.isLoadingExecutions ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-20 bg-gray-100 dark:bg-dark-700 rounded-lg animate-pulse" />
+                  ))}
+                </div>
+              ) : taskService.executions.length === 0 ? (
+                <div className="text-center py-12">
+                  <History className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
+                  <p className="text-gray-500 dark:text-gray-400">
+                    暂无执行记录
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {taskService.executions.map((execution) => (
+                    <div
+                      key={execution.id}
+                      className="p-4 bg-gray-50 dark:bg-dark-700/50 rounded-lg border border-gray-200 dark:border-dark-600"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            execution.status === 'success'
+                              ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                              : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
+                          }`}
+                        >
+                          {execution.status === 'success' ? '成功' : '失败'}
+                        </span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {execution.startedAt
+                            ? new Date(execution.startedAt).toLocaleString('zh-CN', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit',
+                              })
+                            : '-'}
+                        </span>
+                      </div>
+                      {execution.finishedAt && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                          耗时:{' '}
+                          {Math.round(
+                            (new Date(execution.finishedAt).getTime() -
+                              new Date(execution.startedAt).getTime()) /
+                              1000
+                          )}
+                          s
+                        </p>
+                      )}
+                      {execution.errorMessage && (
+                        <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 rounded text-sm text-red-600 dark:text-red-400">
+                          {execution.errorMessage}
+                        </div>
+                      )}
+                      {execution.result && (
+                        <div className="mt-2">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">结果:</p>
+                          <pre className="text-xs bg-gray-100 dark:bg-dark-600 p-2 rounded overflow-x-auto text-gray-700 dark:text-gray-300">
+                            {JSON.stringify(execution.result, null, 2)}
+                          </pre>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-between items-center px-6 py-4 border-t border-gray-200 dark:border-dark-700">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                共 {taskService.executionsTotal} 条执行记录
+              </p>
+              <button
+                onClick={() => setHistoryModalOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-dark-700 hover:bg-gray-200 dark:hover:bg-dark-600 rounded-lg transition-colors"
+              >
+                关闭
               </button>
             </div>
           </div>
