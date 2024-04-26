@@ -3,7 +3,8 @@ import { useNavigate, useLocation } from 'react-router';
 import { view, useService } from '@rabjs/react';
 import { AuthService } from '../services/auth.service';
 import { ThemeService } from '../services/theme.service';
-import { Zap, Sun, Moon, LogOut, Settings, Sparkles, Images, ListTodo } from 'lucide-react';
+import { NotificationService } from '../services/notification.service';
+import { Zap, Sun, Moon, LogOut, Settings, Sparkles, Images, ListTodo, Bell } from 'lucide-react';
 import logoUrl from '../assets/logo.png';
 import logoDarkUrl from '../assets/logo-dark.png';
 import { isElectron, isMacOS } from '../electron/isElectron';
@@ -15,10 +16,16 @@ interface LayoutProps {
 export const Layout = view(({ children }: LayoutProps) => {
   const authService = useService(AuthService);
   const themeService = useService(ThemeService);
+  const notificationService = useService(NotificationService);
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Load notifications on mount (for badge count)
+  useEffect(() => {
+    notificationService.loadNotifications({ limit: 100, offset: 0 });
+  }, []);
 
   // Check active routes
   const isHomePage = location.pathname === '/home';
@@ -26,6 +33,10 @@ export const Layout = view(({ children }: LayoutProps) => {
   const isGalleryPage = location.pathname === '/gallery';
   const isSettingsPage = location.pathname.startsWith('/settings');
   const isTasksPage = location.pathname.startsWith('/tasks');
+  const isNotificationsPage = location.pathname.startsWith('/notifications');
+
+  // Calculate unread count
+  const unreadCount = notificationService.notifications.filter(n => n.status === 'unread').length;
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -110,41 +121,6 @@ export const Layout = view(({ children }: LayoutProps) => {
           >
             <Zap className="w-6 h-6" />
           </button>
-
-          {/* AI Explore Navigation */}
-          <button
-            onClick={() => {
-              const search = location.search;
-              navigate(`/ai-explore${search}`);
-            }}
-            className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors ${
-              isAIExplorePage
-                ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-800'
-            }`}
-            title="AI探索"
-            aria-label="AI探索"
-          >
-            <Sparkles className="w-6 h-6" />
-          </button>
-
-          {/* Gallery Navigation */}
-          <button
-            onClick={() => {
-              const search = location.search;
-              navigate(`/gallery${search}`);
-            }}
-            className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors ${
-              isGalleryPage
-                ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-800'
-            }`}
-            title="图廊"
-            aria-label="图廊"
-          >
-            <Images className="w-6 h-6" />
-          </button>
-
           {/* Tasks Navigation */}
           <button
             onClick={() => {
@@ -160,6 +136,28 @@ export const Layout = view(({ children }: LayoutProps) => {
             aria-label="任务编排"
           >
             <ListTodo className="w-6 h-6" />
+          </button>
+
+          {/* Notifications Navigation */}
+          <button
+            onClick={() => {
+              const search = location.search;
+              navigate(`/notifications${search}`);
+            }}
+            className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors relative ${
+              isNotificationsPage
+                ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-800'
+            }`}
+            title="通知中心"
+            aria-label="通知中心"
+          >
+            <Bell className="w-6 h-6" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-red-500 text-white text-xs font-medium rounded-full">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
           </button>
         </nav>
 

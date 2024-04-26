@@ -129,6 +129,30 @@ Respond with a JSON array of 3-8 tag strings.`;
   }
 
   /**
+   * Chat with AI assistant (personal assistant mode)
+   * Provides helpful responses for life and work related questions
+   *
+   * @param message - The user's message
+   * @param userId - The user's ID (optional, for potential future conversation history)
+   * @returns AI response content
+   */
+  async chat(message: string, userId?: string): Promise<string> {
+    const systemMessage = `你是一个贴心的私人助理，帮助用户处理生活和工作中的各种问题。你需要提供实用、有帮助的建议，并保持友好、专业的态度。`;
+
+    try {
+      const response = await this.model.invoke([
+        { role: 'system', content: systemMessage },
+        { role: 'user', content: message },
+      ]);
+
+      return typeof response.content === 'string' ? response.content : '';
+    } catch (error) {
+      logger.error('Error in AI chat:', error);
+      throw new Error('Failed to get AI response');
+    }
+  }
+
+  /**
    * Fallback method to extract tags using regex
    * Handles responses that aren't proper JSON
    */

@@ -15,10 +15,7 @@ const PROTECTED_PATHS = ['/api', '/home', '/ai-explore', '/gallery', '/settings'
 const AUTH_EXCLUDED_PATHS = [
   '/api/v1/auth/login',
   '/api/v1/auth/register',
-  '/api/v1/memos/public',
-  '/api/v1/memos/ba',
-  '/api/v1/attachments/ba',
-  '/api/v1/debug/ba',
+  '/api/v1/ba',
 ];
 
 /**

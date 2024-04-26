@@ -7,7 +7,7 @@ import { executionLogs, type NewExecutionLog } from '../db/schema/execution-logs
 import { generateUid } from '../utils/id.js';
 import { logger } from '../utils/logger.js';
 
-import type { ActionRegistry } from '../actions/registry.js';
+import { ActionRegistry } from '../actions/registry.js';
 import type { ActionResult } from '../actions/types.js';
 
 @Service()

@@ -3,7 +3,7 @@ import cron, { ScheduledTask } from 'node-cron';
 
 import { logger } from '../utils/logger.js';
 
-import type { TaskService } from './task.service.js';
+import { TaskService } from './task.service.js';
 
 @Service()
 export class SchedulerService {
