@@ -468,3 +468,34 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - API wrapper returns typed response using ApiResponse<T> interface
   - Use request.get/post/put/delete/patch methods for HTTP calls
   - Return response.data directly after API call
+---
+
+## 2026-03-05 01:00:00 - US-004, US-005, US-006 (LLM Settings)
+- Added LLM Settings entry to Settings page sidebar (Bot icon, "大模型设置" menu item)
+- Created UserModelService for state management with @rabjs/react:
+  - loadModels(), createModel(), updateModel(), deleteModel(), setDefault()
+- Created ModelSettings component in settings/components/model-settings.tsx:
+  - Displays model list with name, provider, model name, default badge
+  - Edit and delete buttons on each model row
+  - Set as default button (Star icon) for non-default models
+  - Delete confirmation inline within the model card
+  - Empty state when no models configured
+  - Loading state with skeleton animation
+- Created modal form for add/edit:
+  - Fields: model name, provider (dropdown), API Base URL (for "other"), API Key (password), model identifier, set as default checkbox
+  - Provider options: OpenAI, DeepSeek, OpenRouter, Other (OpenAI compatible)
+  - Form validation: name, apiKey, modelName required
+  - Edit mode: API key optional (leave empty to keep existing)
+  - Auto-refresh list after save
+- Typecheck and lint pass
+- Files changed:
+  - apps/web/src/services/user-model.service.ts (new)
+  - apps/web/src/pages/settings/settings.tsx (added menu item and route)
+  - apps/web/src/pages/settings/components/model-settings.tsx (new)
+  - tasks/prd.json (marked US-004, US-005, US-006 as complete)
+- **Learnings for future iterations:**
+  - Service class extends Service from @rabjs/react, not a decorator
+  - Use view() to create reactive components that auto-update on state changes
+  - useService() to inject services into components
+  - Modal forms can be embedded in the same component with conditional rendering
+  - Inline delete confirmation provides better UX than separate modal

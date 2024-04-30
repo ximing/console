@@ -2,7 +2,8 @@ import { view } from '@rabjs/react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router';
 import { Layout } from '../../components/layout';
 import { UserSettings } from './components/user-settings';
-import { User, Settings as SettingsIcon } from 'lucide-react';
+import { ModelSettings } from './components/model-settings';
+import { User, Settings as SettingsIcon, Bot } from 'lucide-react';
 
 const menuItems = [
   {
@@ -10,6 +11,12 @@ const menuItems = [
     label: '个人信息',
     icon: User,
     path: '/settings/user',
+  },
+  {
+    id: 'models',
+    label: '大模型设置',
+    icon: Bot,
+    path: '/settings/models',
   },
   // 可以在这里添加更多菜单项
   // {
@@ -69,6 +76,7 @@ export const SettingsPage = view(() => {
           <Routes>
             <Route path="/" element={<Navigate to="/settings/user" replace />} />
             <Route path="/user" element={<UserSettings />} />
+            <Route path="/models" element={<ModelSettings />} />
             {/* 可以在这里添加更多路由 */}
             {/* <Route path="/security" element={<SecuritySettings />} /> */}
           </Routes>
