@@ -8,6 +8,7 @@ import { AuthService } from './services/auth.service';
 import { ThemeService } from './services/theme.service';
 import { ToastService } from './services/toast.service';
 import { UserService } from './services/user.service';
+import { UserModelService } from './services/user-model.service';
 import { TaskService } from './services/task.service';
 import { NotificationService } from './services/notification.service';
 
@@ -20,6 +21,7 @@ register(AuthService);
 register(ThemeService);
 register(ToastService);
 register(UserService);
+register(UserModelService);
 register(TaskService);
 register(NotificationService);
 // Initialize theme before rendering
