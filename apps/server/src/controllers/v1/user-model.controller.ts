@@ -9,10 +9,11 @@ import {
   Param,
   CurrentUser,
 } from 'routing-controllers';
-import { Service } from 'typedi';
+import { Service, Container } from 'typedi';
 
 import { ErrorCode } from '../../constants/error-codes.js';
 import { UserModelService } from '../../services/user-model.service.js';
+import { LLMService, type ChatMessage } from '../../services/llm.service.js';
 import { logger } from '../../utils/logger.js';
 import { ResponseUtil as ResponseUtility } from '../../utils/response.js';
 
@@ -46,7 +47,100 @@ function convertToDto(model: UserModel): UserModelDto {
 @Service()
 @JsonController('/api/v1/user-models')
 export class UserModelController {
-  constructor(private userModelService: UserModelService) {}
+  constructor(
+    private userModelService: UserModelService,
+    private llmService: LLMService
+  ) {}
+
+  /**
+   * POST /api/v1/user-models/test - Test model configuration
+   */
+  @Post('/test')
+  async testModel(@CurrentUser() userDto: UserInfoDto, @Body() testData: CreateUserModelDto) {
+    try {
+      if (!userDto?.id) {
+        return ResponseUtility.error(ErrorCode.UNAUTHORIZED);
+      }
+
+      // Validate required fields
+      if (!testData.provider) {
+        return ResponseUtility.error(ErrorCode.PARAMS_ERROR, 'Provider is required');
+      }
+      if (!testData.apiKey || testData.apiKey.trim().length === 0) {
+        return ResponseUtility.error(ErrorCode.PARAMS_ERROR, 'API key is required');
+      }
+      if (!testData.modelName || testData.modelName.trim().length === 0) {
+        return ResponseUtility.error(ErrorCode.PARAMS_ERROR, 'Model name is required');
+      }
+
+      // Get API config based on provider
+      let baseUrl: string;
+      switch (testData.provider) {
+        case 'openai':
+          baseUrl = testData.apiBaseUrl || 'https://api.openai.com/v1';
+          break;
+        case 'deepseek':
+          baseUrl = testData.apiBaseUrl || 'https://api.deepseek.com/v1';
+          break;
+        case 'openrouter':
+          baseUrl = testData.apiBaseUrl || 'https://openrouter.ai/api/v1';
+          break;
+        case 'other':
+          if (!testData.apiBaseUrl) {
+            return ResponseUtility.error(ErrorCode.PARAMS_ERROR, 'API Base URL is required for custom providers');
+          }
+          baseUrl = testData.apiBaseUrl;
+          break;
+        default:
+          return ResponseUtility.error(ErrorCode.PARAMS_ERROR, 'Invalid provider');
+      }
+
+      const testMessages: ChatMessage[] = [
+        { role: 'user', content: 'Say "OK" if you can see this message.' },
+      ];
+
+      const response = await fetch(`${baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${testData.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: testData.modelName,
+          messages: testMessages,
+          max_tokens: 50,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        return ResponseUtility.error(ErrorCode.EXTERNAL_SERVICE_ERROR, `API request failed: ${response.status} - ${errorBody}`);
+      }
+
+      const data = await response.json() as {
+        choices?: Array<{ message: { content: string } }>;
+        error?: { message: string };
+      };
+
+      if (data.error) {
+        return ResponseUtility.error(ErrorCode.EXTERNAL_SERVICE_ERROR, data.error.message);
+      }
+
+      const content = data.choices?.[0]?.message?.content || 'No response';
+
+      return ResponseUtility.success({
+        success: true,
+        message: 'Model connection test successful',
+        response: content,
+      });
+    } catch (error) {
+      logger.error('Test user model error:', error);
+      return ResponseUtility.error(
+        ErrorCode.EXTERNAL_SERVICE_ERROR,
+        error instanceof Error ? error.message : 'Unknown error'
+      );
+    }
+  }
 
   /**
    * POST /api/v1/user-models - Create a new model configuration

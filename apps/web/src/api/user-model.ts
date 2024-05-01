@@ -12,6 +12,12 @@ interface ApiResponse<T> {
   msg?: string;
 }
 
+export interface TestModelResult {
+  success: boolean;
+  message: string;
+  response: string;
+}
+
 /**
  * User model (LLM) API endpoints
  */
@@ -70,6 +76,17 @@ export const userModelApi = {
   setDefault: async (id: string): Promise<UserModelDto> => {
     const response = await request.patch<unknown, ApiResponse<UserModelDto>>(
       `/api/v1/user-models/${id}/set-default`
+    );
+    return response.data;
+  },
+
+  /**
+   * Test model configuration
+   */
+  testModel: async (data: CreateUserModelDto): Promise<TestModelResult> => {
+    const response = await request.post<CreateUserModelDto, ApiResponse<TestModelResult>>(
+      '/api/v1/user-models/test',
+      data
     );
     return response.data;
   },

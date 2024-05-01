@@ -20,6 +20,7 @@ export const ErrorCode = {
   // 业务相关错误: 3000-3999
   BUSINESS_ERROR: 3000,
   CATEGORY_ALREADY_EXISTS: 3001,
+  EXTERNAL_SERVICE_ERROR: 3002,
 
   // 附件相关错误: 4000-4999
   FILE_TOO_LARGE: 4000,
@@ -44,6 +45,7 @@ export const ErrorMessage = {
   [ErrorCode.DB_CONNECT_ERROR]: '数据库连接错误',
   [ErrorCode.BUSINESS_ERROR]: '业务错误',
   [ErrorCode.CATEGORY_ALREADY_EXISTS]: '类别已存在',
+  [ErrorCode.EXTERNAL_SERVICE_ERROR]: '外部服务错误',
   [ErrorCode.FILE_TOO_LARGE]: '文件过大',
   [ErrorCode.UNSUPPORTED_FILE_TYPE]: '不支持的文件类型',
   [ErrorCode.ATTACHMENT_NOT_FOUND]: '附件不存在',

@@ -2,6 +2,7 @@ import { view, useService } from '@rabjs/react';
 import { useEffect, useState } from 'react';
 import { UserModelService } from '../../../services/user-model.service';
 import { ToastService } from '../../../services/toast.service';
+import { userModelApi } from '../../../api/user-model';
 import {
   Loader2,
   Plus,
@@ -10,6 +11,9 @@ import {
   Star,
   X,
   Bot,
+  Play,
+  CheckCircle,
+  AlertCircle,
 } from 'lucide-react';
 import type {
   UserModelDto,
@@ -33,6 +37,10 @@ export const ModelSettings = view(() => {
   const [editingModel, setEditingModel] = useState<UserModelDto | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  // Test state
+  const [isTesting, setIsTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
 
   // Form state
   const [formData, setFormData] = useState<CreateUserModelDto>({
@@ -156,6 +164,36 @@ export const ModelSettings = view(() => {
       toastService.success('删除成功');
     } else {
       toastService.error('删除失败');
+    }
+  };
+
+  // Handle test model
+  const handleTestModel = async () => {
+    if (!formData.apiKey.trim()) {
+      toastService.error('请输入 API Key');
+      return;
+    }
+    if (!formData.modelName.trim()) {
+      toastService.error('请输入模型标识');
+      return;
+    }
+
+    setIsTesting(true);
+    setTestResult(null);
+
+    try {
+      const result = await userModelApi.testModel(formData);
+      setTestResult({
+        success: result.success,
+        message: result.success ? result.response : result.message,
+      });
+    } catch (err) {
+      setTestResult({
+        success: false,
+        message: err instanceof Error ? err.message : '测试失败',
+      });
+    } finally {
+      setIsTesting(false);
     }
   };
 
@@ -331,6 +369,9 @@ export const ModelSettings = view(() => {
           onSubmit={handleSubmit}
           onClose={handleCloseModal}
           providerOptions={providerOptions}
+          isTesting={isTesting}
+          testResult={testResult}
+          onTest={handleTestModel}
         />
       )}
     </div>
@@ -345,6 +386,9 @@ interface ModelFormModalProps {
   onSubmit: (e: React.FormEvent) => void;
   onClose: () => void;
   providerOptions: { value: LLMProvider; label: string }[];
+  isTesting: boolean;
+  testResult: { success: boolean; message: string } | null;
+  onTest: () => void;
 }
 
 const ModelFormModal = view(
@@ -356,6 +400,9 @@ const ModelFormModal = view(
     onSubmit,
     onClose,
     providerOptions,
+    isTesting,
+    testResult,
+    onTest,
   }: ModelFormModalProps) => {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -473,6 +520,54 @@ const ModelFormModal = view(
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 填写实际的模型标识，如 gpt-4、gpt-4o、deepseek-chat 等
               </p>
+            </div>
+
+            {/* Test Button and Result */}
+            <div className="flex items-start gap-3">
+              <button
+                type="button"
+                onClick={onTest}
+                disabled={isTesting || !formData.apiKey || !formData.modelName}
+                className="px-4 py-2 border border-gray-300 dark:border-dark-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isTesting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Play className="w-4 h-4" />
+                )}
+                测试连接
+              </button>
+              {testResult && (
+                <div
+                  className={`flex-1 p-3 rounded-lg ${
+                    testResult.success
+                      ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
+                      : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    {testResult.success ? (
+                      <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
+                    )}
+                    <span
+                      className={`text-sm ${
+                        testResult.success
+                          ? 'text-green-700 dark:text-green-300'
+                          : 'text-red-700 dark:text-red-300'
+                      }`}
+                    >
+                      {testResult.success ? '连接成功' : '连接失败'}
+                    </span>
+                  </div>
+                  {!testResult.success && (
+                    <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                      {testResult.message}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Set as Default */}

@@ -41,12 +41,14 @@ const TaskFormModal = view(({ isOpen, onClose, onSuccess, editTask }: TaskFormMo
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCronDropdown, setShowCronDropdown] = useState(false);
   const [showActionDropdown, setShowActionDropdown] = useState(false);
+  const [showModelDropdown, setShowModelDropdown] = useState(false);
 
   // Form state
   const [name, setName] = useState('');
   const [triggerType, setTriggerType] = useState<'manual' | 'scheduled'>('manual');
   const [cronExpression, setCronExpression] = useState('');
   const [actionId, setActionId] = useState('');
+  const [modelId, setModelId] = useState('');
   const [actionConfig, setActionConfig] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -58,6 +60,9 @@ const TaskFormModal = view(({ isOpen, onClose, onSuccess, editTask }: TaskFormMo
         setTriggerType(editTask.triggerType);
         setCronExpression(editTask.cronExpression || '');
         setActionId(editTask.actionId);
+        // Extract modelId from actionConfig if exists
+        const config = editTask.actionConfig as Record<string, unknown> | undefined;
+        setModelId(config?.modelId as string | undefined || '');
         setActionConfig(
           editTask.actionConfig ? JSON.stringify(editTask.actionConfig, null, 2) : ''
         );
@@ -67,16 +72,22 @@ const TaskFormModal = view(({ isOpen, onClose, onSuccess, editTask }: TaskFormMo
         setTriggerType('manual');
         setCronExpression('');
         setActionId('');
+        setModelId('');
         setActionConfig('');
       }
       setErrors({});
     }
   }, [isOpen, editTask]);
 
-  // Load actions when modal opens (only once)
+  // Load actions and user models when modal opens
   useEffect(() => {
-    if (isOpen && taskService.availableActions.length === 0) {
-      taskService.loadAvailableActions();
+    if (isOpen) {
+      if (taskService.availableActions.length === 0) {
+        taskService.loadAvailableActions();
+      }
+      if (taskService.userModels.length === 0) {
+        taskService.loadUserModels();
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
@@ -119,12 +130,21 @@ const TaskFormModal = view(({ isOpen, onClose, onSuccess, editTask }: TaskFormMo
     setIsSubmitting(true);
 
     try {
+      // Build action config, including modelId if selected
+      let parsedConfig: Record<string, unknown> = {};
+      if (actionConfig.trim()) {
+        parsedConfig = JSON.parse(actionConfig.trim());
+      }
+      if (modelId) {
+        parsedConfig.modelId = modelId;
+      }
+
       const taskData: CreateTaskDto = {
         name: name.trim(),
         triggerType,
         actionId,
         ...(triggerType === 'scheduled' && { cronExpression: cronExpression.trim() }),
-        ...(actionConfig.trim() && { actionConfig: JSON.parse(actionConfig.trim()) }),
+        ...(Object.keys(parsedConfig).length > 0 && { actionConfig: parsedConfig }),
       };
 
       let success: TaskDto | null;
@@ -341,6 +361,65 @@ const TaskFormModal = view(({ isOpen, onClose, onSuccess, editTask }: TaskFormMo
             </div>
             {errors.actionId && <p className="mt-1 text-sm text-red-500">{errors.actionId}</p>}
           </div>
+
+          {/* Model Selector - show when action requires model */}
+          {selectedAction?.requiresModel && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                大模型 <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowModelDropdown(!showModelDropdown)}
+                  className="w-full flex items-center justify-between px-3 py-2 border rounded-lg bg-white dark:bg-dark-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 border-gray-300 dark:border-dark-600"
+                >
+                  <span className={modelId ? 'text-gray-900 dark:text-white' : 'text-gray-400'}>
+                    {modelId
+                      ? taskService.userModels.find((m) => m.id === modelId)?.name || '请选择模型'
+                      : '请选择模型'}
+                  </span>
+                  <ChevronDown className="w-4 h-4 text-gray-400" />
+                </button>
+                {showModelDropdown && (
+                  <div className="absolute z-10 w-full mt-1 bg-white dark:bg-dark-700 border border-gray-200 dark:border-dark-600 rounded-lg shadow-lg overflow-hidden max-h-48 overflow-y-auto">
+                    {taskService.userModels.length === 0 ? (
+                      <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
+                        暂无配置的模型，请在设置中添加
+                      </div>
+                    ) : (
+                      taskService.userModels.map((model) => (
+                        <button
+                          key={model.id}
+                          type="button"
+                          onClick={() => {
+                            setModelId(model.id);
+                            setShowModelDropdown(false);
+                          }}
+                          className="w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-dark-600 transition-colors"
+                        >
+                          <div className="text-sm font-medium text-gray-900 dark:text-white">
+                            {model.name}
+                            {model.isDefault && (
+                              <span className="ml-2 text-xs text-primary-600 dark:text-primary-400">
+                                默认
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            {model.provider} - {model.modelName}
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+              {!modelId && (
+                <p className="mt-1 text-sm text-orange-500">请选择一个模型</p>
+              )}
+            </div>
+          )}
 
           {/* Action Config */}
           <div>
