@@ -1,4 +1,4 @@
-import { config } from '@aimo/eslint-config/base.js';
+import { config } from '@aimo-console/eslint-config/base.js';
 import globals from 'globals';
 
 /** @type {import("eslint").Linter.Config} */

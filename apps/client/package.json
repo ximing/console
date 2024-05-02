@@ -26,13 +26,13 @@
     "dist:linux": "electron-builder --linux"
   },
   "dependencies": {
-    "@aimo/dto": "workspace:*",
+    "@aimo-console/dto": "workspace:*",
     "electron-store": "^10.0.0",
     "electron-updater": "^6.7.3"
   },
   "devDependencies": {
-    "@aimo/eslint-config": "workspace:*",
-    "@aimo/typescript-config": "workspace:*",
+    "@aimo-console/eslint-config": "workspace:*",
+    "@aimo-console/typescript-config": "workspace:*",
     "@fiahfy/icns": "^0.0.7",
     "@types/node": "^22.13.4",
     "electron": "^40.6.0",
