@@ -522,3 +522,41 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - Socket.IO middleware receives socket and next callback for auth
   - Multiple browser tabs for same user create separate socket connections
   - UserInfoDto requires email and username as strings, not optional
+
+## 2026-03-06 10:30:00 - US-002 (Notification Push Service)
+- Created NotificationPushService with Socket.IO integration:
+  - pushNotificationToUser() - sends notification to connected user
+  - createAndPushNotification() - creates notification and pushes to user
+  - pushNotificationUpdate() - sends notification status updates
+- Push payload includes summary (truncated content, max 50 chars)
+- Reuses SocketIOService for user/socket ID mapping management
+- Handles offline users gracefully (skips push if user not connected)
+- Typecheck passes
+- Files changed:
+  - apps/server/src/services/notification-push.service.ts (new)
+  - tasks/prd.json (marked US-002 as complete)
+- **Learnings for future iterations:**
+  - Notification type comes from database schema (db/schema/notifications.ts), not DTO
+  - SocketIOService already provides user socket mapping and sendNotificationToUser method
+  - Services are auto-injected via TypeDI constructor injection
+  - Use .toISOString() for dates when sending JSON payloads
+
+## 2026-03-06 11:00:00 - US-003 (Electron Client Environment Configuration)
+- Implemented environment-based configuration for Electron client:
+  - Electron client vite.config.ts now uses process.env.NODE_ENV to distinguish dev/prod
+  - Development: API = http://localhost:3000, Web = http://localhost:5173
+  - Production: API = https://console.aimo.plus, Web = https://console.aimo.plus
+  - Also defined VITE_API_BASE_URL in client's vite.config for web app to use
+- Updated web app vite.config.ts to use correct production API URL (https://console.aimo.plus)
+- Production build automatically uses production config via NODE_ENV check
+- Typecheck and lint pass
+- Files changed:
+  - apps/client/vite.config.ts (added environment configuration)
+  - apps/web/vite.config.ts (fixed production API URL)
+  - tasks/prd.json (marked US-003 as complete)
+- **Learnings for future iterations:**
+  - Electron uses vite-plugin-electron which serves renderer from web app source
+  - Use define in vite.config.ts to inject environment variables into renderer
+  - The web app uses VITE_API_BASE_URL for API calls, not VITE_API_URL
+  - Production build sets NODE_ENV=production automatically with pnpm build
+  - Build output for Electron goes to apps/client/dist via web app's outDir config

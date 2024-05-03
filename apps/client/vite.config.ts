@@ -3,13 +3,30 @@ import electron from 'vite-plugin-electron/simple';
 import renderer from 'vite-plugin-electron-renderer';
 import { resolve } from 'path';
 
+// Environment configuration for Electron
+const isProduction = process.env.NODE_ENV === 'production';
+
 // Vite Dev Server URL for the web app (when running in development)
 const WEB_APP_DEV_URL = process.env.AIMO_WEB_DEV_URL ?? 'http://localhost:5173';
 
+// Production web resource URL
+const WEB_APP_PROD_URL = 'https://console.aimo.plus';
+
+// Production API URL
+const API_PROD_URL = 'https://console.aimo.plus';
+
+// Development API URL
+const API_DEV_URL = process.env.AIMO_API_DEV_URL ?? 'http://localhost:3000';
+
 export default defineConfig({
   define: {
-    // Inject the dev server URL at build time so it's available in the main process
+    // Inject environment variables at build time
     'process.env.VITE_DEV_SERVER_URL': JSON.stringify(WEB_APP_DEV_URL),
+    'process.env.VITE_WEB_APP_URL': JSON.stringify(isProduction ? WEB_APP_PROD_URL : WEB_APP_DEV_URL),
+    'process.env.VITE_API_BASE_URL': JSON.stringify(isProduction ? API_PROD_URL : API_DEV_URL),
+    'process.env.VITE_API_URL': JSON.stringify(isProduction ? API_PROD_URL : API_DEV_URL),
+    'process.env.VITE_IS_ELECTRON': JSON.stringify(true),
+    'process.env.VITE_IS_PRODUCTION': JSON.stringify(isProduction),
   },
   plugins: [
     electron({
