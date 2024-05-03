@@ -499,3 +499,26 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - useService() to inject services into components
   - Modal forms can be embedded in the same component with conditional rendering
   - Inline delete confirmation provides better UX than separate modal
+
+## 2026-03-06 10:00:00 - US-001 (Socket.IO Integration)
+- Installed socket.io in apps/server
+- Created SocketIOService with JWT-based authentication
+- Added user connection tracking (socket ID to user ID mapping)
+- Provided methods: getConnectedUsers, getConnectedUserIds, getUserSocketIds, isUserConnected
+- Attached Socket.IO to Express HTTP server in app.ts
+- Fixed workspace package references in apps/client (changed @aimo/* to @aimo-console/*)
+- Typecheck passes
+- Files changed:
+  - apps/server/package.json (added socket.io dependency)
+  - apps/server/src/app.ts (added SocketIOService initialization)
+  - apps/server/src/services/socket-io.service.ts (new)
+  - apps/client/package.json (fixed workspace references)
+  - apps/client/tsconfig.json (fixed workspace references)
+  - apps/client/eslint.config.mjs (fixed workspace references)
+  - pnpm-lock.yaml (updated)
+- **Learnings for future iterations:**
+  - Socket.IO attaches to the HTTP server instance, not the Express app
+  - JWT authentication in Socket.IO uses handshake auth token or query parameter
+  - Socket.IO middleware receives socket and next callback for auth
+  - Multiple browser tabs for same user create separate socket connections
+  - UserInfoDto requires email and username as strings, not optional
