@@ -1,6 +1,7 @@
 import axios, { AxiosError } from 'axios';
 import type { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import { navigate } from './navigation';
+import { getRuntimeEnv } from '../electron/isElectron';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/';
 
@@ -26,6 +27,11 @@ request.interceptors.request.use(
     const token = localStorage.getItem('aimo_token');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    // Add runtime environment header for server-side detection
+    if (config.headers) {
+      config.headers['X-Runtime-Env'] = getRuntimeEnv();
     }
 
     // Serialize Date objects in query parameters to timestamps

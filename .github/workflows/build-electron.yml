@@ -46,7 +46,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build DTO package
-        run: pnpm --filter @aimo/dto build
+        run: pnpm --filter @aimo-console/dto build
 
       - name: Upload packages artifacts
         uses: actions/upload-artifact@v4
@@ -92,7 +92,7 @@ jobs:
           path: packages
 
       - name: Build web app
-        run: ELECTRON=true pnpm --filter @aimo/web build
+        run: ELECTRON=true pnpm --filter @aimo-console/web build
 
       - name: Upload web app artifact
         uses: actions/upload-artifact@v4
@@ -136,10 +136,10 @@ jobs:
           path: packages
 
       - name: Type check client
-        run: pnpm --filter @aimo/client typecheck
+        run: pnpm --filter @aimo-console/client typecheck
 
       - name: Lint client
-        run: pnpm --filter @aimo/client lint
+        run: pnpm --filter @aimo-console/client lint
 
   # macOS Intel (x64) build
   build-macos-x64:
@@ -179,7 +179,7 @@ jobs:
         run: cd apps/client && pnpm exec electron-builder install-app-deps --arch=x64
 
       - name: Build Electron main process
-        run: pnpm --filter @aimo/client run build:electron
+        run: pnpm --filter @aimo-console/client run build:electron
 
       - name: Download web app artifact
         uses: actions/download-artifact@v4
@@ -193,7 +193,7 @@ jobs:
             unset CSC_LINK
             unset CSC_KEY_PASSWORD
           fi
-          pnpm --filter @aimo/client run dist:mac -- --x64
+          pnpm --filter @aimo-console/client run dist:mac -- --x64
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_LINK: ${{ secrets.CSC_LINK }}
@@ -250,7 +250,7 @@ jobs:
         run: cd apps/client && pnpm exec electron-builder install-app-deps --arch=arm64
 
       - name: Build Electron main process
-        run: pnpm --filter @aimo/client run build:electron
+        run: pnpm --filter @aimo-console/client run build:electron
 
       - name: Download web app artifact
         uses: actions/download-artifact@v4
@@ -264,7 +264,7 @@ jobs:
             unset CSC_LINK
             unset CSC_KEY_PASSWORD
           fi
-          pnpm --filter @aimo/client run dist:mac -- --arm64
+          pnpm --filter @aimo-console/client run dist:mac -- --arm64
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_LINK: ${{ secrets.CSC_LINK }}
@@ -317,7 +317,7 @@ jobs:
           path: packages
 
       - name: Build Electron main process
-        run: pnpm --filter @aimo/client run build:electron
+        run: pnpm --filter @aimo-console/client run build:electron
 
       - name: Download web app artifact
         uses: actions/download-artifact@v4
@@ -326,7 +326,7 @@ jobs:
           path: apps/client/dist
 
       - name: Build Windows
-        run: pnpm --filter @aimo/client run dist:win
+        run: pnpm --filter @aimo-console/client run dist:win
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
@@ -379,7 +379,7 @@ jobs:
           path: packages
 
       - name: Build Electron main process
-        run: pnpm --filter @aimo/client run build:electron
+        run: pnpm --filter @aimo-console/client run build:electron
 
       - name: Download web app artifact
         uses: actions/download-artifact@v4
@@ -388,7 +388,7 @@ jobs:
           path: apps/client/dist
 
       - name: Build Linux
-        run: pnpm --filter @aimo/client run dist:linux
+        run: pnpm --filter @aimo-console/client run dist:linux
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_OWNER: ${{ github.repository_owner }}
