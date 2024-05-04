@@ -560,3 +560,54 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - The web app uses VITE_API_BASE_URL for API calls, not VITE_API_URL
   - Production build sets NODE_ENV=production automatically with pnpm build
   - Build output for Electron goes to apps/client/dist via web app's outDir config
+
+## 2026-03-06 18:30:00 - US-004, US-005 (Electron Client Integration)
+- Fixed GitHub Actions workflow package references (@aimo/* → @aimo-console/*)
+- Added getRuntimeEnv() function to isElectron.ts returning 'electron' | 'web'
+- Added X-Runtime-Env header to API requests for server-side environment detection
+- Typecheck and lint pass
+- Files changed:
+  - .github/workflows/build-electron.yml (fixed package names)
+  - apps/web/src/electron/isElectron.ts (added getRuntimeEnv)
+  - apps/web/src/utils/request.ts (added X-Runtime-Env header)
+  - tasks/prd.json (marked US-004 and US-005 as complete)
+- **Learnings for future iterations:**
+  - Web app uses relative imports, not @ path alias
+  - The electron folder is at apps/web/src/electron/
+  - API request interceptor adds headers via config.headers
+  - Runtime environment detection uses both userAgent and electronAPI presence
+---
+
+## 2026-03-06 19:30:00 - US-006 (Web Notification Push)
+- Created Socket.IO client service in apps/web:
+  - SocketIOService using socket.io-client
+  - JWT-based authentication via auth token
+  - Auto-reconnection with configurable attempts
+  - Listens for 'notification' and 'notification:update' events
+- Integrated with browser Notification API:
+  - Checks Notification.permission on init
+  - requestNotificationPermission() method for user authorization
+  - Falls back to console.log if permission not granted
+  - Shows notification with body, icon, tag, and click handler
+  - Auto-closes after 5 seconds
+- Integrated with auth lifecycle:
+  - Connects on login and checkAuth (existing session)
+  - Disconnects on logout
+- Updates NotificationService state when notifications arrive
+- Added authService singleton export for non-React contexts
+- Typecheck and lint pass (1 pre-existing warning in layout.tsx)
+- Browser test shows login page loads without errors
+- Files changed:
+  - apps/web/src/services/socket-io.service.ts (new)
+  - apps/web/src/services/auth.service.ts (added Socket.IO integration)
+  - apps/web/package.json (added socket.io-client)
+  - apps/web/pnpm-lock.yaml (updated)
+  - tasks/prd.json (marked US-006 as complete)
+- **Learnings for future iterations:**
+  - Socket.IO client attaches to existing HTTP server path /socket.io
+  - Use socket.io-client package (not socket.io) on client side
+  - Auth token passed via auth: { token } in connection options
+  - Browser Notification API requires user permission (requestPermission)
+  - Handle permission 'default' as "ask user" state
+  - notificationService is a singleton, can be imported directly
+  - Use auth token from authService.token for Socket.IO connection
