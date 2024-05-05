@@ -611,3 +611,27 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - Handle permission 'default' as "ask user" state
   - notificationService is a singleton, can be imported directly
   - Use auth token from authService.token for Socket.IO connection
+---
+
+## 2026-03-06 20:00:00 - US-007 (Electron Notification Push)
+- Implemented Electron system notification support:
+  - Added IPC handler in Electron main process for showing notifications
+  - Exposed notification API via preload script (showNotification, onNotificationClick)
+  - Modified Socket.IO service to detect Electron environment and use Electron Notification API
+  - Added setupNotificationClickHandler() for click-to-navigate functionality
+- Reuses web app's Socket.IO service (already integrated with auth lifecycle)
+- Shows system notifications using Electron's Notification API instead of browser API
+- Click handler sends notification-clicked event to renderer via IPC
+- Typecheck passes for client, server, and web
+- Files changed:
+  - apps/client/src/main/index.ts (added notification IPC handler)
+  - apps/client/src/preload/index.ts (exposed notification APIs)
+  - apps/web/src/electron/isElectron.ts (added notification type definitions)
+  - apps/web/src/services/socket-io.service.ts (added Electron notification support)
+  - tasks/prd.json (marked US-007 as complete)
+- **Learnings for future iterations:**
+  - Electron's Notification API doesn't support 'tag' property (unlike browser Notification)
+  - Use IPC to communicate between renderer and main process for native features
+  - isElectron() checks both userAgent and electronAPI presence for reliability
+  - Socket.IO service can detect runtime environment and use appropriate notification API
+  - Click handler on Electron notification brings window to front before notifying renderer
