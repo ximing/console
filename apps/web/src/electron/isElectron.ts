@@ -113,6 +113,14 @@ declare global {
       getAppVersion: () => Promise<string>;
       onUpdateStatus?: (callback: (status: UpdateStatus) => void) => void;
       removeUpdateStatusListener?: (callback: (status: UpdateStatus) => void) => void;
+      // System notification APIs
+      showNotification?: (payload: {
+        id: string;
+        title: string;
+        body: string;
+      }) => Promise<{ success: boolean; error?: string }>;
+      onNotificationClick?: (callback: (data: { id: string }) => void) => void;
+      removeNotificationClickListener?: (callback: (data: { id: string }) => void) => void;
     };
   }
 }

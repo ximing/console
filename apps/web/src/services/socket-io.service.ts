@@ -3,6 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import type { NotificationChannel, NotificationOwnership, NotificationStatus } from '@aimo-console/dto';
 import { authService } from './auth.service';
 import { notificationService } from './notification.service';
+import { isElectron } from '../electron/isElectron';
 
 /**
  * Notification push payload received from server
@@ -175,6 +176,13 @@ export class SocketIOService extends Service {
    * Show browser notification
    */
   private showBrowserNotification(payload: NotificationPushPayload): void {
+    // Use Electron's Notification API if running in Electron
+    if (isElectron()) {
+      this.showElectronNotification(payload);
+      return;
+    }
+
+    // Use browser Notification API for web
     if (this.notificationPermission !== 'granted') {
       // Fallback: show in-page notification via toast or console
       console.log('Notification:', payload.content);
@@ -202,6 +210,45 @@ export class SocketIOService extends Service {
       }, 5000);
     } catch (error) {
       console.error('Failed to show browser notification:', error);
+    }
+  }
+
+  /**
+   * Show Electron system notification
+   */
+  private async showElectronNotification(payload: NotificationPushPayload): Promise<void> {
+    if (!window.electronAPI?.showNotification) {
+      console.warn('Electron notification API not available');
+      return;
+    }
+
+    try {
+      const result = await window.electronAPI.showNotification({
+        id: payload.id,
+        title: 'AIMO 通知',
+        body: payload.content,
+      });
+
+      if (!result.success) {
+        console.error('Failed to show Electron notification:', result.error);
+      }
+    } catch (error) {
+      console.error('Failed to show Electron notification:', error);
+    }
+  }
+
+  /**
+   * Set up notification click handler (for Electron click-to-navigate)
+   */
+  setupNotificationClickHandler(callback: (notificationId: string) => void): void {
+    if (!isElectron()) {
+      return;
+    }
+
+    if (window.electronAPI?.onNotificationClick) {
+      window.electronAPI.onNotificationClick((data) => {
+        callback(data.id);
+      });
     }
   }
 

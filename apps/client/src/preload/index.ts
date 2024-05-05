@@ -6,6 +6,9 @@ type FileDropCallback = (filePaths: string[]) => void;
 // Update status callback type
 type UpdateStatusCallback = (status: UpdateStatus) => void;
 
+// Notification callback type
+type NotificationClickCallback = (data: { id: string }) => void;
+
 // Update status type
 export interface UpdateStatus {
   status: 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded' | 'error';
@@ -34,6 +37,12 @@ const fileDropCallbackMap = new Map<
 const updateStatusCallbackMap = new Map<
   UpdateStatusCallback,
   (event: IpcRendererEvent, status: UpdateStatus) => void
+>();
+
+// Notification click callback map
+const notificationClickCallbackMap = new Map<
+  NotificationClickCallback,
+  (event: IpcRendererEvent, data: { id: string }) => void
 >();
 
 // Log platform info for debugging
@@ -105,6 +114,27 @@ contextBridge.exposeInMainWorld('electronAPI', {
       updateStatusCallbackMap.delete(callback);
     }
   },
+
+  // System notification API (for showing notifications in Electron)
+  showNotification: (payload: { id: string; title: string; body: string }) =>
+    ipcRenderer.invoke('show-notification', payload),
+
+  // Notification click listener
+  onNotificationClick: (callback: NotificationClickCallback) => {
+    const wrappedCallback = (_event: IpcRendererEvent, data: { id: string }) => {
+      callback(data);
+    };
+    notificationClickCallbackMap.set(callback, wrappedCallback);
+    ipcRenderer.on('notification-clicked', wrappedCallback);
+  },
+
+  removeNotificationClickListener: (callback: NotificationClickCallback) => {
+    const wrappedCallback = notificationClickCallbackMap.get(callback);
+    if (wrappedCallback) {
+      ipcRenderer.removeListener('notification-clicked', wrappedCallback);
+      notificationClickCallbackMap.delete(callback);
+    }
+  },
 });
 
 // --------- Type definitions for Renderer process ---------
@@ -124,6 +154,14 @@ declare global {
       getAppVersion: () => Promise<string>;
       onUpdateStatus: (callback: (status: UpdateStatus) => void) => void;
       removeUpdateStatusListener: (callback: (status: UpdateStatus) => void) => void;
+      // System notification APIs
+      showNotification: (payload: {
+        id: string;
+        title: string;
+        body: string;
+      }) => Promise<{ success: boolean; error?: string }>;
+      onNotificationClick: (callback: (data: { id: string }) => void) => void;
+      removeNotificationClickListener: (callback: (data: { id: string }) => void) => void;
     };
   }
 }
