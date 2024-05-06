@@ -8,19 +8,9 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const isElectron = process.env.ELECTRON === 'true';
 
-  // Determine API base URL for Electron build
-  const apiBaseUrl = isElectron
-    ? // Electron production build uses console.aimo.plus
-      mode === 'production'
-      ? 'https://console.aimo.plus'
-      : 'http://localhost:3000'
-    : env.VITE_API_BASE_URL || '';
-
   return {
     // Inject environment variables
-    define: {
-      'import.meta.env.VITE_API_BASE_URL': JSON.stringify(apiBaseUrl),
-    },
+    define: {},
     base: isElectron ? './' : '/',
     plugins: [react()],
     server: {

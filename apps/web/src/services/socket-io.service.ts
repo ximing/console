@@ -42,11 +42,6 @@ export class SocketIOService extends Service {
    * Get the API base URL for Socket.IO connection
    */
   private getSocketIOUrl(): string {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL;
-    if (baseUrl) {
-      return baseUrl;
-    }
-    // Fallback to relative URL (works with proxy in dev)
     return '';
   }
 
