@@ -544,7 +544,7 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
 ## 2026-03-06 11:00:00 - US-003 (Electron Client Environment Configuration)
 - Implemented environment-based configuration for Electron client:
   - Electron client vite.config.ts now uses process.env.NODE_ENV to distinguish dev/prod
-  - Development: API = http://localhost:3000, Web = http://localhost:5173
+  - Development: API = http://localhost:3000, Web = http://localhost:5273
   - Production: API = https://console.aimo.plus, Web = https://console.aimo.plus
   - Also defined VITE_API_BASE_URL in client's vite.config for web app to use
 - Updated web app vite.config.ts to use correct production API URL (https://console.aimo.plus)
@@ -635,3 +635,31 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - isElectron() checks both userAgent and electronAPI presence for reliability
   - Socket.IO service can detect runtime environment and use appropriate notification API
   - Click handler on Electron notification brings window to front before notifying renderer
+
+## 2026-03-06 21:50:00 - US-001 到 US-008 (Token管理完整实现)
+- 实现了用户API Token管理完整功能：
+  - US-001: 创建user_api_tokens数据库表，使用Drizzle ORM
+  - US-002: 创建ApiTokenService实现token生成、哈希、验证、删除逻辑
+  - US-003: 添加POST /api/v1/user/api-tokens接口用于创建token
+  - US-004: 添加GET /api/v1/user/api-tokens接口用于列出token
+  - US-005: 添加DELETE /api/v1/user/api-tokens/:id接口用于删除token
+  - US-006: 增强BA认证拦截器支持用户Token验证，优先验证用户Token
+  - US-007: 添加POST /api/v1/ba/notifications接口用于创建通知
+  - US-008: 前端设置页面添加API Token管理UI
+- 创建的文件：
+  - apps/server/src/db/schema/user-api-tokens.ts (数据库schema)
+  - apps/server/src/services/api-token.service.ts (后端service)
+  - apps/server/src/controllers/v1/api-token.controller.ts (API控制器)
+  - packages/dto/src/api-token.ts (DTO定义)
+  - apps/server/src/middlewares/ba-auth.interceptor.ts (认证增强)
+  - apps/server/src/controllers/v1/notification.ba.controller.ts (通知API)
+  - apps/web/src/api/api-token.ts (前端API)
+  - apps/web/src/services/api-token.service.ts (前端Service)
+  - apps/web/src/pages/settings/components/api-token-settings.tsx (UI组件)
+- Typecheck和lint通过
+- **Learnings for future iterations:**
+  - Drizzle ORM schema使用mysqlTable定义MySQL表
+  - Token使用SHA-256哈希存储，prefix用于显示
+  - 认证拦截器可以支持多种认证方式，按优先级验证
+  - 前端使用@rabjs/react的Service类管理状态
+  - UI组件使用view装饰器实现响应式更新

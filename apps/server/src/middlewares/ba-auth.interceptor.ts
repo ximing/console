@@ -1,17 +1,25 @@
 import { Request, Response, NextFunction } from 'express';
+import { Container } from 'typedi';
 
 import { config } from '../config/config.js';
+import { ApiTokenService } from '../services/api-token.service.js';
 
 /**
  * BA (Basic Auth) Authentication Interceptor
  *
  * This interceptor validates BA authentication token from the request header.
- * If BA_AUTH_ENABLED is not set to 'true' in environment variables,
- * this interceptor will always return 401.
+ * It supports two authentication modes:
+ *
+ * 1. User API Token (priority): Validates user's personal API token
+ *    - If valid, attaches userId to request for downstream use
+ *    - Automatically updates lastUsedAt timestamp
+ *
+ * 2. Global BA Token (fallback): Validates global BA token
+ *    - Used when user token validation fails
  *
  * Environment variables:
  * - BA_AUTH_ENABLED: Set to 'true' to enable BA authentication
- * - BA_AUTH_TOKEN: The valid token for BA authentication
+ * - BA_AUTH_TOKEN: The valid global token for BA authentication
  *
  * Expected header format:
  * Authorization: Bearer <token>
@@ -50,14 +58,25 @@ export const baAuthInterceptor = async (
 
   const token = parts[1];
 
-  // Validate token
-  if (token !== config.ba.token) {
-    return response.status(401).json({
-      success: false,
-      message: 'Invalid BA token',
-    });
+  // Try to validate as user API token first (priority)
+  const apiTokenService = Container.get(ApiTokenService);
+  const userId = await apiTokenService.validateToken(token);
+
+  if (userId) {
+    // User token is valid, attach userId to request
+    (request as Request & { userId?: string }).userId = userId;
+    return next();
   }
 
-  // Token is valid, continue to the next middleware or controller
-  return next();
+  // If user token validation fails, fall back to global BA token
+  if (token === config.ba.token) {
+    // Token is valid, continue to the next middleware or controller
+    return next();
+  }
+
+  // Invalid token
+  return response.status(401).json({
+    success: false,
+    message: 'Invalid token',
+  });
 };

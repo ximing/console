@@ -26,7 +26,7 @@ cp .env.example .env
 pnpm dev
 
 # Start individual apps
-pnpm dev:web      # Frontend only - Vite dev server at http://localhost:5173
+pnpm dev:web      # Frontend only - Vite dev server at http://localhost:5273
 pnpm dev:server   # Backend only - Express at http://localhost:3000
 
 # Start Docker dependencies (if needed)
