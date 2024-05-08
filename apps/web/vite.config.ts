@@ -4,8 +4,8 @@ import path from 'node:path';
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
-  // Load env file based on mode
-  const env = loadEnv(mode, process.cwd(), '');
+  // Load env file based on mode (for future use)
+  loadEnv(mode, process.cwd(), '');
   const isElectron = process.env.ELECTRON === 'true';
 
   return {
@@ -18,6 +18,11 @@ export default defineConfig(({ mode }) => {
       proxy: {
         '/api': {
           target: 'http://localhost:3002',
+          changeOrigin: true,
+        },
+        '/socket.io': {
+          target: 'http://localhost:3002',
+          ws: true,
           changeOrigin: true,
         },
       },

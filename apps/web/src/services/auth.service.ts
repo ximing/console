@@ -2,7 +2,6 @@ import { Service } from '@rabjs/react';
 import type { LoginDto, RegisterDto, UserInfoDto } from '@aimo-console/dto';
 import * as authApi from '../api/auth';
 import * as userApi from '../api/user';
-import type { SocketIOService } from './socket-io.service';
 
 /**
  * Authentication Service
@@ -15,15 +14,14 @@ export class AuthService extends Service {
   isAuthenticated = false;
 
   // Socket.IO service reference (lazy loaded to avoid circular dependency)
-  private _socketIOService: SocketIOService | null = null;
-  private get socketIOService(): SocketIOService | null {
+  private _socketIOService: unknown = null;
+
+  private async getSocketIOService() {
     if (!this._socketIOService) {
-      // Lazy load to avoid circular dependency
-      import('./socket-io.service').then((module) => {
-        this._socketIOService = module.socketIOService;
-      });
+      const module = await import('./socket-io.service');
+      this._socketIOService = module.socketIOService;
     }
-    return this._socketIOService;
+    return this._socketIOService as { connect(): void; disconnect(): void };
   }
 
   constructor() {
@@ -85,7 +83,7 @@ export class AuthService extends Service {
       if (response.code === 0 && response.data) {
         this.saveAuthState(response.data.token, response.data.user);
         // Connect to Socket.IO after successful login
-        this._socketIOService?.connect();
+        (await this.getSocketIOService())?.connect();
         return { success: true };
       } else {
         return {
@@ -129,9 +127,9 @@ export class AuthService extends Service {
   /**
    * Logout current user
    */
-  logout() {
+  async logout() {
     // Disconnect from Socket.IO before clearing auth state
-    this._socketIOService?.disconnect();
+    (await this.getSocketIOService())?.disconnect();
     this.clearAuthState();
   }
 
@@ -151,7 +149,7 @@ export class AuthService extends Service {
         this.isAuthenticated = true;
         localStorage.setItem('aimo_user', JSON.stringify(user));
         // Connect to Socket.IO for existing authenticated session
-        this._socketIOService?.connect();
+        (await this.getSocketIOService())?.connect();
         return true;
       } else {
         this.clearAuthState();

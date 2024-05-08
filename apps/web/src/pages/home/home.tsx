@@ -184,18 +184,6 @@ export const HomePage = view(() => {
               <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">本月第几天</div>
             </div>
           </div>
-
-          {/* Info Section */}
-          <div className="bg-white dark:bg-dark-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-dark-700">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              系统提示
-            </h2>
-            <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-              <p>• 您可以使用侧边栏的主题切换按钮在明暗模式之间切换</p>
-              <p>• 点击右上角的用户菜单可以退出登录</p>
-              <p>• 当前时间会实时更新，无需刷新页面</p>
-            </div>
-          </div>
         </div>
       </div>
     </Layout>

@@ -8,11 +8,12 @@ import {
   UseBefore,
   Req,
 } from 'routing-controllers';
-import { Service } from 'typedi';
+import { Service, Inject } from 'typedi';
 import type { Request } from 'express';
 
 import { ErrorCode } from '../../constants/error-codes.js';
 import { NotificationService } from '../../services/notification.service.js';
+import { NotificationPushService } from '../../services/notification-push.service.js';
 import { logger } from '../../utils/logger.js';
 import { ResponseUtil as ResponseUtility } from '../../utils/response.js';
 import { baAuthInterceptor } from '../../middlewares/ba-auth.interceptor.js';
@@ -45,13 +46,17 @@ function convertNotificationToDto(notification: Notification): NotificationDto {
 @Service()
 @JsonController('/api/v1/ba/notifications')
 export class NotificationBAController {
-  constructor(private notificationService: NotificationService) {}
+  constructor(
+    private notificationService: NotificationService,
+    @Inject() private notificationPushService: NotificationPushService
+  ) {}
 
   /**
    * POST /api/v1/ba/notifications - Create a new notification (BA Auth with User Token)
    *
    * When using user API token, the userId is attached to request from the auth interceptor.
    * This allows creating notifications on behalf of the user.
+   * The notification will be automatically pushed to the user via Socket.IO.
    */
   @Post('/')
   @UseBefore(baAuthInterceptor)
@@ -78,7 +83,8 @@ export class NotificationBAController {
         return ResponseUtility.error(ErrorCode.PARAMS_ERROR, 'Content is required');
       }
 
-      const notification = await this.notificationService.createNotification({
+      // Create notification and push to user via Socket.IO
+      const notification = await this.notificationPushService.createAndPushNotification(userId, {
         channel: createData.channel,
         ownership: createData.ownership,
         ownershipId: createData.ownershipId,

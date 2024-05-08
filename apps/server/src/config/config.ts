@@ -160,9 +160,9 @@ export interface Config {
 }
 
 export const config: Config = {
-  port: Number(process.env.PORT) || 3000,
+  port: Number(process.env.PORT) || 3002,
   cors: {
-    origin: (process.env.CORS_ORIGIN || 'http://localhost:3000').split(','),
+    origin: (process.env.CORS_ORIGIN || 'http://localhost:3002').split(','),
     credentials: process.env.CORS_CREDENTIALS === 'true',
   },
   jwt: {

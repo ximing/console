@@ -111,7 +111,7 @@ cd apps/server
 pnpm dev
 ```
 
-The server will start at `http://localhost:3000`.
+The server will start at `http://localhost:3002`.
 
 ### Drizzle Commands
 
