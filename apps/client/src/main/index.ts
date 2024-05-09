@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import net from 'node:net';
 
 import {
   app,
@@ -557,11 +558,253 @@ ipcMain.handle('show-notification', (_event, payload: NotificationPayload) => {
   }
 });
 
+// ============================================
+// Socket Server for CLI communication
+// ============================================
+
+const SOCKET_PATH = '/tmp/aimo-console.sock';
+
+// Generate unique ID for each dialog
+function generateId(): string {
+  return `dialog_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+}
+
+// Parse command line arguments
+interface DialogOptions {
+  command: 'notify' | 'dialog';
+  title: string;
+  message: string;
+  type: 'info' | 'warning' | 'error' | 'success' | 'question';
+  buttons: string[];
+  persistent: boolean;
+  icon?: string;
+  timeout?: number;
+}
+
+function parseCommand(line: string): DialogOptions | null {
+  const trimmed = line.trim();
+  if (!trimmed) return null;
+
+  // Match command and key-value pairs
+  const commandMatch = trimmed.match(/^(notify|dialog)\b/);
+  if (!commandMatch) return null;
+
+  const command = commandMatch[1] as 'notify' | 'dialog';
+
+  // Parse --key "value" or --key value or --flag
+  const options: Partial<DialogOptions> = {
+    command,
+    type: 'info',
+    buttons: ['确定'],
+    persistent: command === 'dialog',
+  };
+
+  // Regex to match --key "value" or --key value or --key='value'
+  const kvRegex = /--(\w+)(?:=(.+?)|\s+(".*?"|\S+))/g;
+  let match;
+
+  while ((match = kvRegex.exec(trimmed)) !== null) {
+    const key = match[1];
+    let value = match[2] || match[3];
+
+    // Remove surrounding quotes if present
+    if (value && value.startsWith('"') && value.endsWith('"')) {
+      value = value.slice(1, -1);
+    }
+
+    switch (key) {
+      case 'title':
+        options.title = value;
+        break;
+      case 'message':
+        options.message = value;
+        break;
+      case 'type':
+        if (['info', 'warning', 'error', 'success', 'question'].includes(value)) {
+          options.type = value as DialogOptions['type'];
+        }
+        break;
+      case 'buttons':
+        options.buttons = value.split(',').map((b) => b.trim());
+        break;
+      case 'persistent':
+        options.persistent = value === 'true' || value === '' || !value;
+        break;
+      case 'icon':
+        options.icon = value;
+        break;
+      case 'timeout':
+        options.timeout = parseInt(value, 10) || 3000;
+        break;
+    }
+  }
+
+  // Validate required fields
+  if (!options.title || !options.message) {
+    return null;
+  }
+
+  return options as DialogOptions;
+}
+
+// Get icon for dialog type
+function getDialogIcon(type: DialogOptions['type']): string | undefined {
+  // On macOS, we can use system icons via file paths
+  // On Windows, we rely on the native dialog's built-in icons
+  return undefined;
+}
+
+// Show dialog and return result
+function showDialog(options: DialogOptions): Promise<{ action: string; button: string; id: string }> {
+  return new Promise((resolve) => {
+    const dialogId = generateId();
+
+    const dialogTypeMap: Record<string, 'none' | 'info' | 'error' | 'question' | 'warning'> = {
+      info: 'info',
+      warning: 'warning',
+      error: 'error',
+      success: 'info',
+      question: 'question',
+    };
+
+    // Map our type to Electron's dialog type
+    const electronDialogType = dialogTypeMap[options.type] || 'info';
+
+    const dialogOptions: Electron.MessageBoxOptions = {
+      type: electronDialogType,
+      title: options.title,
+      message: options.message,
+      buttons: options.buttons,
+      defaultId: 0,
+      cancelId: options.buttons.length - 1,
+    };
+
+    // Try to add icon if provided and exists
+    if (options.icon && fs.existsSync(options.icon)) {
+      try {
+        dialogOptions.icon = nativeImage.createFromPath(options.icon);
+      } catch {
+        // Ignore icon errors
+      }
+    }
+
+    dialog.showMessageBox(dialogOptions).then((result) => {
+      const buttonClicked = options.buttons[result.response] || options.buttons[0];
+      resolve({
+        action: 'button_clicked',
+        button: buttonClicked,
+        id: dialogId,
+      });
+    });
+  });
+}
+
+// Show notification (auto-dismiss)
+function showNotification(options: DialogOptions): void {
+  const notification = new Notification({
+    title: options.title,
+    body: options.message,
+    silent: false,
+  });
+
+  notification.on('click', () => {
+    showMainWindow();
+  });
+
+  notification.show();
+
+  // Auto-dismiss after timeout (default 3 seconds)
+  const timeout = options.timeout || 3000;
+  setTimeout(() => {
+    notification.close();
+  }, timeout);
+}
+
+// Handle incoming socket data
+function handleSocketData(
+  data: Buffer,
+  client: net.Socket
+): void {
+  const line = data.toString().trim();
+  console.log('[Socket] Received command:', line);
+
+  const options = parseCommand(line);
+
+  if (!options) {
+    client.write(JSON.stringify({ error: 'Invalid command', usage: 'notify|dialog --title "xxx" --message "xxx" [--type info|warning|error|success|question] [--buttons "btn1,btn2"] [--persistent] [--icon /path/to/icon.png] [--timeout 3000]' }) + '\n');
+    return;
+  }
+
+  console.log('[Socket] Parsed options:', options);
+
+  if (options.command === 'notify') {
+    showNotification(options);
+    client.write(JSON.stringify({ success: true, action: 'notification_shown' }) + '\n');
+  } else {
+    showDialog(options).then((result) => {
+      client.write(JSON.stringify(result) + '\n');
+    });
+  }
+}
+
+// Start socket server
+function startSocketServer(): void {
+  // Clean up old socket file
+  if (fs.existsSync(SOCKET_PATH)) {
+    try {
+      fs.unlinkSync(SOCKET_PATH);
+    } catch (error) {
+      console.warn('[Socket] Failed to remove old socket:', error);
+    }
+  }
+
+  const server = net.createServer((client) => {
+    let buffer = '';
+
+    client.on('data', (data) => {
+      buffer += data.toString();
+
+      // Handle multiple commands (newline separated)
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+      for (const line of lines) {
+        if (line.trim()) {
+          handleSocketData(Buffer.from(line), client);
+        }
+      }
+    });
+
+    client.on('error', (error) => {
+      console.error('[Socket] Client error:', error.message);
+    });
+  });
+
+  server.on('error', (error) => {
+    console.error('[Socket] Server error:', error.message);
+  });
+
+  server.listen(SOCKET_PATH, () => {
+    console.log('[Socket] Server listening on:', SOCKET_PATH);
+  });
+}
+
+// IPC handler for socket server status
+ipcMain.handle('get-socket-status', () => {
+  return {
+    path: SOCKET_PATH,
+    exists: fs.existsSync(SOCKET_PATH),
+  };
+});
+
 app.whenReady().then(() => {
   createWindow();
   createTray();
   registerGlobalShortcuts();
   createApplicationMenu();
+
+  // Start socket server for CLI communication
+  startSocketServer();
 
   // Check for updates 3 seconds after app startup
   setTimeout(() => {
