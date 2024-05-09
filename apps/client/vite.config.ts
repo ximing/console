@@ -13,7 +13,7 @@ const VITE_DEV_SERVER_URL = isProduction ? 'https://console.aimo.plus' : 'http:/
 const API_PROD_URL = 'https://console.aimo.plus';
 
 // Development API URL
-const API_DEV_URL = process.env.AIMO_API_DEV_URL ?? 'http://localhost:3000';
+const API_DEV_URL = process.env.AIMO_API_DEV_URL ?? 'http://localhost:3002';
 
 export default defineConfig({
   define: {

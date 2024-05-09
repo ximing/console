@@ -27,7 +27,7 @@ pnpm dev
 
 # Start individual apps
 pnpm dev:web      # Frontend only - Vite dev server at http://localhost:5273
-pnpm dev:server   # Backend only - Express at http://localhost:3000
+pnpm dev:server   # Backend only - Express at http://localhost:3002
 
 # Start Docker dependencies (if needed)
 pnpm dev:env
@@ -198,7 +198,7 @@ export class MemoService {
 ```env
 JWT_SECRET=your-super-secret-key-at-least-32-characters-long
 OPENAI_API_KEY=sk-xxx...
-CORS_ORIGIN=http://localhost:3000
+CORS_ORIGIN=http://localhost:3002
 ```
 
 ### Storage Configuration

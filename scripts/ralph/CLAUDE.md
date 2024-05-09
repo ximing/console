@@ -62,7 +62,7 @@ Before committing, check if any edited files have learnings worth preserving in 
 
 - "When modifying X, also update Y to keep them in sync"
 - "This module uses pattern Z for all API calls"
-- "Tests require the dev server running on PORT 3000"
+- "Tests require the dev server running on PORT 3002"
 - "Field names must match the template exactly"
 
 **Do NOT add:**

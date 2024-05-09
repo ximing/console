@@ -95,7 +95,7 @@ cp .env.example .env
 # 5. Start development server
 pnpm dev
 
-# The app will start at http://localhost:3000
+# The app will start at http://localhost:3002
 ```
 
 ### Common Commands
@@ -117,7 +117,7 @@ pnpm format        # Code formatting
 docker pull ghcr.io/ximing/aimo:stable
 
 docker run -d \
-  -p 3000:3000 \
+  -p 3002:3002 \
   --name aimo \
   --env-file .env \
   -v $(pwd)/data:/app/data \

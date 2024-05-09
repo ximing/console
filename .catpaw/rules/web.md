@@ -138,7 +138,7 @@ apps/web/
 
 #### Vite 代理配置
 
-- `/api` 代理到 `http://localhost:3000` - 连接后端服务
+- `/api` 代理到 `http://localhost:3002` - 连接后端服务
 
 #### Tailwind 自定义
 

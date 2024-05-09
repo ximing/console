@@ -166,7 +166,7 @@ show tables;
 
 **检查后端**:
 ```bash
-curl http://localhost:3000/api/v1/user/info \
+curl http://localhost:3002/api/v1/user/info \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -209,21 +209,21 @@ docker-compose -f docker-compose.dev.yml logs -f
 2. **测试 API**:
 ```bash
 # 注册用户
-curl -X POST http://localhost:3000/api/v1/auth/register \
+curl -X POST http://localhost:3002/api/v1/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","username":"testuser","password":"password123"}'
 
 # 登录
-curl -X POST http://localhost:3000/api/v1/auth/login \
+curl -X POST http://localhost:3002/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"password123"}'
 
 # 获取用户信息
-curl http://localhost:3000/api/v1/user/info \
+curl http://localhost:3002/api/v1/user/info \
   -H "Authorization: Bearer YOUR_TOKEN"
 
 # 更新用户名
-curl -X PUT http://localhost:3000/api/v1/user/info \
+curl -X PUT http://localhost:3002/api/v1/user/info \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"username":"newname"}'

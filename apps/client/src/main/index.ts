@@ -566,7 +566,7 @@ app.whenReady().then(() => {
   // Check for updates 3 seconds after app startup
   setTimeout(() => {
     setupAutoUpdater();
-  }, 3000);
+  }, 3002);
 });
 
 // Auto-updater event handlers

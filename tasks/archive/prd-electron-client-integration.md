@@ -19,7 +19,7 @@
 **Description:** 作为开发者，我希望 Electron 客户端在本地开发时连接 localhost:5173（web）和 localhost:3000（api），这样我可以本地调试客户端。
 
 **Acceptance Criteria:**
-- [ ] Electron 客户端配置开发环境 API 地址为 http://localhost:3000
+- [ ] Electron 客户端配置开发环境 API 地址为 http://localhost:3002
 - [ ] Electron 客户端开发时加载 Web 资源为 http://localhost:5273
 - [ ] Electron 客户端通过环境变量或配置文件区分开发/生产环境
 - [ ] Typecheck passes

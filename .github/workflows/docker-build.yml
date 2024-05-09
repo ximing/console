@@ -99,7 +99,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Run Command:" >> $GITHUB_STEP_SUMMARY
           echo '```bash' >> $GITHUB_STEP_SUMMARY
-          echo "docker run -d -p 3000:3000 \\" >> $GITHUB_STEP_SUMMARY
+          echo "docker run -d -p 3002:3002 \\" >> $GITHUB_STEP_SUMMARY
           echo "  -e JWT_SECRET=your-secret \\" >> $GITHUB_STEP_SUMMARY
           echo "  -e OPENAI_API_KEY=your-key \\" >> $GITHUB_STEP_SUMMARY
           echo "  -e MYSQL_HOST=mysql \\" >> $GITHUB_STEP_SUMMARY
