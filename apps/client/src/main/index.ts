@@ -647,13 +647,6 @@ function parseCommand(line: string): DialogOptions | null {
   return options as DialogOptions;
 }
 
-// Get icon for dialog type
-function getDialogIcon(type: DialogOptions['type']): string | undefined {
-  // On macOS, we can use system icons via file paths
-  // On Windows, we rely on the native dialog's built-in icons
-  return undefined;
-}
-
 // Show dialog and return result
 function showDialog(options: DialogOptions): Promise<{ action: string; button: string; id: string }> {
   return new Promise((resolve) => {
