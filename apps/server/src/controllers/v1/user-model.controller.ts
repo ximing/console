@@ -87,7 +87,10 @@ export class UserModelController {
           break;
         case 'other':
           if (!testData.apiBaseUrl) {
-            return ResponseUtility.error(ErrorCode.PARAMS_ERROR, 'API Base URL is required for custom providers');
+            return ResponseUtility.error(
+              ErrorCode.PARAMS_ERROR,
+              'API Base URL is required for custom providers'
+            );
           }
           baseUrl = testData.apiBaseUrl;
           break;
@@ -103,7 +106,7 @@ export class UserModelController {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${testData.apiKey}`,
+          Authorization: `Bearer ${testData.apiKey}`,
         },
         body: JSON.stringify({
           model: testData.modelName,
@@ -114,10 +117,13 @@ export class UserModelController {
 
       if (!response.ok) {
         const errorBody = await response.text();
-        return ResponseUtility.error(ErrorCode.EXTERNAL_SERVICE_ERROR, `API request failed: ${response.status} - ${errorBody}`);
+        return ResponseUtility.error(
+          ErrorCode.EXTERNAL_SERVICE_ERROR,
+          `API request failed: ${response.status} - ${errorBody}`
+        );
       }
 
-      const data = await response.json() as {
+      const data = (await response.json()) as {
         choices?: Array<{ message: { content: string } }>;
         error?: { message: string };
       };

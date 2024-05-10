@@ -53,7 +53,11 @@ export const notificationApi = {
   /**
    * Mark all notifications as read
    */
-  markAllAsRead: async (params?: { channel?: string; ownership?: string; ownershipId?: string }): Promise<{ markedCount: number }> => {
+  markAllAsRead: async (params?: {
+    channel?: string;
+    ownership?: string;
+    ownershipId?: string;
+  }): Promise<{ markedCount: number }> => {
     const queryParams = new URLSearchParams();
     if (params?.channel) queryParams.set('channel', params.channel);
     if (params?.ownership) queryParams.set('ownership', params.ownership);

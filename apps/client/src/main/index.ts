@@ -648,7 +648,9 @@ function parseCommand(line: string): DialogOptions | null {
 }
 
 // Show dialog and return result
-function showDialog(options: DialogOptions): Promise<{ action: string; button: string; id: string }> {
+function showDialog(
+  options: DialogOptions
+): Promise<{ action: string; button: string; id: string }> {
   return new Promise((resolve) => {
     const dialogId = generateId();
 
@@ -714,17 +716,20 @@ function showNotification(options: DialogOptions): void {
 }
 
 // Handle incoming socket data
-function handleSocketData(
-  data: Buffer,
-  client: net.Socket
-): void {
+function handleSocketData(data: Buffer, client: net.Socket): void {
   const line = data.toString().trim();
   console.log('[Socket] Received command:', line);
 
   const options = parseCommand(line);
 
   if (!options) {
-    client.write(JSON.stringify({ error: 'Invalid command', usage: 'notify|dialog --title "xxx" --message "xxx" [--type info|warning|error|success|question] [--buttons "btn1,btn2"] [--persistent] [--icon /path/to/icon.png] [--timeout 3000]' }) + '\n');
+    client.write(
+      JSON.stringify({
+        error: 'Invalid command',
+        usage:
+          'notify|dialog --title "xxx" --message "xxx" [--type info|warning|error|success|question] [--buttons "btn1,btn2"] [--persistent] [--icon /path/to/icon.png] [--timeout 3000]',
+      }) + '\n'
+    );
     return;
   }
 

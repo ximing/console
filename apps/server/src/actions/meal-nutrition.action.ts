@@ -1,6 +1,12 @@
 import { Container } from 'typedi';
 
-import type { ActionHandler, ActionResult, ActionParamSchema, ActionContext, ModelInfo } from './types.js';
+import type {
+  ActionHandler,
+  ActionResult,
+  ActionParamSchema,
+  ActionContext,
+  ModelInfo,
+} from './types.js';
 import { LLMService } from '../services/llm.service.js';
 import { NotificationService } from '../services/notification.service.js';
 

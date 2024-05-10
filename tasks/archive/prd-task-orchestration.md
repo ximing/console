@@ -18,9 +18,11 @@
 ## User Stories
 
 ### US-001: 创建任务编排
+
 **Description:** 作为用户，我想创建一个任务编排，定义触发条件和执行动作。
 
 **Acceptance Criteria:**
+
 - [ ] 提供创建任务编排的 UI 界面（页面或弹窗）
 - [ ] 用户可以设置任务名称（必填）
 - [ ] 用户可以选择触发类型：手动或定时
@@ -32,9 +34,11 @@
 - [ ] Typecheck 和 lint 通过
 
 ### US-002: 查看任务列表
+
 **Description:** 作为用户，我想查看我创建的所有任务编排。
 
 **Acceptance Criteria:**
+
 - [ ] 显示任务列表页面
 - [ ] 每行显示：任务名称、触发类型、下次执行时间、状态（启用/禁用）
 - [ ] 支持启用/禁用任务切换
@@ -45,9 +49,11 @@
 - [ ] Typecheck 和 lint 通过
 
 ### US-003: 手动触发任务
+
 **Description:** 作为用户，我想手动执行一个任务。
 
 **Acceptance Criteria:**
+
 - [ ] 任务列表每行有"执行"按钮
 - [ ] 点击执行按钮立即触发任务
 - [ ] 执行完成后显示成功/失败结果
@@ -57,9 +63,11 @@
 - [ ] Verify in browser using dev-browser skill
 
 ### US-004: 定时任务调度
+
 **Description:** 作为系统，我需要根据 CRON 表达式自动触发已启用的任务。
 
 **Acceptance Criteria:**
+
 - [ ] 后端实现定时任务调度器（基于 node-cron 或类似库）
 - [ ] 只调度状态为"启用"的任务
 - [ ] 任务执行后记录执行日志
@@ -68,9 +76,11 @@
 - [ ] Typecheck 和 lint 通过
 
 ### US-005:机制
+
 **Description:** 执行动作注册 作为开发者，我想注册新的动作供用户选择。
 
 **Acceptance Criteria:**
+
 - [ ] 定义动作注册接口（ActionHandler）
 - [ ] 提供内置动作示例（如：发送 HTTP 请求、创建 Memo）
 - [ ] 动作可接收配置参数
@@ -78,9 +88,11 @@
 - [ ] Typecheck 和 lint 通过
 
 ### US-006: 执行日志记录
+
 **Description:** 作为用户，我想查看任务的执行历史。
 
 **Acceptance Criteria:**
+
 - [ ] 每次任务执行生成一条日志记录
 - [ ] 日志包含：执行时间、任务 ID、状态（success/failed）、失败原因（如果有）
 - [ ] 用户可以在任务详情页查看执行历史
@@ -91,18 +103,21 @@
 ## Functional Requirements
 
 ### FR-1: 任务 CRUD
+
 - FR-1.1: 创建任务：名称、触发类型、CRON 表达式、动作列表
 - FR-1.2: 编辑任务：修改上述字段
 - FR-1.3: 删除任务：物理删除，连带删除相关执行日志
 - FR-1.4: 启用/禁用任务：禁用后定时调度器不执行
 
 ### FR-2: 触发器
+
 - FR-2.1: 手动触发：用户点击执行按钮立即触发
 - FR-2.2: 定时触发：基于 CRON 表达式，支持秒/分/时/日/月/周
 - FR-2.3: 提供常用 CRON 模板（每小时、每天、每周）
 - FR-2.4: 验证 CRON 表达式格式有效性
 
 ### FR-3: 动作系统
+
 - FR-3.1: 动作在服务端注册，动态加载
 - FR-3.2: 每个动作有：唯一标识、名称、描述、参数 schema
 - FR-3.3: 动作执行是原子的，成功或失败
@@ -110,12 +125,14 @@
 - FR-3.5: 至少实现一个示例动作（如 HTTP 请求动作）
 
 ### FR-4: 执行日志
+
 - FR-4.1: 记录任务执行的开始时间、结束时间、状态
 - FR-4.2: 失败时记录错误信息（错误类型、错误消息）
 - FR-4.3: 成功时记录执行结果摘要
 - FR-4.4: 执行日志保留策略（可配置，默认 30 天）
 
 ### FR-5: 调度器
+
 - FR-5.1: 调度器每分钟检查一次是否有任务需要执行
 - FR-5.2: 支持并发执行（同一任务不会重叠执行）
 - FR-5.3: 调度器日志记录
@@ -139,10 +156,10 @@
   id: string;
   name: string;
   triggerType: 'manual' | 'scheduled';
-  cronExpression: string | null;  // scheduled 时必填
+  cronExpression: string | null; // scheduled 时必填
   enabled: boolean;
-  actionId: string;              // 动作标识
-  actionConfig: Record<string, any>;  // 动作配置参数
+  actionId: string; // 动作标识
+  actionConfig: Record<string, any>; // 动作配置参数
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
@@ -180,11 +197,13 @@ interface ActionResult {
 ```
 
 ### 调度器实现
+
 - 使用 node-cron 或 node-schedule 库
 - 每个任务作为独立的 cron job 注册
 - 任务执行使用 try-catch 包装，捕获所有异常
 
 ### 已有代码复用
+
 - 使用现有的 DTO 定义
 - 复用现有的数据库连接（如果有 MySQL）或使用新表
 - 使用现有的错误码常量

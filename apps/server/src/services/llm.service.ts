@@ -66,7 +66,10 @@ export class LLMService {
   /**
    * Get API configuration for a provider
    */
-  private getApiConfig(provider: LLMProvider, model: UserModel): { baseUrl: string; apiKey: string } {
+  private getApiConfig(
+    provider: LLMProvider,
+    model: UserModel
+  ): { baseUrl: string; apiKey: string } {
     const modelName = model.modelName;
 
     // Determine base URL based on provider
@@ -114,7 +117,11 @@ export class LLMService {
   /**
    * Call LLM with a specific model ID
    */
-  async chatWithModel(userId: string, modelId: string, options: ChatOptions): Promise<ChatResponse> {
+  async chatWithModel(
+    userId: string,
+    modelId: string,
+    options: ChatOptions
+  ): Promise<ChatResponse> {
     // Get the model configuration
     const model = await this.userModelService.getModel(modelId, userId);
 
@@ -130,7 +137,7 @@ export class LLMService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
+          Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
           model: modelName,
@@ -153,7 +160,7 @@ export class LLMService {
         );
       }
 
-      const data = await response.json() as ChatResponse;
+      const data = (await response.json()) as ChatResponse;
       return data;
     } catch (error) {
       if (error instanceof LLMError) {

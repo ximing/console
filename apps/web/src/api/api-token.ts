@@ -1,8 +1,4 @@
-import type {
-  ApiTokenDto,
-  CreateApiTokenDto,
-  ApiTokenListDto,
-} from '@aimo-console/dto';
+import type { ApiTokenDto, CreateApiTokenDto, ApiTokenListDto } from '@aimo-console/dto';
 import request from '../utils/request';
 
 interface ApiResponse<T> {
@@ -19,7 +15,9 @@ export const apiTokenApi = {
    * Get all tokens for current user
    */
   getTokens: async (): Promise<ApiTokenListDto> => {
-    const response = await request.get<unknown, ApiResponse<ApiTokenListDto>>('/api/v1/user/api-tokens');
+    const response = await request.get<unknown, ApiResponse<ApiTokenListDto>>(
+      '/api/v1/user/api-tokens'
+    );
     return response.data;
   },
 

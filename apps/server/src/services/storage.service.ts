@@ -173,7 +173,10 @@ export class StorageService {
   /**
    * Generate presigned URL for object (temporary access)
    */
-  async getPresignedUrl(objectName: string, expirySeconds: number = MAX_PRESIGNED_URL_EXPIRY_SECONDS) {
+  async getPresignedUrl(
+    objectName: string,
+    expirySeconds: number = MAX_PRESIGNED_URL_EXPIRY_SECONDS
+  ) {
     const s3Client = this.getS3ClientOrThrow();
 
     try {

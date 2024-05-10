@@ -1,9 +1,4 @@
-import {
-  JsonController,
-  Post,
-  Body,
-  UseBefore,
-} from 'routing-controllers';
+import { JsonController, Post, Body, UseBefore } from 'routing-controllers';
 import { Service } from 'typedi';
 
 import { ErrorCode } from '../../constants/error-codes.js';

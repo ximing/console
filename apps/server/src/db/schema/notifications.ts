@@ -7,11 +7,20 @@ export const notifications = mysqlTable(
   'notifications',
   {
     id: varchar('id', { length: 191 }).primaryKey().notNull(),
-    channel: mysqlEnum('channel', ['wechat', 'feishu', 'dingtalk', 'slack', 'email', 'webhook']).notNull(),
+    channel: mysqlEnum('channel', [
+      'wechat',
+      'feishu',
+      'dingtalk',
+      'slack',
+      'email',
+      'webhook',
+    ]).notNull(),
     ownership: mysqlEnum('ownership', ['group', 'private']).notNull(),
     ownershipId: varchar('ownership_id', { length: 191 }).notNull(),
     content: text('content').notNull(),
-    messageType: mysqlEnum('message_type', ['text', 'image', 'file', 'link', 'mixed']).notNull().default('text'),
+    messageType: mysqlEnum('message_type', ['text', 'image', 'file', 'link', 'mixed'])
+      .notNull()
+      .default('text'),
     status: mysqlEnum('status', ['unread', 'read']).notNull().default('unread'),
     createdAt: timestamp('created_at', { mode: 'date', fsp: 3 }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { mode: 'date', fsp: 3 })

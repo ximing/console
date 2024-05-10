@@ -17,6 +17,7 @@ export const ApiTokenSettings = view(() => {
 
   useEffect(() => {
     apiTokenService.fetchTokens();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleCreateToken = async (e: React.FormEvent) => {
@@ -31,7 +32,7 @@ export const ApiTokenSettings = view(() => {
       const token = await apiTokenService.createToken({ name: tokenName.trim() });
       setNewToken(token.token || '');
       setTokenName('');
-    } catch (err) {
+    } catch {
       // Error already handled in service
     } finally {
       setIsCreating(false);
@@ -54,7 +55,7 @@ export const ApiTokenSettings = view(() => {
     try {
       await apiTokenService.deleteToken(id);
       toastService.success('Token删除成功');
-    } catch (err) {
+    } catch {
       // Error already handled in service
     } finally {
       setDeletingId(null);
@@ -163,9 +164,7 @@ export const ApiTokenSettings = view(() => {
           <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
           <div className="text-sm text-amber-800 dark:text-amber-200">
             <p className="font-medium mb-1">安全提示</p>
-            <p>
-              Token只在创建时显示一次，请妥善保存。Token泄露后请立即删除。
-            </p>
+            <p>Token只在创建时显示一次，请妥善保存。Token泄露后请立即删除。</p>
           </div>
         </div>
       </div>

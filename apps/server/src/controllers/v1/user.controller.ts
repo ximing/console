@@ -141,10 +141,7 @@ export class UserV1Controller {
 
       // Check if avatar S3 storage is available
       if (!this.storageService.isAvailable()) {
-        return ResponseUtility.error(
-          ErrorCode.STORAGE_ERROR,
-          'Storage service is not available'
-        );
+        return ResponseUtility.error(ErrorCode.STORAGE_ERROR, 'Storage service is not available');
       }
 
       // Get current user to check if they have an old avatar

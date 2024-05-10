@@ -62,7 +62,7 @@ const TaskFormModal = view(({ isOpen, onClose, onSuccess, editTask }: TaskFormMo
         setActionId(editTask.actionId);
         // Extract modelId from actionConfig if exists
         const config = editTask.actionConfig as Record<string, unknown> | undefined;
-        setModelId(config?.modelId as string | undefined || '');
+        setModelId((config?.modelId as string | undefined) || '');
         setActionConfig(
           editTask.actionConfig ? JSON.stringify(editTask.actionConfig, null, 2) : ''
         );
@@ -325,7 +325,9 @@ const TaskFormModal = view(({ isOpen, onClose, onSuccess, editTask }: TaskFormMo
                   errors.actionId ? 'border-red-500' : 'border-gray-300 dark:border-dark-600'
                 }`}
               >
-                <span className={selectedAction ? 'text-gray-900 dark:text-white' : 'text-gray-400'}>
+                <span
+                  className={selectedAction ? 'text-gray-900 dark:text-white' : 'text-gray-400'}
+                >
                   {selectedAction ? selectedAction.name : '请选择动作'}
                 </span>
                 <ChevronDown className="w-4 h-4 text-gray-400" />
@@ -415,9 +417,7 @@ const TaskFormModal = view(({ isOpen, onClose, onSuccess, editTask }: TaskFormMo
                   </div>
                 )}
               </div>
-              {!modelId && (
-                <p className="mt-1 text-sm text-orange-500">请选择一个模型</p>
-              )}
+              {!modelId && <p className="mt-1 text-sm text-orange-500">请选择一个模型</p>}
             </div>
           )}
 
@@ -435,7 +435,9 @@ const TaskFormModal = view(({ isOpen, onClose, onSuccess, editTask }: TaskFormMo
                 errors.actionConfig ? 'border-red-500' : 'border-gray-300 dark:border-dark-600'
               }`}
             />
-            {errors.actionConfig && <p className="mt-1 text-sm text-red-500">{errors.actionConfig}</p>}
+            {errors.actionConfig && (
+              <p className="mt-1 text-sm text-red-500">{errors.actionConfig}</p>
+            )}
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
               输入 JSON 格式的配置参数，具体参数取决于所选动作
             </p>
@@ -571,9 +573,7 @@ export const TasksPage = view(() => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">任务编排</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                管理您的自动化任务
-              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">管理您的自动化任务</p>
             </div>
             <button
               onClick={openNewTaskModal}
@@ -601,12 +601,8 @@ export const TasksPage = view(() => {
               <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-dark-700 rounded-full flex items-center justify-center">
                 <Zap className="w-8 h-8 text-gray-400" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                暂无任务
-              </h3>
-              <p className="text-gray-500 dark:text-gray-400 mb-6">
-                创建您的第一个自动化任务吧
-              </p>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">暂无任务</h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-6">创建您的第一个自动化任务吧</p>
               <button
                 onClick={openNewTaskModal}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
@@ -767,10 +763,7 @@ export const TasksPage = view(() => {
       {deleteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setDeleteModalOpen(false)}
-          />
+          <div className="absolute inset-0 bg-black/50" onClick={() => setDeleteModalOpen(false)} />
 
           {/* Modal */}
           <div className="relative bg-white dark:bg-dark-800 rounded-xl shadow-xl p-6 max-w-md w-full mx-4 border border-gray-200 dark:border-dark-700">
@@ -820,12 +813,8 @@ export const TasksPage = view(() => {
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-dark-700">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  执行历史
-                </h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  {historyTask.name}
-                </p>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">执行历史</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{historyTask.name}</p>
               </div>
               <button
                 onClick={() => setHistoryModalOpen(false)}
@@ -840,15 +829,16 @@ export const TasksPage = view(() => {
               {taskService.isLoadingExecutions ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-20 bg-gray-100 dark:bg-dark-700 rounded-lg animate-pulse" />
+                    <div
+                      key={i}
+                      className="h-20 bg-gray-100 dark:bg-dark-700 rounded-lg animate-pulse"
+                    />
                   ))}
                 </div>
               ) : taskService.executions.length === 0 ? (
                 <div className="text-center py-12">
                   <History className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
-                  <p className="text-gray-500 dark:text-gray-400">
-                    暂无执行记录
-                  </p>
+                  <p className="text-gray-500 dark:text-gray-400">暂无执行记录</p>
                 </div>
               ) : (
                 <div className="space-y-3">

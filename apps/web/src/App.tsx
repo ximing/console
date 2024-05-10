@@ -32,6 +32,7 @@ function AuthInitializer() {
     // 在组件挂载时检查认证状态
     // 这会验证 token 并连接 Socket.IO
     authService.checkAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return null;

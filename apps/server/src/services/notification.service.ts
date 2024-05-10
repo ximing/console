@@ -2,10 +2,18 @@ import { Service } from 'typedi';
 import { eq, and, count, desc, type SQL } from 'drizzle-orm';
 
 import { getDatabase } from '../db/connection.js';
-import { notifications, type Notification, type NewNotification } from '../db/schema/notifications.js';
+import {
+  notifications,
+  type Notification,
+  type NewNotification,
+} from '../db/schema/notifications.js';
 import { generateUid } from '../utils/id.js';
 
-import type { NotificationChannel, NotificationOwnership, NotificationStatus } from '@aimo-console/dto';
+import type {
+  NotificationChannel,
+  NotificationOwnership,
+  NotificationStatus,
+} from '@aimo-console/dto';
 
 @Service()
 export class NotificationService {
@@ -110,10 +118,7 @@ export class NotificationService {
       return null;
     }
 
-    await db
-      .update(notifications)
-      .set({ status: 'read' })
-      .where(eq(notifications.id, id));
+    await db.update(notifications).set({ status: 'read' }).where(eq(notifications.id, id));
 
     const [updated] = await db.select().from(notifications).where(eq(notifications.id, id));
     return updated;

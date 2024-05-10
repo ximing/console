@@ -63,7 +63,9 @@ export const HomePage = view(() => {
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
                   <GreetingIcon className="w-8 h-8" />
-                  <h1 className="text-3xl font-bold">{greeting}，{userName}！</h1>
+                  <h1 className="text-3xl font-bold">
+                    {greeting}，{userName}！
+                  </h1>
                 </div>
                 <p className="text-primary-100 text-lg">欢迎回来，开始您的工作吧</p>
               </div>
@@ -170,14 +172,18 @@ export const HomePage = view(() => {
             </div>
             <div className="bg-white dark:bg-dark-800 rounded-lg shadow p-4 border border-gray-200 dark:border-dark-700">
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {Math.ceil((Number(currentTime) - Number(new Date(currentTime.getFullYear(), 0, 1))) / 86400000)}
+                {Math.ceil(
+                  (Number(currentTime) - Number(new Date(currentTime.getFullYear(), 0, 1))) /
+                    86400000
+                )}
               </div>
               <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">今年第几天</div>
             </div>
             <div className="bg-white dark:bg-dark-800 rounded-lg shadow p-4 border border-gray-200 dark:border-dark-700">
               <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                 {Math.ceil(
-                  (Number(currentTime) - Number(new Date(currentTime.getFullYear(), currentTime.getMonth(), 1))) /
+                  (Number(currentTime) -
+                    Number(new Date(currentTime.getFullYear(), currentTime.getMonth(), 1))) /
                     86400000
                 )}
               </div>

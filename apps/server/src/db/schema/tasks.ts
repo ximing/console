@@ -1,4 +1,12 @@
-import { mysqlTable, varchar, timestamp, index, boolean, json, mysqlEnum } from 'drizzle-orm/mysql-core';
+import {
+  mysqlTable,
+  varchar,
+  timestamp,
+  index,
+  boolean,
+  json,
+  mysqlEnum,
+} from 'drizzle-orm/mysql-core';
 
 /**
  * Tasks table - stores task orchestration configurations

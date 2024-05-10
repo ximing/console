@@ -26,7 +26,9 @@ export const userModelApi = {
    * Get all models for current user
    */
   getModels: async (): Promise<UserModelListDto> => {
-    const response = await request.get<unknown, ApiResponse<UserModelListDto>>('/api/v1/user-models');
+    const response = await request.get<unknown, ApiResponse<UserModelListDto>>(
+      '/api/v1/user-models'
+    );
     return response.data;
   },
 
@@ -34,7 +36,9 @@ export const userModelApi = {
    * Get a single model by ID
    */
   getModel: async (id: string): Promise<UserModelDto> => {
-    const response = await request.get<unknown, ApiResponse<UserModelDto>>(`/api/v1/user-models/${id}`);
+    const response = await request.get<unknown, ApiResponse<UserModelDto>>(
+      `/api/v1/user-models/${id}`
+    );
     return response.data;
   },
 

@@ -15,9 +15,11 @@
 ## User Stories
 
 ### US-001: 创建大模型配置数据库表
+
 **Description:** 作为开发者，我需要创建数据库表来存储用户的大模型配置，以便数据能够持久化。
 
 **Acceptance Criteria:**
+
 - [ ] 创建 `user_models` 表，包含字段：id、userId、name、provider、apiBaseUrl、apiKey、modelName、isDefault、createdAt、updatedAt
 - [ ] provider 字段存储模型提供方标识（如 openai、deepseek、openrouter）
 - [ ] apiBaseUrl 字段可选，用于配置自定义 API 地址
@@ -26,9 +28,11 @@
 - [ ] Typecheck 通过
 
 ### US-002: 后端 - 添加模型配置 CRUD 接口
+
 **Description:** 作为开发者，我需要提供后端 API 来管理用户的大模型配置。
 
 **Acceptance Criteria:**
+
 - [ ] POST /api/v1/user-models - 创建模型配置
 - [ ] GET /api/v1/user-models - 获取用户所有模型配置
 - [ ] GET /api/v1/user-models/:id - 获取单个模型配置详情
@@ -38,9 +42,11 @@
 - [ ] Typecheck 通过
 
 ### US-003: 后端 - 统一模型调用服务
+
 **Description:** 作为开发者，我需要提供一个统一的大模型调用服务，调用方只需传入模型提供方和模型名称即可。
 
 **Acceptance Criteria:**
+
 - [ ] 创建 LLMService，提供统一的 chat 方法
 - [ ] chat 方法接收参数：provider、model、messages
 - [ ] 根据 provider 查找用户配置的模型（包含 apiKey 和 apiBaseUrl）
@@ -50,9 +56,11 @@
 - [ ] Typecheck 通过
 
 ### US-004: 前端 - 设置页面添加大模型配置入口
+
 **Description:** 作为用户，我需要在设置页面能够访问大模型配置功能。
 
 **Acceptance Criteria:**
+
 - [ ] 在设置页面添加"大模型设置"入口/标签页
 - [ ] 显示已配置的模型列表
 - [ ] 显示"添加模型"按钮
@@ -60,9 +68,11 @@
 - [ ] Verify in browser using dev-browser skill
 
 ### US-005: 前端 - 添加/编辑模型配置表单
+
 **Description:** 作为用户，我需要填写模型配置信息，包括模型名称、提供方、API Key 等。
 
 **Acceptance Criteria:**
+
 - [ ] 表单字段：模型名称（显示用）、模型提供方（下拉选择）、API Base URL（可选）、API Key、模型名称（实际调用用）
 - [ ] 提供方下拉选项：OpenAI、DeepSeek、OpenRouter、其他（兼容 OpenAI）
 - [ ] API Key 字段为密码类型
@@ -73,9 +83,11 @@
 - [ ] Verify in browser using dev-browser skill
 
 ### US-006: 前端 - 模型列表展示与操作
+
 **Description:** 作为用户，我需要查看已配置的模型列表，并对模型进行编辑、删除、设为默认等操作。
 
 **Acceptance Criteria:**
+
 - [ ] 列表展示每个模型的：名称、提供方、模型名称、默认标识
 - [ ] 每个模型有编辑、删除按钮
 - [ ] 提供"设为默认"操作
@@ -85,9 +97,11 @@
 - [ ] Verify in browser using dev-browser skill
 
 ### US-007: 前端 - API 调用封装
+
 **Description:** 作为前端开发者，我需要封装 API 调用方法供其他模块使用。
 
 **Acceptation Criteria:**
+
 - [ ] 在 api/ 目录添加 user-model.api.ts
 - [ ] 提供 createModel、getModels、updateModel、deleteModel 方法
 - [ ] 使用 axios 进行请求

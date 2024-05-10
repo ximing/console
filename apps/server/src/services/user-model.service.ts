@@ -77,10 +77,7 @@ export class UserModelService {
 
       // If this is set as default, unset other defaults first
       if (data.isDefault) {
-        await db
-          .update(userModels)
-          .set({ isDefault: false })
-          .where(eq(userModels.userId, userId));
+        await db.update(userModels).set({ isDefault: false }).where(eq(userModels.userId, userId));
       }
 
       const id = generateUid();
@@ -110,7 +107,11 @@ export class UserModelService {
   /**
    * Update a model
    */
-  async updateModel(id: string, userId: string, data: UpdateUserModelDto): Promise<UserModel | null> {
+  async updateModel(
+    id: string,
+    userId: string,
+    data: UpdateUserModelDto
+  ): Promise<UserModel | null> {
     try {
       const db = getDatabase();
 

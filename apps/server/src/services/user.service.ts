@@ -81,10 +81,7 @@ export class UserService {
   /**
    * Update user information
    */
-  async updateUser(
-    id: string,
-    updateData: { username?: string; avatar?: string }
-  ): Promise<void> {
+  async updateUser(id: string, updateData: { username?: string; avatar?: string }): Promise<void> {
     try {
       const db = getDatabase();
 
