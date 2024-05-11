@@ -77,7 +77,7 @@ pnpm rm             # Remove all node_modules recursively
 ### Package Structure
 
 ```
-aimo/
+console/
 ├── apps/
 │   ├── web/              # React 19 + Vite frontend
 │   └── server/           # Express.js + TypeScript backend
