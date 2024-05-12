@@ -1,3 +1,5 @@
+/* eslint-disable import/order */
+
 import { AuthV1Controller } from './v1/auth.controller.js';
 import { UserV1Controller } from './v1/user.controller.js';
 import { TaskController } from './v1/task.controller.js';
@@ -6,6 +8,7 @@ import { NotificationBAController } from './v1/notification.ba.controller.js';
 import { AIController } from './v1/ai.controller.js';
 import { UserModelController } from './v1/user-model.controller.js';
 import { ApiTokenController } from './v1/api-token.controller.js';
+import { StaticController } from './static.controller.js';
 
 export const controllers = [
   AuthV1Controller,
@@ -16,4 +19,5 @@ export const controllers = [
   AIController,
   UserModelController,
   ApiTokenController,
+  StaticController,
 ];
