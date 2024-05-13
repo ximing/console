@@ -141,13 +141,6 @@ export class NotificationService extends Service {
   }
 
   /**
-   * Get unread count
-   */
-  get unreadCount(): number {
-    return this.notifications.filter((n) => n.status === 'unread').length;
-  }
-
-  /**
    * Clear all notifications
    */
   clear(): void {
