@@ -22,9 +22,21 @@ export const Layout = view(({ children }: LayoutProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Load notifications on mount (for badge count)
+  // Load unread count on mount (for badge)
   useEffect(() => {
-    notificationService.loadNotifications({ limit: 100, offset: 0 });
+    notificationService.loadUnreadCount();
+
+    // Refresh unread count when page becomes visible (user switches back to tab)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        notificationService.loadUnreadCount();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -34,8 +46,8 @@ export const Layout = view(({ children }: LayoutProps) => {
   const isTasksPage = location.pathname.startsWith('/tasks');
   const isNotificationsPage = location.pathname.startsWith('/notifications');
 
-  // Calculate unread count
-  const unreadCount = notificationService.notifications.filter((n) => n.status === 'unread').length;
+  // Get unread count from service (updated via socket events)
+  const unreadCount = notificationService.unreadCount;
 
   // Close menu when clicking outside
   useEffect(() => {

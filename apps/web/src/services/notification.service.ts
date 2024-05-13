@@ -10,6 +10,7 @@ export class NotificationService extends Service {
   // State
   notifications: NotificationDto[] = [];
   total = 0;
+  unreadCount = 0;
   isLoading = false;
   error: string | null = null;
 
@@ -81,6 +82,10 @@ export class NotificationService extends Service {
       const notification = await notificationApi.markAsRead(id);
       // Update local state
       this.notifications = this.notifications.map((n) => (n.id === id ? notification : n));
+      // Decrement unread count if was unread
+      if (notification.status === 'read') {
+        this.decrementUnreadCount();
+      }
       return true;
     } catch (err) {
       console.error('Mark as read error:', err);
@@ -99,6 +104,8 @@ export class NotificationService extends Service {
         ...n,
         status: 'read',
       }));
+      // Reset unread count
+      this.resetUnreadCount();
       return true;
     } catch (err) {
       console.error('Mark all as read error:', err);
@@ -146,7 +153,41 @@ export class NotificationService extends Service {
   clear(): void {
     this.notifications = [];
     this.total = 0;
+    this.unreadCount = 0;
     this.error = null;
+  }
+
+  /**
+   * Load unread notification count only (for badge)
+   */
+  async loadUnreadCount(): Promise<void> {
+    try {
+      const data = await notificationApi.getUnreadCount();
+      this.unreadCount = data.count;
+    } catch (err) {
+      console.error('Load unread count error:', err);
+    }
+  }
+
+  /**
+   * Increment unread count when new notification arrives via socket
+   */
+  incrementUnreadCount(): void {
+    this.unreadCount += 1;
+  }
+
+  /**
+   * Decrement unread count (e.g., when notification is read)
+   */
+  decrementUnreadCount(): void {
+    this.unreadCount = Math.max(0, this.unreadCount - 1);
+  }
+
+  /**
+   * Reset unread count to zero
+   */
+  resetUnreadCount(): void {
+    this.unreadCount = 0;
   }
 }
 

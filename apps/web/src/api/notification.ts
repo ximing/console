@@ -79,4 +79,24 @@ export const notificationApi = {
     );
     return response.data;
   },
+
+  /**
+   * Get unread notification count
+   */
+  getUnreadCount: async (params?: {
+    channel?: string;
+    ownership?: string;
+    ownershipId?: string;
+  }): Promise<{ count: number }> => {
+    const queryParams = new URLSearchParams();
+    if (params?.channel) queryParams.set('channel', params.channel);
+    if (params?.ownership) queryParams.set('ownership', params.ownership);
+    if (params?.ownershipId) queryParams.set('ownershipId', params.ownershipId);
+
+    const query = queryParams.toString();
+    const response = await request.get<unknown, ApiResponse<{ count: number }>>(
+      `/api/v1/notifications/unread-count${query ? `?${query}` : ''}`
+    );
+    return response.data;
+  },
 };

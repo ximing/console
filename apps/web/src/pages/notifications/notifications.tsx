@@ -18,6 +18,8 @@ export const NotificationsPage = view(() => {
   // Load notifications on mount
   useEffect(() => {
     notificationService.loadNotifications();
+    // Sync unread count when visiting notification page
+    notificationService.loadUnreadCount();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

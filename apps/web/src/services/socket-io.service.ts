@@ -295,6 +295,11 @@ export class SocketIOService extends Service {
     notificationService.notifications = [dto, ...notificationService.notifications];
     notificationService.total += 1;
 
+    // Increment unread count for badge
+    if (payload.status === 'unread') {
+      notificationService.incrementUnreadCount();
+    }
+
     // Trigger callback
     this.onNotification?.(payload);
 
