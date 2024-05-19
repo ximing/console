@@ -28,7 +28,7 @@
         "Typecheck 和 lint 通过"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
