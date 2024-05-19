@@ -636,6 +636,27 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - Socket.IO service can detect runtime environment and use appropriate notification API
   - Click handler on Electron notification brings window to front before notifying renderer
 
+## 2026-03-07 10:30:00 - US-001 (AIMO CLI)
+- Created CLI app in apps/cli/ directory with commander
+- Implemented subcommand registration mechanism using CliCommand interface
+- Added --help and --version support
+- Created init and notify subcommand stubs
+- Typecheck and lint pass
+- Files changed:
+  - apps/cli/package.json (new)
+  - apps/cli/tsconfig.json (new)
+  - apps/cli/eslint.config.mjs (new)
+  - apps/cli/src/index.ts (new)
+  - apps/cli/src/commands/index.ts (new)
+  - apps/cli/src/commands/init.command.ts (new)
+  - apps/cli/src/commands/notify.command.ts (new)
+  - tasks/prd.json (marked US-001 as complete)
+- **Learnings for future iterations:**
+  - CLI apps are added to apps/ directory with workspace package name @aimo-console/cli
+  - Use commander for CLI subcommand handling
+  - ESLint config uses @aimo-console/eslint-config/base.js
+  - CLI runs via tsx for dev and tsc for build
+
 ## 2026-03-06 21:50:00 - US-001 到 US-008 (Token管理完整实现)
 - 实现了用户API Token管理完整功能：
   - US-001: 创建user_api_tokens数据库表，使用Drizzle ORM
