@@ -34,14 +34,17 @@ interface NotificationResponse {
 /**
  * Load config from file
  */
-function loadConfig(): CliConfig | null {
-  const configPath = path.resolve(process.cwd(), CONFIG_FILE_NAME);
-  if (!existsSync(configPath)) {
+function loadConfig(configPath?: string): CliConfig | null {
+  const resolvedPath = configPath
+    ? path.resolve(process.cwd(), configPath)
+    : path.resolve(process.cwd(), CONFIG_FILE_NAME);
+
+  if (!existsSync(resolvedPath)) {
     return null;
   }
 
   try {
-    const content = readFileSync(configPath, 'utf8');
+    const content = readFileSync(resolvedPath, 'utf8');
     return JSON.parse(content) as CliConfig;
   } catch {
     return null;
@@ -54,6 +57,7 @@ function loadConfig(): CliConfig | null {
 function getConfig(options: {
   domain?: string;
   token?: string;
+  config?: string;
 }): { domain: string; token: string } | null {
   // Priority 1: Environment variables
   const envDomain = process.env.AIMO_CLI_DOMAIN;
@@ -63,8 +67,8 @@ function getConfig(options: {
   const cliDomain = options.domain;
   const cliToken = options.token;
 
-  // Priority 3: Config file
-  const configFile = loadConfig();
+  // Priority 3: Config file (with optional custom path)
+  const configFile = loadConfig(options.config);
 
   const domain = envDomain ?? cliDomain ?? configFile?.domain;
   const token = envToken ?? cliToken ?? configFile?.token;
@@ -91,6 +95,7 @@ export const notifyCommand: CliCommand = {
       .option('--dry-run', 'Preview notification without sending', false)
       .option('--domain <domain>', 'Override domain from config')
       .option('--token <token>', 'Override token from config')
+      .option('--config <path>', 'Path to config file (default: .aimo-cli.json)')
       .action(async (options) => {
         const config = getConfig(options);
 
