@@ -672,6 +672,29 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - Config file uses JSON format with pretty printing (JSON.stringify with null, 2)
   - Check existsSync before writing to avoid accidentally overwriting
 
+## 2026-03-07 11:00:00 - US-003, US-004 (AIMO CLI)
+- Implemented notify subcommand to create notifications via CLI
+- Supports parameters: --channel/-c, --ownership/-o, --ownership-id, --content/-m, --message-type
+- Makes HTTP POST to /api/v1/ba/notifications endpoint
+- Prints notification ID and status on success
+- Supports --dry-run to preview without sending request
+- Implements config priority: env vars > CLI options > config file
+- Uses native fetch API for HTTP requests (Node.js 18+)
+- Added --config parameter to both notify and init commands
+- Supports AIMO_CLI_DOMAIN and AIMO_CLI_TOKEN environment variables
+- Typecheck and lint pass (warnings only)
+- Files changed:
+  - apps/cli/src/commands/notify.command.ts (complete rewrite)
+  - apps/cli/src/commands/init.command.ts (added --config option)
+  - tasks/prd.json (marked US-003 and US-004 as complete)
+- **Learnings for future iterations:**
+  - Use native fetch API available in Node.js 18+ for HTTP requests
+  - CLI uses BA endpoint (/api/v1/ba/notifications) which accepts API tokens
+  - Use .substring() or .slice() for string truncation (note: lint prefers slice)
+  - Commander options can be used to accept command-line parameters
+  - process.exit() is allowed in CLI apps (unicorn/no-process-exit warning is a false positive)
+  - Use -c, --config format for short and long options in commander
+
 ## 2026-03-06 21:50:00 - US-001 到 US-008 (Token管理完整实现)
 - 实现了用户API Token管理完整功能：
   - US-001: 创建user_api_tokens数据库表，使用Drizzle ORM
