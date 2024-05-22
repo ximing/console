@@ -173,7 +173,7 @@ export const config: Config = {
     port: Number(process.env.MYSQL_PORT) || 3306,
     user: process.env.MYSQL_USER || 'root',
     password: process.env.MYSQL_PASSWORD || '',
-    database: process.env.MYSQL_DATABASE || 'aimo',
+    database: process.env.MYSQL_DATABASE || 'console',
     connectionLimit: Number(process.env.MYSQL_CONNECTION_LIMIT) || 10,
   },
   s3:
@@ -196,7 +196,7 @@ export const config: Config = {
     port: Number(process.env.REDIS_PORT) || 6379,
     password: process.env.REDIS_PASSWORD || undefined,
     db: Number(process.env.REDIS_DB) || 0,
-    keyPrefix: process.env.REDIS_KEY_PREFIX || 'aimo:',
+    keyPrefix: process.env.REDIS_KEY_PREFIX || 'console:',
     connectTimeout: Number(process.env.REDIS_CONNECT_TIMEOUT) || 10000,
     maxRetriesPerRequest: Number(process.env.REDIS_MAX_RETRIES) || 3,
   },

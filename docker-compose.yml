@@ -3,7 +3,7 @@ version: '3.8'
 services:
   mysql:
     image: mysql:8.0
-    container_name: aimo-mysql
+    container_name: console-mysql
     ports:
       - '3306:3306'
     volumes:
@@ -11,8 +11,8 @@ services:
       - ./data/mysql:/var/lib/mysql
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD:-aimo_password}
-      - MYSQL_DATABASE=${MYSQL_DATABASE:-aimo}
-      - MYSQL_USER=${MYSQL_USER:-aimo}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-console}
+      - MYSQL_USER=${MYSQL_USER:-console}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD:-aimo_password}
       # 配置 MySQL 字符集
       - MYSQL_CHARSET=utf8mb4
@@ -38,17 +38,17 @@ services:
 
   app:
     # 使用预构建的镜像 (推荐生产环境使用 stable 标签)
-    image: ghcr.io/ximing/aimo:stable
+    image: ghcr.io/ximing/console:stable
     # 其他可用标签:
-    # - ghcr.io/ximing/aimo:latest  (最新提交，可能不稳定)
-    # - ghcr.io/ximing/aimo:stable  (master 分支稳定版本)
-    # - ghcr.io/ximing/aimo:v1.0.0  (特定版本)
+    # - ghcr.io/ximing/console:latest  (最新提交，可能不稳定)
+    # - ghcr.io/ximing/console:stable  (master 分支稳定版本)
+    # - ghcr.io/ximing/console:v1.0.0  (特定版本)
     # 如果需要从源码构建，请注释上面一行，取消下面的注释
     # build:
     #   context: .
     #   dockerfile: Dockerfile
-    # image: aimo:latest
-    container_name: aimo-app
+    # image: console:latest
+    container_name: console-app
     depends_on:
       mysql:
         condition: service_healthy
@@ -74,9 +74,9 @@ services:
       # ===== MySQL 数据库配置 =====
       - MYSQL_HOST=${MYSQL_HOST:-mysql}
       - MYSQL_PORT=${MYSQL_PORT:-3306}
-      - MYSQL_USER=${MYSQL_USER:-aimo}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-aimo_password}
-      - MYSQL_DATABASE=${MYSQL_DATABASE:-aimo}
+      - MYSQL_USER=${MYSQL_USER:-console}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-console_password}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-console}
       - MYSQL_CONNECTION_LIMIT=${MYSQL_CONNECTION_LIMIT:-10}
 
       # ===== LanceDB 配置 =====

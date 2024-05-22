@@ -16,7 +16,7 @@ pnpm workspace仓库，安装 npm 包 使用 pnpm
 ## 项目结构
 
 ```
-aimo/
+console/
 ├── apps/                          # 应用程序
 │   ├── server/                    # 后端服务（Node.js + Express）
 │   │   ├── src/

@@ -5,7 +5,7 @@ import { Command } from 'commander';
 
 import type { CliCommand } from './index.js';
 
-const CONFIG_FILE_NAME = '.aimo-cli.json';
+const CONFIG_FILE_NAME = '.console-cli.json';
 
 interface CliConfig {
   domain: string;
@@ -14,15 +14,15 @@ interface CliConfig {
 
 export const initCommand: CliCommand = {
   name: 'init',
-  description: 'Generate configuration file for AIMO CLI',
+  description: 'Generate configuration file for console CLI',
   register(program: Command): Command {
     return program
       .command('init')
-      .description('Generate .aimo-cli.json configuration file')
+      .description('Generate .console-cli.json configuration file')
       .option('-f, --force', 'Overwrite existing configuration file', false)
       .option('--domain <domain>', 'AIMO domain (e.g., https://console.aimo.plus)')
       .option('--token <token>', 'JWT token for authentication')
-      .option('-c, --config <path>', 'Path to config file (default: .aimo-cli.json)')
+      .option('-c, --config <path>', 'Path to config file (default: .console-cli.json)')
       .action(async (options) => {
         const configFileName = options.config || CONFIG_FILE_NAME;
         const configPath = path.resolve(process.cwd(), configFileName);
@@ -60,7 +60,7 @@ export const initCommand: CliCommand = {
         try {
           writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
           console.log(`Configuration file created at ${configPath}`);
-          console.log('You can now use aimo-cli notify command');
+          console.log('You can now use console-cli notify command');
         } catch (error) {
           console.error('Failed to create configuration file:', error);
           process.exit(1);

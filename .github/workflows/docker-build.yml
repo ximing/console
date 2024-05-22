@@ -103,8 +103,8 @@ jobs:
           echo "  -e JWT_SECRET=your-secret \\" >> $GITHUB_STEP_SUMMARY
           echo "  -e OPENAI_API_KEY=your-key \\" >> $GITHUB_STEP_SUMMARY
           echo "  -e MYSQL_HOST=mysql \\" >> $GITHUB_STEP_SUMMARY
-          echo "  -e MYSQL_USER=aimo \\" >> $GITHUB_STEP_SUMMARY
+          echo "  -e MYSQL_USER=console \\" >> $GITHUB_STEP_SUMMARY
           echo "  -e MYSQL_PASSWORD=password \\" >> $GITHUB_STEP_SUMMARY
-          echo "  -e MYSQL_DATABASE=aimo \\" >> $GITHUB_STEP_SUMMARY
+          echo "  -e MYSQL_DATABASE=console \\" >> $GITHUB_STEP_SUMMARY
           echo "  ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY

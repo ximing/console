@@ -41,9 +41,9 @@ sudo systemctl start mysql
 
 # Create database
 mysql -u root -p
-CREATE DATABASE aimo CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'aimo'@'localhost' IDENTIFIED BY 'your-secure-password';
-GRANT ALL PRIVILEGES ON aimo.* TO 'aimo'@'localhost';
+CREATE DATABASE console CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'console'@'localhost' IDENTIFIED BY 'your-secure-password';
+GRANT ALL PRIVILEGES ON console.* TO 'console'@'localhost';
 FLUSH PRIVILEGES;
 EXIT;
 ```
@@ -54,7 +54,7 @@ EXIT;
 # From project root
 docker-compose up -d mysql
 
-# The database 'aimo' will be created automatically
+# The database 'console' will be created automatically
 ```
 
 ### 3. Configure Environment Variables
@@ -71,9 +71,9 @@ Edit `.env` and configure MySQL connection:
 # MySQL Configuration
 MYSQL_HOST=localhost
 MYSQL_PORT=3306
-MYSQL_USER=aimo
+MYSQL_USER=console
 MYSQL_PASSWORD=your-secure-password
-MYSQL_DATABASE=aimo
+MYSQL_DATABASE=console
 MYSQL_CONNECTION_LIMIT=10
 
 # Required: OpenAI API Key for embeddings

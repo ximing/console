@@ -31,15 +31,11 @@ const __dirname = path.dirname(__filename);
 // ├─┬ dist
 // │ ├─┬ main
 // │ │ └── index.js     > Electron-Main
-// │ ├─┬ preload
-// │ │ └── index.mjs    > Preload-Scripts
-// │ └─┬ index.html   > Web app (built from apps/web with ELECTRON=true)
+// │ └─┬ preload
+// │   └── index.cjs    > Preload-Scripts
 
-export const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL;
-export const RENDERER_DIST = path.resolve(__dirname, '..');
+export const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL || 'https://console.aimo.plus';
 export const PRELOAD_PATH = path.join(__dirname, '../preload/index.cjs');
-
-process.env.VITE_PUBLIC = RENDERER_DIST;
 
 let mainWindow: BrowserWindow | null;
 let tray: Tray | null = null;
@@ -191,11 +187,7 @@ function createWindow(): void {
     }
   });
 
-  if (VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(VITE_DEV_SERVER_URL);
-  } else {
-    mainWindow.loadFile(path.join(RENDERER_DIST, 'index.html'));
-  }
+  mainWindow.loadURL(VITE_DEV_SERVER_URL);
 
   // Show window when ready to prevent visual flash
   mainWindow.once('ready-to-show', () => {
@@ -457,7 +449,7 @@ function createApplicationMenu(): void {
         {
           label: '访问 GitHub',
           click: () => {
-            shell.openExternal('https://github.com/ximing/aimo');
+            shell.openExternal('https://github.com/ximing/console');
           },
         },
       ],
@@ -562,7 +554,7 @@ ipcMain.handle('show-notification', (_event, payload: NotificationPayload) => {
 // Socket Server for CLI communication
 // ============================================
 
-const SOCKET_PATH = '/tmp/aimo-console.sock';
+const SOCKET_PATH = process.env.VITE_SOCKET_PATH as string;
 
 // Generate unique ID for each dialog
 function generateId(): string {

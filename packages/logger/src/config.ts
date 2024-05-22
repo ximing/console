@@ -38,7 +38,7 @@ export interface LoggerOptions {
 
   /**
    * 日志存储根目录
-   * 默认: ~/.aimo/logs/
+   * 默认: ~/.console/logs/
    * 环境变量: OSG_LOGGER_DIR
    */
   logDir?: string;
@@ -129,7 +129,7 @@ export function resolveConfig(options: LoggerOptions): ResolvedConfig {
   let logDir =
     options.logDir ||
     getEnvironmentValue('OSG_LOGGER_DIR') ||
-    path.join(os.homedir(), '.aimo', 'logs');
+    path.join(os.homedir(), '.console', 'logs');
 
   // 确保路径末尾没有斜杠
   logDir = logDir.replace(/\/$/, '');
