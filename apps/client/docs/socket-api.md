@@ -1,17 +1,17 @@
-# AIMO Electron Socket API
+# Console Electron Socket API
 
-通过 Unix Socket 与 AIMO Electron 客户端通信，创建系统通知和对话框。
+通过 Unix Socket 与 Console Electron 客户端通信，创建系统通知和对话框。
 
 ## Socket 路径
 
 ```
-/tmp/aimo-console.sock
+/tmp/console.sock
 ```
 
 ## 使用方式
 
 ```bash
-echo '<command>' | nc -U /tmp/aimo-console.sock
+echo '<command>' | nc -U /tmp/console.sock
 ```
 
 ## 命令格式
@@ -142,4 +142,4 @@ fi
 1. `notify` 命令是非阻塞的，发送后立即返回
 2. `dialog` 命令会阻塞等待用户交互，在用户点击按钮前不会返回
 3. 多个命令可以通过换行分隔一次性发送
-4. 确保 AIMO Electron 应用正在运行
+4. 确保 Console Electron 应用正在运行

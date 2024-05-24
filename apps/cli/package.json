@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "license": "BSL-1.1",
-  "description": "AIMO CLI for operations and notifications",
+  "description": "console CLI for operations and notifications",
   "type": "module",
   "bin": {
     "aimo-cli": "./dist/index.js"

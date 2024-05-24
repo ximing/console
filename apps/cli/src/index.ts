@@ -8,7 +8,7 @@ const program = new Command();
 
 program
   .name('console-cli')
-  .description('AIMO CLI for operations and notifications')
+  .description('console CLI for operations and notifications')
   .version('0.0.1');
 
 // Register subcommands

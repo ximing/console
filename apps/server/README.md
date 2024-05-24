@@ -1,6 +1,6 @@
-# AIMO Server
+# Console Server
 
-Express.js backend server for AIMO with MySQL for relational data and LanceDB for vector embeddings.
+Express.js backend server for Console with MySQL for relational data and LanceDB for vector embeddings.
 
 ## Architecture
 

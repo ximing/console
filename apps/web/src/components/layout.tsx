@@ -107,12 +107,12 @@ export const Layout = view(({ children }: LayoutProps) => {
         >
           <img
             src={logoUrl}
-            alt="Aimo Logo"
+            alt="Console Logo"
             className="w-full h-full object-cover block dark:hidden"
           />
           <img
             src={logoDarkUrl}
-            alt="Aimo Logo"
+            alt="Console Logo"
             className="w-full h-full object-cover hidden dark:block"
           />
         </div>
