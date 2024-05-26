@@ -5,7 +5,7 @@ import type {
   NotificationOwnership,
   NotificationStatus,
   NotificationDto,
-} from '@aimo-console/dto';
+} from '@x-console/dto';
 import { authService } from './auth.service';
 import { notificationService } from './notification.service';
 import { isElectron } from '../electron/isElectron';

@@ -1,7 +1,7 @@
 {
-  "name": "@aimo-console/logger",
+  "name": "@x-console/logger",
   "version": "0.1.0",
-  "description": "AIMO Node.js 服务端日志库",
+  "description": "Console Node.js 服务端日志库",
   "main": "lib/index.cjs",
   "module": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -37,8 +37,8 @@
     "winston-daily-rotate-file": "^4.7.1"
   },
   "devDependencies": {
-    "@aimo-console/eslint-config": "workspace:*",
-    "@aimo-console/typescript-config": "workspace:*",
+    "@x-console/eslint-config": "workspace:*",
+    "@x-console/typescript-config": "workspace:*",
     "@types/jest": "^29.0.0",
     "@types/node": "^20.0.0",
     "@types/winston": "^2.4.4",

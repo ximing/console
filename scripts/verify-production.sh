@@ -91,13 +91,13 @@ if [ "$BUILD_CHECK" = "true" ]; then
     pnpm install --frozen-lockfile
     
     echo -e "Building DTO package..."
-    pnpm --filter @aimo-console/dto build
+    pnpm --filter @x-console/dto build
     
     echo -e "Building Web application..."
-    pnpm --filter @aimo-console/web build
+    pnpm --filter @x-console/web build
     
     echo -e "Building Server application..."
-    pnpm --filter @aimo-console/server build
+    pnpm --filter @x-console/server build
     
     # Verify build artifacts
     echo -e "\n${YELLOW}7. Verifying build artifacts...${NC}"

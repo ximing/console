@@ -1,6 +1,6 @@
 import { Service } from '@rabjs/react';
 import { userModelApi } from '../api/user-model';
-import type { UserModelDto, CreateUserModelDto, UpdateUserModelDto } from '@aimo-console/dto';
+import type { UserModelDto, CreateUserModelDto, UpdateUserModelDto } from '@x-console/dto';
 
 /**
  * User Model Service

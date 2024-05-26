@@ -1,5 +1,5 @@
 {
-  "name": "@aimo-console/eslint-config",
+  "name": "@x-console/eslint-config",
   "version": "0.0.0",
   "type": "module",
   "private": true,

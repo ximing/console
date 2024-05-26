@@ -1,6 +1,6 @@
 import { Service } from '@rabjs/react';
 import { apiTokenApi } from '../api/api-token';
-import type { ApiTokenDto, ApiTokenListDto, CreateApiTokenDto } from '@aimo-console/dto';
+import type { ApiTokenDto, ApiTokenListDto, CreateApiTokenDto } from '@x-console/dto';
 
 export class ApiTokenService extends Service {
   tokens: ApiTokenDto[] = [];

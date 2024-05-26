@@ -23,7 +23,7 @@ import type {
   NotificationListDto,
   QueryNotificationDto,
   CreateNotificationDto,
-} from '@aimo-console/dto';
+} from '@x-console/dto';
 import type { Notification } from '../../db/schema/notifications.js';
 
 /**

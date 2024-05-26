@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { Log } from '@aimo-console/logger';
+import { Log } from '@x-console/logger';
 
 /**
  * Console Server Logger

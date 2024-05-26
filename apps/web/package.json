@@ -1,5 +1,5 @@
 {
-  "name": "@aimo-console/web",
+  "name": "@x-console/web",
   "private": true,
   "version": "0.0.0",
   "license": "BSL-1.1",
@@ -13,7 +13,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@aimo-console/dto": "workspace:*",
+    "@x-console/dto": "workspace:*",
     "@headlessui/react": "^2.2.9",
     "@rabjs/react": "^9.0.0",
     "axios": "^1.13.5",
@@ -29,7 +29,7 @@
     "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
-    "@aimo-console/typescript-config": "workspace:*",
+    "@x-console/typescript-config": "workspace:*",
     "@eslint/js": "^9.39.1",
     "@types/d3": "^7.4.3",
     "@types/node": "^24.10.1",

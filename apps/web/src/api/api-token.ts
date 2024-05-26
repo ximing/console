@@ -1,4 +1,4 @@
-import type { ApiTokenDto, CreateApiTokenDto, ApiTokenListDto } from '@aimo-console/dto';
+import type { ApiTokenDto, CreateApiTokenDto, ApiTokenListDto } from '@x-console/dto';
 import request from '../utils/request';
 
 interface ApiResponse<T> {

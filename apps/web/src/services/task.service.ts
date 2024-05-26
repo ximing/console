@@ -8,7 +8,7 @@ import type {
   AvailableActionDto,
   ExecutionLogDto,
   UserModelDto,
-} from '@aimo-console/dto';
+} from '@x-console/dto';
 
 /**
  * Task Service

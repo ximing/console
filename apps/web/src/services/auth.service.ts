@@ -1,5 +1,5 @@
 import { Service } from '@rabjs/react';
-import type { LoginDto, RegisterDto, UserInfoDto } from '@aimo-console/dto';
+import type { LoginDto, RegisterDto, UserInfoDto } from '@x-console/dto';
 import * as authApi from '../api/auth';
 import * as userApi from '../api/user';
 

@@ -28,7 +28,7 @@ import type {
   TaskTriggerResultDto,
   UpdateTaskDto,
   UserInfoDto,
-} from '@aimo-console/dto';
+} from '@x-console/dto';
 import type { Task } from '../../db/schema/tasks.js';
 import type { ExecutionLog } from '../../db/schema/execution-logs.js';
 

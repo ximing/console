@@ -6,7 +6,7 @@ import { config } from '../config/config.js';
 import { UserService } from '../services/user.service.js';
 import { logger } from '../utils/logger.js';
 
-import type { UserInfoDto } from '@aimo-console/dto';
+import type { UserInfoDto } from '@x-console/dto';
 
 // Paths that require authentication
 const PROTECTED_PATHS = ['/api', '/home', '/ai-explore', '/gallery', '/settings'];

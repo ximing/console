@@ -11,7 +11,7 @@ import type {
   ApiTokenDto,
   ApiTokenListDto,
   UserInfoDto,
-} from '@aimo-console/dto';
+} from '@x-console/dto';
 
 /**
  * Helper to convert token to DTO

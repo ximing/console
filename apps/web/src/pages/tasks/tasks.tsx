@@ -16,7 +16,7 @@ import {
   Loader2,
   History,
 } from 'lucide-react';
-import type { TaskDto, CreateTaskDto } from '@aimo-console/dto';
+import type { TaskDto, CreateTaskDto } from '@x-console/dto';
 
 // CRON templates
 const CRON_TEMPLATES = [

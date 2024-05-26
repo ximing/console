@@ -1,7 +1,7 @@
-import { config } from '@aimo-console/eslint-config/base.js';
+import { config } from '@x-console/eslint-config/base.js';
 
 /**
- * ESLint 9 Flat Config for @aimo-console/logger
+ * ESLint 9 Flat Config for @x-console/logger
  */
 export default [
   ...config,

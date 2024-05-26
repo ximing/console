@@ -22,16 +22,16 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 
 # Build logger package first
-RUN pnpm --filter @aimo-console/logger build
+RUN pnpm --filter @x-console/logger build
 
 # Build DTO package first
-RUN pnpm --filter @aimo-console/dto build
+RUN pnpm --filter @x-console/dto build
 
 # Build web app (outputs to server/public)
-RUN pnpm --filter @aimo-console/web build
+RUN pnpm --filter @x-console/web build
 
 # Build server
-RUN pnpm --filter @aimo-console/server build
+RUN pnpm --filter @x-console/server build
 
 # Production stage
 FROM node:20-slim
