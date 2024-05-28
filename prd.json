@@ -1,0 +1,129 @@
+{
+  "project": "Console Client",
+  "branchName": "ralph/electron-log-viewer",
+  "description": "在 Electron 环境下，于 Web 设置页面中增加日志模块，实时读取并展示主进程日志",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "添加日志 IPC 通道",
+      "description": "作为开发者，我需要在主进程中添加 IPC 通道以便前端能够读取日志文件内容。",
+      "acceptanceCriteria": [
+        "在 ipc.ts 中添加读取日志文件的 IPC handler",
+        "支持按行读取日志文件并返回 JSON 格式",
+        "支持分页参数（offset, limit）",
+        "支持按日志级别筛选",
+        "支持搜索关键词",
+        "返回日志总数用于分页",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "暴露日志 IPC 到 preload",
+      "description": "作为开发者，我需要在 preload 中暴露 IPC 通道以便渲染进程能够调用。",
+      "acceptanceCriteria": [
+        "在 preload 中添加 log 相关的 IPC 调用",
+        "暴露 getLogs 方法：支持分页、筛选、搜索参数",
+        "暴露 getLogCount 方法",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "添加日志设置入口",
+      "description": "作为用户，我希望在设置页面中能看到日志模块的入口，以便快速访问日志查看功能。",
+      "acceptanceCriteria": [
+        "在设置页面添加日志菜单项",
+        "点击后进入日志查看页面",
+        "显示当前日志数量统计",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "实时日志展示",
+      "description": "作为用户，我希望打开日志页面时能看到最新的日志，并且新日志能实时推送显示。",
+      "acceptanceCriteria": [
+        "页面打开时加载最新日志（默认 100 条）",
+        "新日志自动追加到顶部（最新优先）",
+        "每条日志显示：时间戳、日志级别、日志内容",
+        "不同日志级别使用不同颜色区分",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "滚动加载历史日志",
+      "description": "作为用户，我希望能够通过滚动查看更多历史日志。",
+      "acceptanceCriteria": [
+        "滚动到底部时自动加载更多日志（每次 100 条）",
+        "加载中显示 loading 状态",
+        "没有更多日志时提示已加载全部",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "日志级别筛选",
+      "description": "作为用户，我希望能够按日志级别筛选日志，快速定位特定类型的日志。",
+      "acceptanceCriteria": [
+        "提供日志级别筛选器：全部 | error | warn | info | debug",
+        "筛选后重新加载对应级别的日志",
+        "筛选状态在 URL 参数中保持",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "日志搜索功能",
+      "description": "作为用户，我希望能够搜索日志内容，快速找到包含特定关键词的日志。",
+      "acceptanceCriteria": [
+        "提供搜索输入框",
+        "输入关键词后实时筛选日志",
+        "搜索关键词高亮显示",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "清空和导出日志",
+      "description": "作为用户，我希望能够清空当前显示的日志或导出日志文件。",
+      "acceptanceCriteria": [
+        "提供清空按钮，清空当前显示的日志列表（不删除文件）",
+        "提供导出按钮，下载日志文件",
+        "清空前显示确认对话框",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
