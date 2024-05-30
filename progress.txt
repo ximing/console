@@ -11,3 +11,10 @@
   - Log files are rotated daily with format YYYY-MM-DD.log
   - Logs should be sorted by timestamp (newest first) for display
   - The Log class is in packages/logger and is imported in client as @x-console/logger
+
+## 2026-03-07 - US-002
+- What was implemented: Exposed log IPC methods in preload. Added getLogs and getLogCount methods to electronAPI.
+- Files changed: apps/client/src/preload/index.ts
+- **Learnings for future iterations:**
+  - Preload uses contextBridge.exposeInMainWorld to expose APIs to renderer
+  - Type definitions need to be added in both the implementation and the Window global type
