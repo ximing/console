@@ -1,0 +1,13 @@
+## Codebase Patterns
+- Log files use JSON format (one JSON object per line) - parse with JSON.parse()
+- Log directory: app.getPath('userData') + '/logs'
+- Daily rotating log files: YYYY-MM-DD.log format
+
+## 2026-03-07 - US-001
+- What was implemented: Added IPC handler for reading log files in ipc.ts. Supports pagination (offset, limit), log level filtering, and keyword search.
+- Files changed: apps/client/src/main/ipc.ts
+- **Learnings for future iterations:**
+  - Winston logger writes JSON format logs - need to parse each line as JSON
+  - Log files are rotated daily with format YYYY-MM-DD.log
+  - Logs should be sorted by timestamp (newest first) for display
+  - The Log class is in packages/logger and is imported in client as @x-console/logger
