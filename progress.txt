@@ -27,3 +27,11 @@
   - Settings menu items are defined in menuItems array with id, label, icon, and path
   - Routes are defined using react-router Routes component
   - Electron types should be added to isElectron.ts for web app
+
+## 2026-03-07 - US-004
+- What was implemented: Log viewer displays latest 100 logs on page load, sorted by newest first. Shows timestamp, level, and message. Different log levels have different colors.
+- Files changed: apps/web/src/pages/settings/components/log-settings.tsx
+- **Learnings for future iterations:**
+  - Uses getLevelColor() function to style log levels
+  - Default limit is 100 logs
+  - Logs are sorted by timestamp descending (newest first)
