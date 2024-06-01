@@ -171,6 +171,24 @@ export const LogSettings = view(() => {
     }
   };
 
+  // Highlight search keyword in text
+  const highlightKeyword = (text: string, keyword: string) => {
+    if (!keyword) {
+      return text;
+    }
+
+    const parts = text.split(new RegExp(`(${keyword})`, 'gi'));
+    return parts.map((part, index) =>
+      part.toLowerCase() === keyword.toLowerCase() ? (
+        <mark key={index} className="bg-yellow-200 dark:bg-yellow-500/30 px-0.5 rounded">
+          {part}
+        </mark>
+      ) : (
+        part
+      )
+    );
+  };
+
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -286,7 +304,7 @@ export const LogSettings = view(() => {
                       {log.level}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 font-mono whitespace-pre-wrap break-all">
-                      {log.message}
+                      {highlightKeyword(log.message, search)}
                     </td>
                   </tr>
                 ))}

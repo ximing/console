@@ -52,3 +52,11 @@
   - Use useSearchParams from react-router for URL parameter management
   - Update URL params on filter/search changes
   - Initialize state from URL params on component mount
+
+## 2026-03-07 - US-007
+- What was implemented: Added search keyword highlighting. Search keywords are highlighted with yellow background in log messages.
+- Files changed: apps/web/src/pages/settings/components/log-settings.tsx
+- **Learnings for future iterations:**
+  - Use highlightKeyword function to wrap matching text with <mark> tags
+  - Use case-insensitive regex for highlighting
+  - Apply different background colors for light/dark mode
