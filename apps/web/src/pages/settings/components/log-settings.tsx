@@ -1,5 +1,6 @@
 import { view } from '@rabjs/react';
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams } from 'react-router';
 import { isElectron } from '../../electron/isElectron';
 import { FileText, RefreshCw, Download, Trash2, Loader2 } from 'lucide-react';
 
@@ -32,12 +33,13 @@ function getElectronAPI() {
 }
 
 export const LogSettings = view(() => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [level, setLevel] = useState<string>('all');
-  const [search, setSearch] = useState('');
+  const [level, setLevel] = useState<string>(searchParams.get('level') || 'all');
+  const [search, setSearch] = useState(searchParams.get('search') || '');
   const [offset, setOffset] = useState(0);
   const limit = 100;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -111,6 +113,14 @@ export const LogSettings = view(() => {
 
   const handleSearch = () => {
     setOffset(0);
+    // Update URL params
+    const newParams = new URLSearchParams(searchParams);
+    if (search) {
+      newParams.set('search', search);
+    } else {
+      newParams.delete('search');
+    }
+    setSearchParams(newParams);
     loadLogs();
   };
 
@@ -176,8 +186,17 @@ export const LogSettings = view(() => {
         <select
           value={level}
           onChange={(e) => {
-            setLevel(e.target.value);
+            const newLevel = e.target.value;
+            setLevel(newLevel);
             setOffset(0);
+            // Update URL params
+            const newParams = new URLSearchParams(searchParams);
+            if (newLevel === 'all') {
+              newParams.delete('level');
+            } else {
+              newParams.set('level', newLevel);
+            }
+            setSearchParams(newParams);
           }}
           className="px-4 py-2 rounded-lg border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-800 text-gray-900 dark:text-white"
         >
