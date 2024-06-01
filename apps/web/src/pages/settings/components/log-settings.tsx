@@ -1,7 +1,7 @@
 import { view } from '@rabjs/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { isElectron } from '../../electron/isElectron';
-import { FileText, RefreshCw, Download, Trash2 } from 'lucide-react';
+import { FileText, RefreshCw, Download, Trash2, Loader2 } from 'lucide-react';
 
 // Types for log entries
 interface LogEntry {
@@ -35,40 +35,79 @@ export const LogSettings = view(() => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [level, setLevel] = useState<string>('all');
   const [search, setSearch] = useState('');
   const [offset, setOffset] = useState(0);
   const limit = 100;
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const loadLogs = async () => {
+  const loadLogs = async (isLoadMore = false) => {
     const api = getElectronAPI();
     if (!api?.getLogs) {
       return;
     }
 
-    setLoading(true);
+    if (isLoadMore) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+    }
+
     try {
       const params = {
-        offset,
+        offset: isLoadMore ? offset : 0,
         limit,
         level: level === 'all' ? undefined : level,
         search: search || undefined,
       };
       const result = (await api.getLogs(params)) as LogResponse;
       if (result.logs) {
-        setLogs(result.logs);
+        if (isLoadMore) {
+          setLogs((prev) => [...prev, ...result.logs]);
+        } else {
+          setLogs(result.logs);
+        }
         setTotal(result.total);
       }
     } catch (error) {
       console.error('Failed to load logs:', error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
+  const handleLoadMore = useCallback(() => {
+    if (loadingMore || logs.length >= total) {
+      return;
+    }
+    setOffset((prev) => prev + limit);
+    loadLogs(true);
+  }, [loadingMore, logs.length, total]);
+
+  // Infinite scroll
   useEffect(() => {
+    const container = containerRef.current;
+    if (!container) {
+      return;
+    }
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      if (scrollTop + clientHeight >= scrollHeight - 50) {
+        handleLoadMore();
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [handleLoadMore]);
+
+  useEffect(() => {
+    setOffset(0);
     loadLogs();
-  }, [level, offset]);
+  }, [level]);
 
   const handleSearch = () => {
     setOffset(0);
@@ -200,7 +239,10 @@ export const LogSettings = view(() => {
         ) : logs.length === 0 ? (
           <div className="p-8 text-center text-gray-500">暂无日志</div>
         ) : (
-          <div className="max-h-[600px] overflow-y-auto">
+          <div
+            ref={containerRef}
+            className="max-h-[600px] overflow-y-auto"
+          >
             <table className="w-full">
               <thead className="bg-gray-50 dark:bg-dark-700 sticky top-0">
                 <tr>
@@ -235,15 +277,18 @@ export const LogSettings = view(() => {
         )}
       </div>
 
-      {/* Load More */}
-      {logs.length > 0 && logs.length < total && (
-        <div className="mt-4 text-center">
-          <button
-            onClick={() => setOffset(offset + limit)}
-            className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-          >
-            加载更多
-          </button>
+      {/* Loading more indicator */}
+      {loadingMore && (
+        <div className="mt-4 flex items-center justify-center gap-2 text-gray-500">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span>加载中...</span>
+        </div>
+      )}
+
+      {/* All loaded */}
+      {logs.length > 0 && logs.length >= total && (
+        <div className="mt-4 text-center text-gray-500">
+          已加载全部 {total} 条日志
         </div>
       )}
     </div>
