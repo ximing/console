@@ -1,8 +1,8 @@
 import { view } from '@rabjs/react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router';
-import { isElectron } from '../../electron/isElectron';
-import { FileText, RefreshCw, Download, Trash2, Loader2 } from 'lucide-react';
+import { isElectron } from '../../../electron/isElectron';
+import { RefreshCw, Download, Trash2, Loader2 } from 'lucide-react';
 
 // Types for log entries
 interface LogEntry {
@@ -16,11 +16,6 @@ interface LogEntry {
 interface LogResponse {
   logs: LogEntry[];
   total: number;
-  error?: string;
-}
-
-interface LogCountResponse {
-  count: number;
   error?: string;
 }
 
@@ -45,7 +40,7 @@ export const LogSettings = view(() => {
   const limit = 100;
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const loadLogs = async (isLoadMore = false) => {
+  const loadLogs = useCallback(async (isLoadMore = false) => {
     const api = getElectronAPI();
     if (!api?.getLogs) {
       return;
@@ -79,7 +74,7 @@ export const LogSettings = view(() => {
       setLoading(false);
       setLoadingMore(false);
     }
-  };
+  }, [level, search, offset]);
 
   const handleLoadMore = useCallback(() => {
     if (loadingMore || logs.length >= total) {
@@ -87,7 +82,7 @@ export const LogSettings = view(() => {
     }
     setOffset((prev) => prev + limit);
     loadLogs(true);
-  }, [loadingMore, logs.length, total]);
+  }, [loadingMore, logs.length, total, loadLogs]);
 
   // Infinite scroll
   useEffect(() => {
@@ -110,7 +105,7 @@ export const LogSettings = view(() => {
   useEffect(() => {
     setOffset(0);
     loadLogs();
-  }, [level]);
+  }, [level, loadLogs]);
 
   const handleSearch = () => {
     setOffset(0);
@@ -256,7 +251,7 @@ export const LogSettings = view(() => {
         {/* Actions */}
         <div className="flex gap-2 ml-auto">
           <button
-            onClick={loadLogs}
+            onClick={() => loadLogs()}
             className="p-2 rounded-lg border border-gray-300 dark:border-dark-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-700"
             title="刷新"
           >
