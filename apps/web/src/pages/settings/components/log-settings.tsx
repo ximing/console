@@ -41,6 +41,7 @@ export const LogSettings = view(() => {
   const [level, setLevel] = useState<string>(searchParams.get('level') || 'all');
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [offset, setOffset] = useState(0);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const limit = 100;
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -125,7 +126,16 @@ export const LogSettings = view(() => {
   };
 
   const handleClear = () => {
+    setShowClearConfirm(true);
+  };
+
+  const confirmClear = () => {
     setLogs([]);
+    setShowClearConfirm(false);
+  };
+
+  const cancelClear = () => {
+    setShowClearConfirm(false);
   };
 
   const handleExport = async () => {
@@ -268,6 +278,34 @@ export const LogSettings = view(() => {
           </button>
         </div>
       </div>
+
+      {/* Clear Confirmation Dialog */}
+      {showClearConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-dark-800 rounded-lg p-6 max-w-sm w-full mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              确认清空
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              确定要清空当前显示的日志列表吗？这不会删除实际的日志文件。
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={cancelClear}
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg"
+              >
+                取消
+              </button>
+              <button
+                onClick={confirmClear}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              >
+                确认清空
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Log List */}
       <div className="bg-white dark:bg-dark-800 rounded-lg border border-gray-200 dark:border-dark-700 overflow-hidden">
