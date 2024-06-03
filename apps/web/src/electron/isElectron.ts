@@ -14,7 +14,6 @@ export function isElectron(): boolean {
     typeof navigator !== 'undefined' && navigator.userAgent.includes('Electron');
   // Also check for electronAPI (more reliable, exposed by preload script)
   const hasElectronAPI = typeof window !== 'undefined' && !!window.electronAPI;
-
   return hasElectronInUA || hasElectronAPI;
 }
 
