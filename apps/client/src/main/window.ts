@@ -1,13 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import {
-  app,
-  BrowserWindow,
-  shell,
-  screen,
-  type WebContents,
-} from 'electron';
+import { app, BrowserWindow, shell, screen, type WebContents } from 'electron';
 import Store from 'electron-store';
 import { PRELOAD_PATH, VITE_DEV_SERVER_URL, getIsQuitting, setIsQuitting } from './index';
 

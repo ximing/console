@@ -40,41 +40,44 @@ export const LogSettings = view(() => {
   const limit = 100;
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const loadLogs = useCallback(async (isLoadMore = false) => {
-    const api = getElectronAPI();
-    if (!api?.getLogs) {
-      return;
-    }
-
-    if (isLoadMore) {
-      setLoadingMore(true);
-    } else {
-      setLoading(true);
-    }
-
-    try {
-      const params = {
-        offset: isLoadMore ? offset : 0,
-        limit,
-        level: level === 'all' ? undefined : level,
-        search: search || undefined,
-      };
-      const result = (await api.getLogs(params)) as LogResponse;
-      if (result.logs) {
-        if (isLoadMore) {
-          setLogs((prev) => [...prev, ...result.logs]);
-        } else {
-          setLogs(result.logs);
-        }
-        setTotal(result.total);
+  const loadLogs = useCallback(
+    async (isLoadMore = false) => {
+      const api = getElectronAPI();
+      if (!api?.getLogs) {
+        return;
       }
-    } catch (error) {
-      console.error('Failed to load logs:', error);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }, [level, search, offset]);
+
+      if (isLoadMore) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+      }
+
+      try {
+        const params = {
+          offset: isLoadMore ? offset : 0,
+          limit,
+          level: level === 'all' ? undefined : level,
+          search: search || undefined,
+        };
+        const result = (await api.getLogs(params)) as LogResponse;
+        if (result.logs) {
+          if (isLoadMore) {
+            setLogs((prev) => [...prev, ...result.logs]);
+          } else {
+            setLogs(result.logs);
+          }
+          setTotal(result.total);
+        }
+      } catch (error) {
+        console.error('Failed to load logs:', error);
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+      }
+    },
+    [level, search, offset]
+  );
 
   const handleLoadMore = useCallback(() => {
     if (loadingMore || logs.length >= total) {
@@ -198,9 +201,7 @@ export const LogSettings = view(() => {
     <div className="p-6">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">日志</h2>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">
-          共 {total} 条日志
-        </p>
+        <p className="text-gray-500 dark:text-gray-400 mt-1">共 {total} 条日志</p>
       </div>
 
       {/* Toolbar */}
@@ -278,9 +279,7 @@ export const LogSettings = view(() => {
       {showClearConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-dark-800 rounded-lg p-6 max-w-sm w-full mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              确认清空
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">确认清空</h3>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
               确定要清空当前显示的日志列表吗？这不会删除实际的日志文件。
             </p>
@@ -309,10 +308,7 @@ export const LogSettings = view(() => {
         ) : logs.length === 0 ? (
           <div className="p-8 text-center text-gray-500">暂无日志</div>
         ) : (
-          <div
-            ref={containerRef}
-            className="max-h-[600px] overflow-y-auto"
-          >
+          <div ref={containerRef} className="max-h-[600px] overflow-y-auto">
             <table className="w-full">
               <thead className="bg-gray-50 dark:bg-dark-700 sticky top-0">
                 <tr>
@@ -333,7 +329,9 @@ export const LogSettings = view(() => {
                     <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 font-mono">
                       {log.timestamp}
                     </td>
-                    <td className={`px-4 py-3 text-sm font-medium font-mono ${getLevelColor(log.level)}`}>
+                    <td
+                      className={`px-4 py-3 text-sm font-medium font-mono ${getLevelColor(log.level)}`}
+                    >
                       {log.level}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 font-mono whitespace-pre-wrap break-all">
@@ -357,9 +355,7 @@ export const LogSettings = view(() => {
 
       {/* All loaded */}
       {logs.length > 0 && logs.length >= total && (
-        <div className="mt-4 text-center text-gray-500">
-          已加载全部 {total} 条日志
-        </div>
+        <div className="mt-4 text-center text-gray-500">已加载全部 {total} 条日志</div>
       )}
     </div>
   );

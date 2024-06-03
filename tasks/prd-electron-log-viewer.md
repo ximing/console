@@ -3,6 +3,7 @@
 ## Introduction
 
 在 Electron 环境下，于 Web 设置页面中增加一个日志模块，实时读取并展示 `apps/client/src/main/logger.ts` 打印的日志。该模块服务于两类用户：
+
 - 开发者：用于调试和问题排查
 - 普通用户：用于查看应用运行状态和错误信息
 
@@ -17,9 +18,11 @@
 ## User Stories
 
 ### US-001: 添加日志设置入口
+
 **Description:** 作为用户，我希望在设置页面中能看到日志模块的入口，以便快速访问日志查看功能。
 
 **Acceptance Criteria:**
+
 - [ ] 在设置页面添加"日志"菜单项
 - [ ] 点击后进入日志查看页面
 - [ ] 显示当前日志数量统计
@@ -27,9 +30,11 @@
 - [ ] Verify in browser using dev-browser skill
 
 ### US-002: 实时日志展示
+
 **Description:** 作为用户，我希望打开日志页面时能看到最新的日志，并且新日志能实时推送显示。
 
 **Acceptance Criteria:**
+
 - [ ] 页面打开时加载最新日志（默认 100 条）
 - [ ] 新日志自动追加到顶部（最新优先）
 - [ ] 支持实时接收新日志（通过 IPC 或 WebSocket）
@@ -39,9 +44,11 @@
 - [ ] Verify in browser using dev-browser skill
 
 ### US-003: 滚动加载历史日志
+
 **Description:** 作为用户，我希望能够通过滚动查看更多历史日志。
 
 **Acceptance Criteria:**
+
 - [ ] 滚动到底部时自动加载更多日志（每次 100 条）
 - [ ] 加载中显示 loading 状态
 - [ ] 加载完毕隐藏 loading
@@ -50,9 +57,11 @@
 - [ ] Verify in browser using dev-browser skill
 
 ### US-004: 日志级别筛选
+
 **Description:** 作为用户，我希望能够按日志级别筛选日志，快速定位特定类型的日志。
 
 **Acceptance Criteria:**
+
 - [ ] 提供日志级别筛选器：全部 | error | warn | info | debug
 - [ ] 筛选后重新加载对应级别的日志
 - [ ] 筛选状态在 URL 参数中保持
@@ -60,9 +69,11 @@
 - [ ] Verify in browser using dev-browser skill
 
 ### US-005: 日志搜索功能
+
 **Description:** 作为用户，我希望能够搜索日志内容，快速找到包含特定关键词的日志。
 
 **Acceptance Criteria:**
+
 - [ ] 提供搜索输入框
 - [ ] 输入关键词后实时筛选日志
 - [ ] 搜索关键词高亮显示
@@ -71,9 +82,11 @@
 - [ ] Verify in browser using dev-browser skill
 
 ### US-006: 清空和导出日志
+
 **Description:** 作为用户，我希望能够清空当前显示的日志或导出日志文件。
 
 **Acceptance Criteria:**
+
 - [ ] 提供"清空"按钮，清空当前显示的日志列表（不删除文件）
 - [ ] 提供"导出"按钮，下载日志文件
 - [ ] 清空前显示确认对话框

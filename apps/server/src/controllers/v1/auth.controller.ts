@@ -6,6 +6,7 @@ import { Service } from 'typedi';
 import { config } from '../../config/config.js';
 import { ErrorCode } from '../../constants/error-codes.js';
 import { UserService } from '../../services/user.service.js';
+import { StorageService } from '../../services/storage.service.js';
 import { logger } from '../../utils/logger.js';
 import { ResponseUtil as ResponseUtility } from '../../utils/response.js';
 
@@ -15,7 +16,10 @@ import type { Response } from 'express';
 @Service()
 @JsonController('/api/v1/auth')
 export class AuthV1Controller {
-  constructor(private userService: UserService) {}
+  constructor(
+    private userService: UserService,
+    private storageService: StorageService
+  ) {}
 
   @Post('/register')
   async register(@Body() userData: RegisterDto, @Res() response: Response) {
@@ -63,13 +67,23 @@ export class AuthV1Controller {
         maxAge: 90 * 24 * 60 * 60 * 1000, // 90 days in milliseconds
       });
 
+      // Generate presigned URL for avatar if needed
+      let avatarUrl = user.avatar ?? undefined;
+      if (avatarUrl && !avatarUrl.startsWith('http')) {
+        try {
+          avatarUrl = await this.storageService.getPresignedUrl(avatarUrl);
+        } catch (error) {
+          logger.error('Failed to generate presigned URL for avatar', { error });
+        }
+      }
+
       const responseData: LoginResponseDto = {
         token,
         user: {
           id: user.id,
           email: user.email,
           username: user.username,
-          avatar: user.avatar ?? undefined,
+          avatar: avatarUrl,
         },
       };
 
@@ -120,13 +134,23 @@ export class AuthV1Controller {
         maxAge: 90 * 24 * 60 * 60 * 1000, // 90 days in milliseconds
       });
 
+      // Generate presigned URL for avatar if needed
+      let avatarUrl = user.avatar ?? undefined;
+      if (avatarUrl && !avatarUrl.startsWith('http')) {
+        try {
+          avatarUrl = await this.storageService.getPresignedUrl(avatarUrl);
+        } catch (error) {
+          logger.error('Failed to generate presigned URL for avatar', { error });
+        }
+      }
+
       const responseData: LoginResponseDto = {
         token,
         user: {
           id: user.id,
           email: user.email,
           username: user.username,
-          avatar: user.avatar ?? undefined,
+          avatar: avatarUrl,
         },
       };
 

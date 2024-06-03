@@ -87,7 +87,10 @@ export const notifyCommand: CliCommand = {
     return program
       .command('notify')
       .description('Create a notification')
-      .requiredOption('-c, --channel <channel>', 'Notification channel (wechat|feishu|dingtalk|slack|email|webhook)')
+      .requiredOption(
+        '-c, --channel <channel>',
+        'Notification channel (wechat|feishu|dingtalk|slack|email|webhook)'
+      )
       .requiredOption('-o, --ownership <ownership>', 'Ownership type (group|private)')
       .option('--ownership-id <id>', 'Ownership ID', '')
       .requiredOption('-m, --content <content>', 'Notification content')
@@ -146,7 +149,10 @@ export const notifyCommand: CliCommand = {
             console.log('  ID:', result.data.id);
             console.log('  Status:', result.data.status);
             console.log('  Channel:', result.data.channel);
-            console.log('  Content:', result.data.content.substring(0, 50) + (result.data.content.length > 50 ? '...' : ''));
+            console.log(
+              '  Content:',
+              result.data.content.substring(0, 50) + (result.data.content.length > 50 ? '...' : '')
+            );
           } else {
             console.error('✗ Failed to create notification:', result.message || 'Unknown error');
             process.exit(1);

@@ -6,12 +6,7 @@ import { ApiTokenService, type GeneratedToken } from '../../services/api-token.s
 import { logger } from '../../utils/logger.js';
 import { ResponseUtil as ResponseUtility } from '../../utils/response.js';
 
-import type {
-  CreateApiTokenDto,
-  ApiTokenDto,
-  ApiTokenListDto,
-  UserInfoDto,
-} from '@x-console/dto';
+import type { CreateApiTokenDto, ApiTokenDto, ApiTokenListDto, UserInfoDto } from '@x-console/dto';
 
 /**
  * Helper to convert token to DTO
