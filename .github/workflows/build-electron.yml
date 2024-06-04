@@ -50,12 +50,16 @@ jobs:
       - name: Build DTO package
         run: pnpm --filter @x-console/dto build
 
+      - name: Build Logger package
+        run: pnpm --filter @x-console/logger build
+
       - name: Upload packages artifacts
         uses: actions/upload-artifact@v4
         with:
           name: packages-dist
           path: |
             packages/*/dist/**
+            packages/*/lib/**
             packages/*/package.json
           retention-days: 1
 
