@@ -156,6 +156,7 @@ export interface Config {
     enabled: boolean;
     token: string;
   };
+  allowRegistration: boolean;
   env: string;
 }
 
@@ -326,5 +327,6 @@ export const config: Config = {
     enabled: process.env.BA_AUTH_ENABLED === 'true',
     token: process.env.BA_AUTH_TOKEN || '',
   },
+  allowRegistration: process.env.ALLOW_REGISTRATION !== 'false',
   env: process.env.NODE_ENV || 'development',
 };

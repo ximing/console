@@ -6,10 +6,10 @@ import * as userApi from '../api/user';
 /**
  * Authentication Service
  * Manages user authentication state and operations
+ * Uses HTTP-only cookies for token storage
  */
 export class AuthService extends Service {
-  // State
-  token: string | null = null;
+  // State - token is no longer stored in localStorage, kept in memory only
   user: UserInfoDto | null = null;
   isAuthenticated = false;
 
@@ -26,20 +26,18 @@ export class AuthService extends Service {
 
   constructor() {
     super();
-    // Load auth state from localStorage on init
+    // Load auth state from localStorage on init (only user info)
     this.loadAuthState();
   }
 
   /**
-   * Load authentication state from localStorage
+   * Load authentication state from localStorage (user info only, no token)
    */
   loadAuthState() {
-    const savedToken = localStorage.getItem('aimo_token');
     const savedUser = localStorage.getItem('aimo_user');
 
-    if (savedToken && savedUser) {
+    if (savedUser) {
       try {
-        this.token = savedToken;
         this.user = JSON.parse(savedUser);
         this.isAuthenticated = true;
       } catch (error) {
@@ -50,14 +48,14 @@ export class AuthService extends Service {
   }
 
   /**
-   * Save authentication state to localStorage
+   * Save authentication state (user info only, token is in HTTP-only cookie)
+   * @param _token - Token from server response (kept for API compatibility, stored in cookie)
    */
-  saveAuthState(token: string, user: UserInfoDto) {
-    this.token = token;
+  saveAuthState(_token: string, user: UserInfoDto) {
+    // Token is now stored in HTTP-only cookie, not in localStorage
     this.user = user;
     this.isAuthenticated = true;
 
-    localStorage.setItem('aimo_token', token);
     localStorage.setItem('aimo_user', JSON.stringify(user));
   }
 
@@ -65,11 +63,9 @@ export class AuthService extends Service {
    * Clear authentication state
    */
   clearAuthState() {
-    this.token = null;
     this.user = null;
     this.isAuthenticated = false;
 
-    localStorage.removeItem('aimo_token');
     localStorage.removeItem('aimo_user');
   }
 
@@ -128,6 +124,13 @@ export class AuthService extends Service {
    * Logout current user
    */
   async logout() {
+    try {
+      // Call logout API to clear cookie on server
+      await authApi.logout();
+    } catch (error) {
+      console.error('Logout API error:', error);
+    }
+
     // Disconnect from Socket.IO before clearing auth state
     (await this.getSocketIOService())?.disconnect();
     this.clearAuthState();
@@ -135,9 +138,11 @@ export class AuthService extends Service {
 
   /**
    * Check if user is authenticated and fetch user info
+   * Token is sent automatically via cookie (withCredentials: true)
    */
   async checkAuth() {
-    if (!this.token) {
+    // Check if we have user info in localStorage first
+    if (!this.user) {
       return false;
     }
 

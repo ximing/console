@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { view, useService } from '@rabjs/react';
 import { AuthService } from '../../services/auth.service';
+import { getAuthConfig } from '../../api/auth';
 import { LoginForm } from './components/login-form';
 import { RegisterForm } from './components/register-form';
 import logoLight from '../../assets/logo.png';
@@ -12,6 +13,21 @@ export const AuthPage = view(() => {
   const authService = useService(AuthService);
   const navigate = useNavigate();
   const isLogin = searchParams.get('mode') !== 'register';
+  const [allowRegistration, setAllowRegistration] = useState(true);
+
+  // Fetch auth config on mount
+  useEffect(() => {
+    getAuthConfig()
+      .then((res) => {
+        if (res && res.code === 0 && res.data) {
+          setAllowRegistration(res.data.allowRegistration);
+        }
+      })
+      .catch(() => {
+        // Default to true if fetch fails
+        setAllowRegistration(true);
+      });
+  }, []);
 
   // Redirect to home if already authenticated
   useEffect(() => {
@@ -48,17 +64,19 @@ export const AuthPage = view(() => {
           {isLogin ? <LoginForm /> : <RegisterForm />}
 
           {/* Toggle */}
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => {
-                const nextMode = isLogin ? 'register' : 'login';
-                navigate(`/auth?mode=${nextMode}`, { replace: true });
-              }}
-              className="text-sm text-primary-600 hover:text-primary-700 font-medium transition-colors"
-            >
-              {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
-            </button>
-          </div>
+          {allowRegistration && (
+            <div className="mt-6 text-center">
+              <button
+                onClick={() => {
+                  const nextMode = isLogin ? 'register' : 'login';
+                  navigate(`/auth?mode=${nextMode}`, { replace: true });
+                }}
+                className="text-sm text-primary-600 hover:text-primary-700 font-medium transition-colors"
+              >
+                {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
