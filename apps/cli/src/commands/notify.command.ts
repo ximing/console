@@ -60,8 +60,8 @@ function getConfig(options: {
   config?: string;
 }): { domain: string; token: string } | null {
   // Priority 1: Environment variables
-  const envDomain = process.env.AIMO_CLI_DOMAIN;
-  const envToken = process.env.AIMO_CLI_TOKEN;
+  const environmentDomain = process.env.AIMO_CLI_DOMAIN;
+  const environmentToken = process.env.AIMO_CLI_TOKEN;
 
   // Priority 2: CLI options
   const cliDomain = options.domain;
@@ -70,8 +70,8 @@ function getConfig(options: {
   // Priority 3: Config file (with optional custom path)
   const configFile = loadConfig(options.config);
 
-  const domain = envDomain ?? cliDomain ?? configFile?.domain;
-  const token = envToken ?? cliToken ?? configFile?.token;
+  const domain = environmentDomain ?? cliDomain ?? configFile?.domain;
+  const token = environmentToken ?? cliToken ?? configFile?.token;
 
   if (!domain || !token) {
     return null;
@@ -151,7 +151,7 @@ export const notifyCommand: CliCommand = {
             console.log('  Channel:', result.data.channel);
             console.log(
               '  Content:',
-              result.data.content.substring(0, 50) + (result.data.content.length > 50 ? '...' : '')
+              result.data.content.slice(0, 50) + (result.data.content.length > 50 ? '...' : '')
             );
           } else {
             console.error('✗ Failed to create notification:', result.message || 'Unknown error');
