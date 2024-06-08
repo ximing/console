@@ -180,11 +180,12 @@ export class SocketServer {
     });
 
     notification.show();
-
-    const timeout = options.timeout || 3000;
-    setTimeout(() => {
-      notification.close();
-    }, timeout);
+    const timeout = options.timeout;
+    if (timeout) {
+      setTimeout(() => {
+        notification.close();
+      }, timeout);
+    }
   }
 
   private async showDialog(
