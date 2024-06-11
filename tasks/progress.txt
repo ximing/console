@@ -1,1 +1,12 @@
 ## Codebase Patterns
+
+## 2026-03-08T16:30:00Z - US-001
+- Implemented global hotkey registration (Option+Space for macOS, Alt+Space for Windows/Linux)
+- Created CommandPaletteHotkey class in apps/client/src/main/command-palette-hotkey.ts
+- Added IPC handlers for command palette toggle and shortcut info
+- Exposed IPC methods in preload for renderer to listen to toggle events
+- **Learnings for future iterations:**
+  - Electron globalShortcut API is straightforward - use `globalShortcut.register(shortcut, callback)`
+  - IPC between main and renderer uses contextBridge.exposeInMainWorld
+  - Use callback maps in preload to properly manage event listener lifecycle
+---
