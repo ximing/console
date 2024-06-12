@@ -9,6 +9,7 @@ import { NotificationsPage } from './pages/notifications';
 import NotFoundPage from './pages/not-found';
 import { ProtectedRoute } from './components/protected-route';
 import { ToastContainer } from './components/toast';
+import { CommandPalette } from './components/command-palette/command-palette';
 import { setNavigate } from './utils/navigation';
 import { isElectron } from './electron/isElectron';
 import { AuthService } from './services/auth.service';
@@ -58,6 +59,7 @@ function App() {
       <AuthInitializer />
       <AppContent />
       <ToastContainer />
+      <CommandPalette />
       <Routes>
         <Route path="/" element={<RootRoute />} />
         <Route path="/auth" element={<AuthPage />} />
