@@ -48,3 +48,21 @@
   - Category field (text/developer/ai) useful for filtering AI tools by login status
   - Controller pattern: validate input, call service, return ResponseUtil.success/error
 ---
+
+## 2026-03-08T19:00:00Z - US-004
+- Created POST /api/tool/execute endpoint for tool execution
+- Created ToolExecutionService with handlers for all 15 tools
+- Text processing tools: json-format, json-validate, base64-encode/decode, url-encode/decode, markdown-preview
+- Developer tools: uuid-generate, color-convert (HEX/RGB/HSL), timestamp-convert, hash-md5/sha256
+- AI tools: ai-translate (with target language), ai-summarize, ai-explain-code
+- Files changed:
+  - apps/server/src/services/tool-execution.service.ts (new)
+  - apps/server/src/controllers/v1/tool-execution.controller.ts (new)
+  - apps/server/src/controllers/index.ts (modified)
+- **Learnings for future iterations:**
+  - AI tools use LangChain ChatOpenAI similar to AIRouteService
+  - Tool execution receives toolId, input, and optional options parameters
+  - Each tool returns { success: boolean, result?: string, error?: string }
+  - Color conversion handles HEX, RGB, HSL formats bidirectionally
+  - Timestamp conversion handles both seconds and milliseconds
+  - Use ResponseUtil.error with ErrorCode.PARAMS_ERROR for validation errors
