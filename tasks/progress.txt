@@ -87,3 +87,17 @@
   - Copy to clipboard using navigator.clipboard.writeText
   - CommandPalette only renders in Electron (isElectron() check), browser verification not applicable
   - Tool result displayed in <pre> tag with whitespace-pre-wrap for formatted output
+---
+
+## 2026-03-08T21:00:00Z - US-006
+- Verified Base64 encode/decode tool implementation
+- Backend already has base64-encode and base64-decode tools in tool-execution.service.ts (from US-004)
+- Frontend uses executeTool API function to call backend
+- AI routing automatically detects whether to encode or decode based on user input
+- Copy to clipboard functionality already exists in CommandPalette component
+- Typecheck passes
+- **Learnings for future iterations:**
+  - Text processing tools (Base64, URL, JSON) have backend implementations in tool-execution.service.ts
+  - Front for all text toolsend integration uses the same executeTool pattern
+  - AI routing handles auto-detection between encode/decode variants
+  - CommandPalette only renders in Electron (isElectron() check), browser verification not applicable
