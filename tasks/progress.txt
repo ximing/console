@@ -115,3 +115,22 @@
   - URL encode/decode follows same pattern as Base64 - backend implementation exists, frontend integration is automatic via executeTool
   - Keywords in tool-registry.ts: 'url', '编码', 'encode', '百分号编码', 'uri' for encode; 'url', '解码', 'decode', '百分号解码', 'uri' for decode
   - CommandPalette only renders in Electron (isElectron() check), browser verification not applicable
+---
+
+## 2026-03-08T23:00:00Z - US-008
+- Implemented Markdown preview with code syntax highlighting
+- Modified backend to return raw markdown instead of pre-converted HTML
+- Added react-syntax-highlighter for code highlighting
+- Created markdown.ts utility with MarkdownRenderer component using react-markdown
+- Updated CommandPalette to detect markdown-preview tool and render with MarkdownRenderer
+- Copy button copies HTML version for markdown-preview tool
+- Files changed:
+  - apps/server/src/services/tool-execution.service.ts (modified - simplified to return raw markdown)
+  - apps/web/src/utils/markdown.ts (new)
+  - apps/web/src/components/command-palette/command-palette.tsx (modified)
+  - apps/web/package.json (added react-syntax-highlighter)
+- **Learnings for future iterations:**
+  - For markdown tools, backend should return raw markdown, frontend renders with react-markdown + react-syntax-highlighter
+  - Use MarkdownRenderer component with custom code component for syntax highlighting
+  - Copy functionality needs special handling - convert markdown to HTML before copying
+  - CommandPalette only renders in Electron (isElectron() check), browser verification not applicable
