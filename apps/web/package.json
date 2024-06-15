@@ -13,9 +13,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@x-console/dto": "workspace:*",
     "@headlessui/react": "^2.2.9",
     "@rabjs/react": "^9.0.0",
+    "@x-console/dto": "workspace:*",
     "axios": "^1.13.5",
     "copy-to-clipboard": "^3.3.3",
     "d3": "^7.9.0",
@@ -26,16 +26,17 @@
     "react-infinite-scroll-component": "^6.1.1",
     "react-markdown": "^10.1.0",
     "react-router": "^7.13.0",
+    "react-syntax-highlighter": "^16.1.1",
     "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
-    "@x-console/typescript-config": "workspace:*",
     "@eslint/js": "^9.39.1",
     "@types/d3": "^7.4.3",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
+    "@x-console/typescript-config": "workspace:*",
     "autoprefixer": "^10.4.24",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",

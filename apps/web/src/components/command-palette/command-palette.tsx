@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { isElectron } from '../../electron/isElectron';
 import { routeTool, executeTool, type Tool, type ToolExecutionResponse } from '../../api/tool';
+import { MarkdownRenderer, renderMarkdownToHtml } from '../../utils/markdown';
 
 /**
  * CommandPalette component - a modal command palette similar to uTools
@@ -163,7 +164,11 @@ export function CommandPalette() {
     if (!toolResult?.result) return;
 
     try {
-      await navigator.clipboard.writeText(toolResult.result);
+      // For markdown-preview, copy HTML; otherwise copy plain text
+      const contentToCopy = selectedTool?.id === 'markdown-preview'
+        ? renderMarkdownToHtml(toolResult.result)
+        : toolResult.result;
+      await navigator.clipboard.writeText(contentToCopy);
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (error) {
@@ -291,9 +296,15 @@ export function CommandPalette() {
                     </button>
                   </div>
                   {toolResult.success ? (
-                    <pre className="p-3 text-xs bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-x-auto text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
-                      {toolResult.result}
-                    </pre>
+                    selectedTool?.id === 'markdown-preview' ? (
+                      <div className="p-3 text-sm bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-x-auto max-h-[300px] overflow-y-auto">
+                        <MarkdownRenderer content={toolResult.result} />
+                      </div>
+                    ) : (
+                      <pre className="p-3 text-xs bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-x-auto text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
+                        {toolResult.result}
+                      </pre>
+                    )
                   ) : (
                     <div className="p-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                       {toolResult.error}

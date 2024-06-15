@@ -123,8 +123,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 8,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Backend modified to return raw markdown. Frontend uses react-markdown + react-syntax-highlighter for rendering with code highlighting. Copy button copies HTML version."
     },
     {
       "id": "US-009",
