@@ -150,6 +150,9 @@ declare global {
       // Log APIs
       getLogs?: (params: LogQueryParams) => Promise<LogResponse>;
       getLogCount?: (params: Omit<LogQueryParams, 'offset' | 'limit'>) => Promise<LogCountResponse>;
+      // Command palette APIs
+      onCommandPaletteToggle?: (callback: () => void) => void;
+      removeCommandPaletteToggleListener?: (callback: () => void) => void;
     };
   }
 }

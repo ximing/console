@@ -134,3 +134,22 @@
   - Use MarkdownRenderer component with custom code component for syntax highlighting
   - Copy functionality needs special handling - convert markdown to HTML before copying
   - CommandPalette only renders in Electron (isElectron() check), browser verification not applicable
+---
+
+## 2026-03-08T23:30:00Z - US-009
+- Implemented UUID generation tool integration in command palette
+- Backend already has uuid-generate tool in tool-execution.service.ts (from US-004)
+- Modified CommandPalette to allow execution without input for uuid-generate tool
+- Added count parameter support: input parsed as number (1-100), defaults to 1 if empty
+- Updated placeholder text to show batch generation hint
+- Fixed type errors: renamed markdown.ts to markdown.tsx, fixed NodeJS.Timeout type, added electronAPI types
+- Files changed:
+  - apps/web/src/components/command-palette/command-palette.tsx (modified - handle uuid-generate special case)
+  - apps/web/src/utils/markdown.tsx (renamed from .ts)
+  - apps/web/src/electron/isElectron.ts (added command palette API types)
+- **Learnings for future iterations:**
+  - UUID tool uses options.count parameter for batch generation (1-100)
+  - For tools that don't need user input, handle as special case in CommandPalette
+  - JSX files must have .tsx extension for TypeScript to parse correctly
+  - Use ReturnType<typeof setTimeout> instead of NodeJS.Timeout for browser compatibility
+  - Add IPC API types to isElectron.ts Window interface when extending electronAPI
