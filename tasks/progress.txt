@@ -186,3 +186,18 @@
   - Keywords in tool-registry.ts: '时间戳', 'timestamp', '日期', 'date', '时间', 'time', '转换'
   - Backend auto-detects seconds vs milliseconds by input length (≤10 digits = seconds)
   - CommandPalette only renders in Electron (isElectron() check), browser verification not applicable
+---
+
+## 2026-03-09T00:05:00Z - US-012
+- Verified hash calculation tool implementation (MD5 and SHA256)
+- Backend already has hash-md5 and hash-sha256 tools in tool-execution.service.ts (from US-004)
+- Tool registry already has both tools with proper keywords (from US-003)
+- Frontend uses executeTool API function to call backend (same pattern as US-005-US-011)
+- AI routing automatically detects hash calculation based on user input
+- Copy to clipboard functionality already exists in CommandPalette component
+- Typecheck passes for both web and server
+- **Learnings for future iterations:**
+  - Hash calculation follows same pattern as other text tools - backend implementation exists, frontend integration is automatic via executeTool
+  - Keywords for MD5: 'md5', 'hash', '哈希', '加密', 'digest'
+  - Keywords for SHA256: 'sha256', 'sha', 'hash', '哈希', '加密', 'digest'
+  - CommandPalette only renders in Electron (isElectron() check), browser verification not applicable
