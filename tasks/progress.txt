@@ -169,3 +169,20 @@
   - Color conversion follows same pattern as other text tools - backend implementation exists, frontend integration is automatic via executeTool
   - Keywords in tool-registry.ts: '颜色', 'color', 'hex', 'rgb', 'hsl', '转换', 'convert'
   - CommandPalette only renders in Electron (isElectron() check), browser verification not applicable
+---
+
+## 2026-03-08T23:55:00Z - US-011
+- Verified timestamp conversion tool implementation
+- Backend already has timestamp-convert tool in tool-execution.service.ts (from US-004)
+- Tool registry already has timestamp-convert with proper keywords (from US-003)
+- Supports Unix timestamp → datetime and datetime → Unix timestamp
+- Supports both seconds and milliseconds formats (auto-detected by input length)
+- Frontend uses executeTool API function to call backend (same pattern as US-005-US-010)
+- AI routing automatically detects timestamp conversion based on user input
+- Copy to clipboard functionality already exists in CommandPalette component
+- Typecheck passes for both web and server
+- **Learnings for future iterations:**
+  - Timestamp conversion follows same pattern as other text tools - backend implementation exists, frontend integration is automatic via executeTool
+  - Keywords in tool-registry.ts: '时间戳', 'timestamp', '日期', 'date', '时间', 'time', '转换'
+  - Backend auto-detects seconds vs milliseconds by input length (≤10 digits = seconds)
+  - CommandPalette only renders in Electron (isElectron() check), browser verification not applicable
