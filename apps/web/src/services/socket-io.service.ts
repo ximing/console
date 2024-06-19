@@ -152,11 +152,16 @@ export class SocketIOService extends Service {
     const socketUrl = this.getSocketIOUrl();
     console.log('Connecting to Socket.IO at:', socketUrl);
 
-    // Use withCredentials to send HTTP-only cookies for authentication
-    // Token is stored in HTTP-only cookie on the server
+    // Get token from auth service for authentication
+    const token = authService.token;
+    console.log('Socket.IO auth token present:', !!token);
+
     this.socket = io(socketUrl, {
       path: '/socket.io',
       withCredentials: true,
+      auth: {
+        token: token,
+      },
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5,

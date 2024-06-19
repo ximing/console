@@ -6,11 +6,12 @@ import * as userApi from '../api/user';
 /**
  * Authentication Service
  * Manages user authentication state and operations
- * Uses HTTP-only cookies for token storage
+ * Token is stored in memory for Socket.IO authentication
  */
 export class AuthService extends Service {
-  // State - token is no longer stored in localStorage, kept in memory only
+  // State - token is kept in memory for Socket.IO auth
   user: UserInfoDto | null = null;
+  token: string | null = null;
   isAuthenticated = false;
 
   // Socket.IO service reference (lazy loaded to avoid circular dependency)
@@ -48,11 +49,13 @@ export class AuthService extends Service {
   }
 
   /**
-   * Save authentication state (user info only, token is in HTTP-only cookie)
-   * @param _token - Token from server response (kept for API compatibility, stored in cookie)
+   * Save authentication state (user info and token)
+   * Token is stored in memory for Socket.IO authentication
+   * @param token - Token from server response (stored for Socket.IO auth)
+   * @param user - User info
    */
-  saveAuthState(_token: string, user: UserInfoDto) {
-    // Token is now stored in HTTP-only cookie, not in localStorage
+  saveAuthState(token: string, user: UserInfoDto) {
+    this.token = token;
     this.user = user;
     this.isAuthenticated = true;
 
@@ -63,6 +66,7 @@ export class AuthService extends Service {
    * Clear authentication state
    */
   clearAuthState() {
+    this.token = null;
     this.user = null;
     this.isAuthenticated = false;
 
