@@ -12,6 +12,7 @@ export interface Tool {
   nameEn: string;
   description: string;
   confidence: number;
+  category?: 'text' | 'developer' | 'ai';
 }
 
 export interface AIRouteResponse {
@@ -22,6 +23,7 @@ export interface ToolExecutionRequest {
   toolId: string;
   input: string;
   options?: Record<string, unknown>;
+  modelId?: string;
 }
 
 export interface ToolExecutionResponse {
@@ -33,8 +35,11 @@ export interface ToolExecutionResponse {
 /**
  * Route user input to matching tools using AI
  */
-export const routeTool = async (input: string): Promise<Tool[]> => {
-  const response = await request.post<unknown, ApiResponse<AIRouteResponse>>('/api/ai-route', { input });
+export const routeTool = async (input: string, modelId?: string): Promise<Tool[]> => {
+  const response = await request.post<unknown, ApiResponse<AIRouteResponse>>('/api/ai-route', {
+    input,
+    modelId: modelId || undefined,
+  });
   if (response.code !== 0) {
     console.error('AI route error:', response.msg);
     return [];

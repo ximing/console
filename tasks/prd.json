@@ -249,8 +249,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 16,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Created CommandPaletteSettings component. Model selection saved to localStorage ('command-palette-model-id'). Updated API to pass modelId to backend. Backend services use user-configured model when provided, fallback to default."
     },
     {
       "id": "US-017",
@@ -264,8 +264,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 17,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added login status display at bottom of CommandPalette. Shows '已登录' or '未登录（AI 工具需要登录）'. Login prompt shown when: (1) selecting AI tool while not logged in, (2) executing AI tool returns auth error. Inline login form with email/password. After successful login, auto-retries tool execution. Logout button available."
     }
   ]
 }
