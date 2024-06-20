@@ -201,3 +201,35 @@
   - Keywords for MD5: 'md5', 'hash', '哈希', '加密', 'digest'
   - Keywords for SHA256: 'sha256', 'sha', 'hash', '哈希', '加密', 'digest'
   - CommandPalette only renders in Electron (isElectron() check), browser verification not applicable
+---
+
+## 2026-03-09T01:00:00Z - US-013
+- Added language detection to AI translation tool
+- Translation now first detects source language before translating to target
+- Added user login verification for AI tools in tool execution controller
+- AI tools now return 401 error if user is not logged in
+- Files changed:
+  - apps/server/src/services/tool-execution.service.ts (modified - added language detection)
+  - apps/server/src/controllers/v1/tool-execution.controller.ts (modified - added auth check)
+- **Learnings for future iterations:**
+  - AI tools use category: 'ai' in tool-registry.ts to identify them
+  - Use @CurrentUser() decorator for authentication in routing-controllers
+  - Import UserInfoDto from @x-console/dto package
+  - Tool category is checked using getToolById() from tool-registry
+  - CommandPalette only renders in Electron (isElectron() check), browser verification not applicable
+---
+
+## 2026-03-09T02:00:00Z - US-014 & US-015
+- Verified AI summarization and code explanation tools are fully implemented in backend
+- ai-summarize: Registered in tool-registry with keywords ['总结', 'summarize', '摘要', 'summary', '概括', '精简']
+- ai-explain-code: Registered in tool-registry with keywords ['代码', 'code', '解释', 'explain', '说明', '分析', '编程']
+- Both tools use LangChain AI for processing (executeAiSummarize and executeAiExplainCode methods)
+- Auth check already implemented in tool-execution.controller.ts (category: 'ai' requires login)
+- Frontend integration automatic via executeTool API (same pattern as other tools)
+- Typecheck passes for both web and server
+- **Learnings for future iterations:**
+  - AI tools follow category: 'ai' pattern in tool-registry.ts
+  - Frontend uses generic executeTool function for all tools - no special handling needed
+  - Backend already implemented these tools - marked as passes: false but complete
+  - Both tools support different text lengths (max 10000 chars enforced in controller)
+  - CommandPalette only renders in Electron (isElectron() check), browser verification not applicable
