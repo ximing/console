@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { app, BrowserWindow, shell, screen, type WebContents } from 'electron';
 import Store from 'electron-store';
+import { logger } from './logger';
 import { PRELOAD_PATH, VITE_DEV_SERVER_URL, getIsQuitting, setIsQuitting } from './index';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -16,6 +17,10 @@ interface WindowState {
   isMaximized: boolean;
 }
 
+interface CommandPaletteSettings {
+  hotkey: string;
+}
+
 const DEFAULT_STATE: WindowState = {
   x: 0,
   y: 0,
@@ -24,10 +29,22 @@ const DEFAULT_STATE: WindowState = {
   isMaximized: false,
 };
 
+const DEFAULT_HOTKEY: CommandPaletteSettings = {
+  hotkey: process.platform === 'darwin' ? 'Option+Space' : 'Alt+Space',
+};
+
 const windowStore = new Store<WindowState>({
   name: 'window-state',
   defaults: DEFAULT_STATE,
 });
+
+const commandPaletteStore = new Store<CommandPaletteSettings>({
+  name: 'command-palette-settings',
+  defaults: DEFAULT_HOTKEY,
+});
+
+// Export for use by other modules
+export { commandPaletteStore };
 
 export class WindowManager {
   private window: BrowserWindow | null = null;
@@ -84,6 +101,7 @@ export class WindowManager {
 
     const iconPath = this.getIconPath();
 
+    logger.info('[WindowManager] Creating BrowserWindow');
     this.window = new BrowserWindow({
       x: bounds.x,
       y: bounds.y,
@@ -150,6 +168,7 @@ export class WindowManager {
     });
 
     this.window.loadURL(VITE_DEV_SERVER_URL);
+    logger.info('[WindowManager] Window created and loading URL');
 
     this.window.once('ready-to-show', () => {
       this.window?.show();

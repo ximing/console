@@ -12,6 +12,7 @@ interface ToolExecutionRequestBody {
   toolId: string;
   input: string;
   options?: Record<string, unknown>;
+  modelId?: string;
 }
 
 @Service()
@@ -49,11 +50,16 @@ export class ToolExecutionController {
         return ResponseUtility.error(ErrorCode.PARAMS_ERROR, '输入内容过长');
       }
 
-      // 5. Execute the tool
+      // 5. Get userId
+      const userId = userDto?.id;
+
+      // 6. Execute the tool
       const result = await this.toolExecutionService.execute({
         toolId: body.toolId.trim(),
         input: body.input.trim(),
         options: body.options,
+        modelId: body.modelId,
+        userId: userId,
       });
 
       if (!result.success) {

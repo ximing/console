@@ -39,7 +39,7 @@ export async function initializeApp(): Promise<void> {
   socketServer.setWindowManager(windowManager);
 
   // Setup IPC handlers with dependencies
-  setupIPCHandlers(windowManager, updaterManager);
+  setupIPCHandlers(windowManager, updaterManager, commandPaletteHotkey);
 
   // Initialize managers
   windowManager.create();

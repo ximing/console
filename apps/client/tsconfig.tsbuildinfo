@@ -1,1 +1,1 @@
-{"root":["./src/main/index.ts","./src/main/ipc.ts","./src/main/logger.ts","./src/main/menu.ts","./src/main/socket.ts","./src/main/tray.ts","./src/main/updater.ts","./src/main/window.ts","./src/preload/index.ts"],"version":"5.9.3"}
+{"root":["./src/main/command-palette-hotkey.ts","./src/main/index.ts","./src/main/ipc.ts","./src/main/logger.ts","./src/main/menu.ts","./src/main/socket.ts","./src/main/tray.ts","./src/main/updater.ts","./src/main/window.ts","./src/preload/index.ts"],"version":"5.9.3"}
