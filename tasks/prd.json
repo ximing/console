@@ -1,271 +1,133 @@
 {
   "project": "X-Console",
-  "branchName": "ralph/command-palette",
-  "description": "在 Electron 桌面客户端中实现类似 uTools 的命令面板工具，通过全局快捷键唤起，AI 判断使用哪个工具",
+  "branchName": "ralph/command-palette-window",
+  "description": "将命令面板改为独立的 Alfred 风格浮动窗口，作为独立 BrowserWindow，通过路由 /command-palette 加载",
   "userStories": [
     {
       "id": "US-001",
-      "title": "注册全局快捷键和 IPC 通信",
-      "description": "作为开发者，我需要在 Electron 主进程中注册全局快捷键并与渲染进程通信。",
+      "title": "创建命令面板窗口管理器",
+      "description": "作为开发者，我需要在 Electron 主进程中创建独立的 BrowserWindow 用于命令面板。",
       "acceptanceCriteria": [
-        "在主进程中注册 Option+Space (macOS) 和 Alt+Space (Windows/Linux) 全局快捷键",
-        "创建 IPC 通道用于显示/隐藏命令面板",
-        "在 preload 中暴露 IPC 方法供渲染进程调用",
-        "快捷键冲突时优雅处理",
+        "创建 CommandPaletteWindowManager 类",
+        "窗口配置：无边框 (frame: false)、浮动 (alwaysOnTop: true)、透明背景",
+        "窗口尺寸：680x500 像素",
+        "窗口位置：水平居中，垂直 20% 处",
+        "不显示在任务栏 (skipTaskbar: true)",
         "Typecheck passes"
       ],
       "priority": 1,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-002",
-      "title": "创建命令面板 UI 组件",
-      "description": "作为用户，我希望通过快捷键弹出命令面板进行操作。",
+      "title": "实现窗口显示/隐藏切换",
+      "description": "作为用户，我可以通过快捷键控制命令面板窗口的显示和隐藏。",
       "acceptanceCriteria": [
-        "创建 CommandPalette 主组件",
-        "面板居中弹出，带半透明背景遮罩",
-        "面板宽度 600px，最大高度 70vh",
-        "输入框自动聚焦，带图标",
-        "Esc 或点击遮罩可关闭面板",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "实现 show() 方法显示窗口",
+        "实现 hide() 方法隐藏窗口",
+        "实现 toggle() 方法切换显示状态",
+        "窗口打开时自动聚焦",
+        "窗口关闭时释放焦点",
+        "Typecheck passes"
       ],
       "priority": 2,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-003",
-      "title": "实现 AI 路由后端端点",
-      "description": "作为开发者，我需要在后端实现 AI 路由端点，根据用户输入判断使用哪个工具。",
+      "title": "配置快捷键触发窗口切换",
+      "description": "作为用户，我可以通过全局快捷键唤起命令面板。",
       "acceptanceCriteria": [
-        "创建 POST /api/ai-route 端点",
-        "接收用户输入文本",
-        "调用 AI 返回匹配的工具列表",
-        "支持返回多个工具供用户选择",
+        "全局快捷键 Option+Space (macOS) / Alt+Space (Windows) 触发窗口显示",
+        "再次按快捷键关闭窗口",
+        "按 Escape 键关闭窗口",
+        "点击窗口外部区域关闭窗口",
         "Typecheck passes"
       ],
       "priority": 3,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-004",
-      "title": "实现工具执行后端端点",
-      "description": "作为开发者，我需要实现工具执行端点，支持 AI 辅助类工具的执行。",
+      "title": "添加命令面板路由",
+      "description": "作为开发者，我需要在 Web 应用中添加命令面板的独立路由。",
       "acceptanceCriteria": [
-        "创建 POST /api/tool/execute 端点",
-        "接收 toolId、input、options 参数",
-        "返回执行结果",
-        "支持 AI 辅助工具（翻译、总结、代码解释）",
-        "Typecheck passes"
+        "在 React Router 中添加 /command-palette 路由",
+        "创建 CommandPalettePage 页面组件",
+        "独立窗口加载 /command-palette 页面",
+        "页面加载时自动聚焦输入框",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 4,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-005",
-      "title": "实现文本处理工具 - JSON 格式化",
-      "description": "作为用户，我需要快速格式化 JSON 字符串。",
+      "title": "实现主题适配",
+      "description": "作为用户，我希望命令面板窗口的主题与主应用保持一致。",
       "acceptanceCriteria": [
-        "在前端实现 JSON 格式化工具函数",
-        "输入 JSON 字符串，输出格式化后的 JSON",
-        "JSON 解析错误时显示友好错误信息",
-        "支持一键复制结果",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "从主进程获取当前主题设置",
+        "将主题设置传递给渲染进程",
+        "根据主题应用对应的 CSS 类 (light/dark)",
+        "主题变更时面板自动更新",
+        "Typecheck passes"
       ],
       "priority": 5,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-006",
-      "title": "实现文本处理工具 - Base64 编码/解码",
-      "description": "作为用户，我需要 Base64 编码和解码功能。",
+      "title": "设置页添加快捷键配置",
+      "description": "作为用户，我需要在设置页中修改命令面板的快捷键。",
       "acceptanceCriteria": [
-        "在前端实现 Base64 编码/解码工具函数",
-        "支持自动判断是编码还是解码需求",
-        "支持一键复制结果",
+        "在命令面板设置页显示当前快捷键",
+        "提供快捷键选项列表供选择",
+        "保存用户选择的快捷键到 store",
+        "快捷键修改后重新注册",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 6,
-      "passes": true,
-      "notes": "Backend implementation exists from US-004. Frontend uses executeTool API. AI routing auto-detects encode/decode. Copy functionality in CommandPalette."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-007",
-      "title": "实现文本处理工具 - URL 编码/解码",
-      "description": "作为用户，我需要 URL 编码和解码功能。",
+      "title": "移除主应用的模态框命令面板",
+      "description": "作为开发者，我需要移除主应用中的模态框命令面板实现。",
       "acceptanceCriteria": [
-        "在前端实现 URL 编码/解码工具函数",
-        "支持自动判断是编码还是解码需求",
-        "支持一键复制结果",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "移除 App.tsx 中的 CommandPalette 组件引用",
+        "保留 CommandPalette 组件供独立页面使用",
+        "清理相关的 IPC 监听代码",
+        "Typecheck passes"
       ],
       "priority": 7,
-      "passes": true,
-      "notes": "Backend implementation exists from US-004. Frontend uses executeTool API. AI routing auto-detects encode/decode. Copy functionality in CommandPalette."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-008",
-      "title": "实现文本处理工具 - Markdown 预览",
-      "description": "作为用户，我需要将 Markdown 渲染为 HTML 预览。",
+      "title": "测试独立窗口命令面板",
+      "description": "作为用户，我需要验证独立窗口模式的命令面板正常工作。",
       "acceptanceCriteria": [
-        "在前端实现 Markdown 渲染工具函数",
-        "支持代码高亮",
-        "支持一键复制 HTML",
+        "快捷键可以正常打开命令面板窗口",
+        "输入框自动聚焦",
+        "可以搜索和执行工具",
+        "Escape 键可以关闭窗口",
+        "点击窗口外部可以关闭窗口",
+        "主题与主应用一致",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 8,
-      "passes": true,
-      "notes": "Backend modified to return raw markdown. Frontend uses react-markdown + react-syntax-highlighter for rendering with code highlighting. Copy button copies HTML version."
-    },
-    {
-      "id": "US-009",
-      "title": "实现开发工具 - UUID 生成",
-      "description": "作为开发者，我需要生成 UUID v4。",
-      "acceptanceCriteria": [
-        "在前端实现 UUID 生成工具",
-        "生成符合 RFC 4122 的 UUID v4",
-        "支持批量生成",
-        "支持一键复制结果",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 9,
-      "passes": true,
+      "passes": false,
       "notes": ""
-    },
-    {
-      "id": "US-010",
-      "title": "实现开发工具 - 颜色转换",
-      "description": "作为开发者，我需要颜色格式转换。",
-      "acceptanceCriteria": [
-        "在前端实现颜色转换工具函数",
-        "支持 HEX → RGB → HSL 相互转换",
-        "支持输入任一格式自动识别",
-        "支持一键复制结果",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 10,
-      "passes": true,
-      "notes": "Backend implementation exists from US-004. Frontend uses executeTool API. AI routing detects color keywords. Copy functionality in CommandPalette."
-    },
-    {
-      "id": "US-011",
-      "title": "实现开发工具 - 时间戳转换",
-      "description": "作为开发者，我需要时间戳和日期时间互转。",
-      "acceptanceCriteria": [
-        "在前端实现时间戳转换工具函数",
-        "支持 Unix 时间戳 → 日期时间",
-        "支持日期时间 → Unix 时间戳",
-        "支持秒和毫秒两种格式",
-        "支持一键复制结果",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 11,
-      "passes": true,
-      "notes": "Backend implementation exists from US-004. Frontend uses executeTool API. AI routing detects timestamp keywords. Copy functionality in CommandPalette."
-    },
-    {
-      "id": "US-012",
-      "title": "实现开发工具 - Hash 计算",
-      "description": "作为开发者，我需要计算字符串的 Hash 值。",
-      "acceptanceCriteria": [
-        "在前端实现 Hash 计算工具函数",
-        "支持 MD5 计算",
-        "支持 SHA256 计算",
-        "支持一键复制结果",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 12,
-      "passes": true,
-      "notes": "Backend implementation exists from US-004. Frontend uses executeTool API. AI routing detects hash keywords. Copy functionality in CommandPalette."
-    },
-    {
-      "id": "US-013",
-      "title": "实现 AI 辅助工具 - 翻译",
-      "description": "作为用户，我需要 AI 翻译文本。",
-      "acceptanceCriteria": [
-        "在工具执行端点实现翻译功能",
-        "调用 AI 进行翻译",
-        "支持语言检测",
-        "需要验证用户登录状态",
-        "Typecheck passes"
-      ],
-      "priority": 13,
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-014",
-      "title": "实现 AI 辅助工具 - 总结",
-      "description": "作为用户，我需要 AI 总结文本。",
-      "acceptanceCriteria": [
-        "在工具执行端点实现总结功能",
-        "调用 AI 进行文本总结",
-        "支持不同长度的文本",
-        "需要验证用户登录状态",
-        "Typecheck passes"
-      ],
-      "priority": 14,
-      "passes": true,
-      "notes": "Backend implementation complete. AI summarize tool registered in tool-registry with keywords ['总结', 'summarize', '摘要', 'summary', '概括', '精简']. Uses LangChain AI with text summarization prompt. Auth check implemented in tool-execution.controller.ts."
-    },
-    {
-      "id": "US-015",
-      "title": "实现 AI 辅助工具 - 代码解释",
-      "description": "作为开发者，我需要 AI 解释代码。",
-      "acceptanceCriteria": [
-        "在工具执行端点实现代码解释功能",
-        "调用 AI 解释输入的代码",
-        "支持多种编程语言",
-        "需要验证用户登录状态",
-        "Typecheck passes"
-      ],
-      "priority": 15,
-      "passes": true,
-      "notes": "Backend implementation complete. AI code explain tool registered in tool-registry with keywords ['代码', 'code', '解释', 'explain', '说明', '分析', '编程']. Uses LangChain AI with code explanation prompt. Supports multiple programming languages. Auth check implemented in tool-execution.controller.ts."
-    },
-    {
-      "id": "US-016",
-      "title": "设置页配置 AI 模型",
-      "description": "作为用户，我需要在设置页配置命令面板使用的 AI 模型。",
-      "acceptanceCriteria": [
-        "在设置页添加命令面板配置区域",
-        "从大模型设置中获取可用模型列表",
-        "保存用户选择的模型配置到本地存储",
-        "AI 路由和执行使用用户配置的模型",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 16,
-      "passes": true,
-      "notes": "Created CommandPaletteSettings component. Model selection saved to localStorage ('command-palette-model-id'). Updated API to pass modelId to backend. Backend services use user-configured model when provided, fallback to default."
-    },
-    {
-      "id": "US-017",
-      "title": "AI 工具用户认证",
-      "description": "作为用户，我需要登录后才能使用 AI 辅助工具。",
-      "acceptanceCriteria": [
-        "AI 工具执行时验证用户登录状态",
-        "未登录时提示用户登录",
-        "登录状态在面板中显示",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 17,
-      "passes": true,
-      "notes": "Added login status display at bottom of CommandPalette. Shows '已登录' or '未登录（AI 工具需要登录）'. Login prompt shown when: (1) selecting AI tool while not logged in, (2) executing AI tool returns auth error. Inline login form with email/password. After successful login, auto-retries tool execution. Logout button available."
     }
   ]
 }
