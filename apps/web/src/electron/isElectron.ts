@@ -152,6 +152,7 @@ declare global {
       getLogCount?: (params: Omit<LogQueryParams, 'offset' | 'limit'>) => Promise<LogCountResponse>;
       // Command palette APIs
       showCommandPalette?: () => Promise<{ success: boolean; error?: string }>;
+      closeCommandPalette?: () => Promise<{ success: boolean; error?: string }>;
       onCommandPaletteToggle?: (callback: () => void) => void;
       removeCommandPaletteToggleListener?: (callback: () => void) => void;
       getCommandPaletteShortcut?: () => Promise<string>;

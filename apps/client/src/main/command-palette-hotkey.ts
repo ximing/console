@@ -1,6 +1,7 @@
 import { globalShortcut } from 'electron';
 import { logger } from './logger';
-import { WindowManager, commandPaletteStore } from './window';
+import { commandPaletteStore } from './window';
+import { CommandPaletteWindowManager } from './command-palette-window';
 
 // Get shortcut from store, fallback to platform default
 function getCommandPaletteShortcut(): string {
@@ -8,11 +9,11 @@ function getCommandPaletteShortcut(): string {
 }
 
 export class CommandPaletteHotkey {
-  private windowManager: WindowManager;
+  private commandPaletteWindowManager: CommandPaletteWindowManager;
   private isRegistered = false;
 
-  constructor(windowManager: WindowManager) {
-    this.windowManager = windowManager;
+  constructor(commandPaletteWindowManager: CommandPaletteWindowManager) {
+    this.commandPaletteWindowManager = commandPaletteWindowManager;
   }
 
   register(): boolean {
@@ -45,15 +46,9 @@ export class CommandPaletteHotkey {
   }
 
   private handleHotkeyPressed(): void {
-    const window = this.windowManager.getWindow();
-    if (!window) {
-      logger.warn('Command palette hotkey pressed but no window available');
-      return;
-    }
-
-    // Send message to renderer to toggle command palette
-    window.webContents.send('toggle-command-palette');
-    logger.debug('Command palette toggle sent to renderer');
+    // Toggle the command palette independent window
+    this.commandPaletteWindowManager.toggle();
+    logger.debug('Command palette window toggled');
   }
 
   unregister(): void {

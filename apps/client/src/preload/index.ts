@@ -179,6 +179,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Command palette APIs
   showCommandPalette: () => ipcRenderer.invoke('show-command-palette'),
+  closeCommandPalette: () => ipcRenderer.invoke('close-command-palette'),
   getCommandPaletteShortcut: () => ipcRenderer.invoke('get-command-palette-shortcut'),
   setCommandPaletteShortcut: (hotkey: string) =>
     ipcRenderer.invoke('set-command-palette-shortcut', hotkey),
@@ -230,6 +231,7 @@ declare global {
       getLogCount: (params: Omit<LogQueryParams, 'offset' | 'limit'>) => Promise<LogCountResponse>;
       // Command palette APIs
       showCommandPalette: () => Promise<{ success: boolean; error?: string }>;
+      closeCommandPalette: () => Promise<{ success: boolean; error?: string }>;
       getCommandPaletteShortcut: () => Promise<string>;
       setCommandPaletteShortcut: (
         hotkey: string
