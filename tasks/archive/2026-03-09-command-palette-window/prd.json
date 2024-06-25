@@ -1,0 +1,133 @@
+{
+  "project": "X-Console",
+  "branchName": "ralph/command-palette-window",
+  "description": "将命令面板改为独立的 Alfred 风格浮动窗口，作为独立 BrowserWindow，通过路由 /command-palette 加载",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "创建命令面板窗口管理器",
+      "description": "作为开发者，我需要在 Electron 主进程中创建独立的 BrowserWindow 用于命令面板。",
+      "acceptanceCriteria": [
+        "创建 CommandPaletteWindowManager 类",
+        "窗口配置：无边框 (frame: false)、浮动 (alwaysOnTop: true)、透明背景",
+        "窗口尺寸：680x500 像素",
+        "窗口位置：水平居中，垂直 20% 处",
+        "不显示在任务栏 (skipTaskbar: true)",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "实现窗口显示/隐藏切换",
+      "description": "作为用户，我可以通过快捷键控制命令面板窗口的显示和隐藏。",
+      "acceptanceCriteria": [
+        "实现 show() 方法显示窗口",
+        "实现 hide() 方法隐藏窗口",
+        "实现 toggle() 方法切换显示状态",
+        "窗口打开时自动聚焦",
+        "窗口关闭时释放焦点",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "配置快捷键触发窗口切换",
+      "description": "作为用户，我可以通过全局快捷键唤起命令面板。",
+      "acceptanceCriteria": [
+        "全局快捷键 Option+Space (macOS) / Alt+Space (Windows) 触发窗口显示",
+        "再次按快捷键关闭窗口",
+        "按 Escape 键关闭窗口",
+        "点击窗口外部区域关闭窗口",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "添加命令面板路由",
+      "description": "作为开发者，我需要在 Web 应用中添加命令面板的独立路由。",
+      "acceptanceCriteria": [
+        "在 React Router 中添加 /command-palette 路由",
+        "创建 CommandPalettePage 页面组件",
+        "独立窗口加载 /command-palette 页面",
+        "页面加载时自动聚焦输入框",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "实现主题适配",
+      "description": "作为用户，我希望命令面板窗口的主题与主应用保持一致。",
+      "acceptanceCriteria": [
+        "从主进程获取当前主题设置",
+        "将主题设置传递给渲染进程",
+        "根据主题应用对应的 CSS 类 (light/dark)",
+        "主题变更时面板自动更新",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "设置页添加快捷键配置",
+      "description": "作为用户，我需要在设置页中修改命令面板的快捷键。",
+      "acceptanceCriteria": [
+        "在命令面板设置页显示当前快捷键",
+        "提供快捷键选项列表供选择",
+        "保存用户选择的快捷键到 store",
+        "快捷键修改后重新注册",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "移除主应用的模态框命令面板",
+      "description": "作为开发者，我需要移除主应用中的模态框命令面板实现。",
+      "acceptanceCriteria": [
+        "移除 App.tsx 中的 CommandPalette 组件引用",
+        "保留 CommandPalette 组件供独立页面使用",
+        "清理相关的 IPC 监听代码",
+        "Typecheck passes"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "测试独立窗口命令面板",
+      "description": "作为用户，我需要验证独立窗口模式的命令面板正常工作。",
+      "acceptanceCriteria": [
+        "快捷键可以正常打开命令面板窗口",
+        "输入框自动聚焦",
+        "可以搜索和执行工具",
+        "Escape 键可以关闭窗口",
+        "点击窗口外部可以关闭窗口",
+        "主题与主应用一致",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 8,
+      "passes": true,
+      "notes": ""
+    }
+  ]
+}
