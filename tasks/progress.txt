@@ -32,3 +32,25 @@
   - Check tool.category === 'ai' for authentication requirements
   - The frontend will call /execute endpoint when isHighConfidence is true
 ---
+
+## 2026-03-08 - US-003
+- Implemented intent confirmation UI when confidence < 0.8
+- Added recognizeIntent and executeIntent API functions in tool.ts
+- Modified CommandPalette component to show intent confirmation card with:
+  - Recognized intent name and confidence percentage
+  - Visual confidence bar (color-coded: green >= 0.7, yellow >= 0.6, orange < 0.6)
+  - Extracted parameters display
+  - Raw input display
+  - "Confirm Execute" and "Modify Parameters" buttons
+- Added loading spinner during intent recognition and execution
+- Integrated auto-execution for high confidence intents (>= 0.8) in frontend
+- Files changed:
+  - apps/web/src/api/tool.ts (modified)
+  - apps/web/src/components/command-palette/command-palette.tsx (modified)
+  - tasks/prd.json (modified)
+- **Learnings for future iterations:**
+  - Use intent.intentId.includes('ai-') to check if tool requires login
+  - Confidence threshold constants: CONFIDENCE_HIGH = 0.8, CONFIDENCE_MEDIUM = 0.7
+  - Execute high confidence intents automatically using executeIntent API
+  - Show loading spinner in search bar when isRecognizing is true
+---
