@@ -27,7 +27,9 @@ export function CommandPalette() {
 
   // Intent recognition state
   const [recognizedIntent, setRecognizedIntent] = useState<IntentResult | null>(null);
+  const [alternativeIntents, setAlternativeIntents] = useState<IntentResult[]>([]);
   const [showIntentConfirm, setShowIntentConfirm] = useState(false);
+  const [showIntentSelection, setShowIntentSelection] = useState(false);
   const [isRecognizing, setIsRecognizing] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [modelId, setModelId] = useState<string>('');
@@ -66,7 +68,11 @@ export function CommandPalette() {
   // Handle ESC key to close
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape' && isOpen) {
-      if (showIntentConfirm) {
+      if (showIntentSelection) {
+        // Go back from intent selection
+        setShowIntentSelection(false);
+        setAlternativeIntents([]);
+      } else if (showIntentConfirm) {
         // Go back from intent confirmation
         setShowIntentConfirm(false);
         setRecognizedIntent(null);
@@ -81,9 +87,11 @@ export function CommandPalette() {
         setMatchedTools([]);
         setRecognizedIntent(null);
         setShowIntentConfirm(false);
+        setShowIntentSelection(false);
+        setAlternativeIntents([]);
       }
     }
-  }, [isOpen, selectedTool, showIntentConfirm]);
+  }, [isOpen, selectedTool, showIntentConfirm, showIntentSelection]);
 
   // Listen for global keyboard events
   useEffect(() => {
@@ -99,6 +107,8 @@ export function CommandPalette() {
       setMatchedTools([]);
       setRecognizedIntent(null);
       setShowIntentConfirm(false);
+      setShowIntentSelection(false);
+      setAlternativeIntents([]);
       return;
     }
 
@@ -111,11 +121,31 @@ export function CommandPalette() {
       try {
         const result = await recognizeIntent(inputValue, modelId || undefined);
 
-        if (result.intent) {
+        // Check for multiple high-confidence intents (>= 0.7)
+        const highConfidenceIntents: IntentResult[] = [];
+        if (result.intent && result.intent.confidence >= 0.7) {
+          highConfidenceIntents.push(result.intent);
+        }
+        result.alternativeIntents.forEach(alt => {
+          if (alt.confidence >= 0.7) {
+            highConfidenceIntents.push(alt);
+          }
+        });
+
+        if (highConfidenceIntents.length > 1) {
+          // Multiple high confidence intents - show selection UI
+          setRecognizedIntent(highConfidenceIntents[0]);
+          setAlternativeIntents(highConfidenceIntents.slice(1));
+          setShowIntentSelection(true);
+          setShowIntentConfirm(false);
+          setMatchedTools([]);
+        } else if (result.intent) {
           setRecognizedIntent(result.intent);
+          setAlternativeIntents([]);
 
           if (result.intent.isHighConfidence) {
             // High confidence - auto execute
+            setShowIntentSelection(false);
             setShowIntentConfirm(false);
             setMatchedTools([]);
 
@@ -150,6 +180,7 @@ export function CommandPalette() {
             }
           } else {
             // Low confidence - show confirmation
+            setShowIntentSelection(false);
             setShowIntentConfirm(true);
             setMatchedTools([]);
           }
@@ -157,12 +188,16 @@ export function CommandPalette() {
           // No intent recognized, fallback to tool list
           setRecognizedIntent(null);
           setShowIntentConfirm(false);
+          setShowIntentSelection(false);
+          setAlternativeIntents([]);
           setMatchedTools([]);
         }
       } catch (error) {
         console.error('Failed to recognize intent:', error);
         setRecognizedIntent(null);
         setShowIntentConfirm(false);
+        setShowIntentSelection(false);
+        setAlternativeIntents([]);
         setMatchedTools([]);
       } finally {
         setIsRecognizing(false);
@@ -174,7 +209,7 @@ export function CommandPalette() {
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [inputValue]);
+  }, [inputValue, modelId, isLoggedIn]);
 
   // Listen for command palette toggle from Electron main process
   useEffect(() => {
@@ -196,6 +231,8 @@ export function CommandPalette() {
           setToolResult(null);
           setRecognizedIntent(null);
           setShowIntentConfirm(false);
+          setShowIntentSelection(false);
+          setAlternativeIntents([]);
           setIsLoggedIn(authService.isAuthenticated);
         }
         return newValue;
@@ -224,6 +261,8 @@ export function CommandPalette() {
       setToolResult(null);
       setRecognizedIntent(null);
       setShowIntentConfirm(false);
+      setShowIntentSelection(false);
+      setAlternativeIntents([]);
     }
   };
 
@@ -270,6 +309,42 @@ export function CommandPalette() {
 
       setToolResult(result);
       setShowIntentConfirm(false);
+    } catch (error) {
+      setToolResult({
+        success: false,
+        error: error instanceof Error ? error.message : 'Intent execution failed',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle selecting an intent from candidates
+  const handleIntentSelect = async (intent: IntentResult) => {
+    // Check if AI tool requires login
+    if (intent.intentId.includes('ai-') && !isLoggedIn) {
+      setShowLoginPrompt(true);
+      return;
+    }
+
+    setIsLoading(true);
+    setShowIntentSelection(false);
+    setMatchedTools([]);
+
+    try {
+      const execResult = await executeIntent(
+        intent.intentId,
+        intent.rawInput,
+        intent.extractedParams,
+        modelId || undefined
+      );
+
+      if (!execResult.success && (execResult.error?.includes('需要登录') || execResult.error?.includes('登录'))) {
+        setShowLoginPrompt(true);
+      }
+
+      setToolResult(execResult);
+      setRecognizedIntent(intent);
     } catch (error) {
       setToolResult({
         success: false,
@@ -462,7 +537,117 @@ export function CommandPalette() {
 
         {/* Results area */}
         <div className="max-h-[50vh] overflow-y-auto">
-          {showIntentConfirm && recognizedIntent ? (
+          {showIntentSelection && recognizedIntent ? (
+            // Intent selection view (when multiple intents have confidence >= 0.7)
+            <div className="p-4">
+              {/* Intent selection header */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center">
+                  <button
+                    onClick={() => {
+                      setShowIntentSelection(false);
+                      setAlternativeIntents([]);
+                    }}
+                    className="mr-2 p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <span className="font-medium text-gray-900 dark:text-gray-100">选择意图</span>
+                </div>
+              </div>
+
+              {/* Hint text */}
+              <div className="mb-3 text-sm text-gray-500 dark:text-gray-400">
+                检测到多个可能的意图，请选择要执行的意图：
+              </div>
+
+              {/* All intents including primary and alternatives */}
+              <div className="space-y-2">
+                {/* Primary intent */}
+                <button
+                  onClick={() => handleIntentSelect(recognizedIntent)}
+                  disabled={isLoading}
+                  className="w-full p-3 text-left bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 disabled:opacity-50"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{recognizedIntent.intentName}</span>
+                    <div className="flex items-center">
+                      <span className="text-xs text-gray-500 dark:text-gray-400 mr-2">推荐</span>
+                      <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                        {Math.round(recognizedIntent.confidence * 100)}%
+                      </span>
+                    </div>
+                  </div>
+                  {/* Confidence bar */}
+                  <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mt-2">
+                    <div
+                      className="h-full bg-green-500"
+                      style={{ width: `${recognizedIntent.confidence * 100}%` }}
+                    />
+                  </div>
+                  {/* Extracted params preview */}
+                  {Object.keys(recognizedIntent.extractedParams).length > 0 && (
+                    <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                      参数: {JSON.stringify(recognizedIntent.extractedParams)}
+                    </div>
+                  )}
+                </button>
+
+                {/* Alternative intents */}
+                {alternativeIntents.map((altIntent, index) => (
+                  <button
+                    key={`${altIntent.intentId}-${index}`}
+                    onClick={() => handleIntentSelect(altIntent)}
+                    disabled={isLoading}
+                    className="w-full p-3 text-left bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{altIntent.intentName}</span>
+                      <span className={`text-sm font-medium ${
+                        altIntent.confidence >= 0.7
+                          ? 'text-green-600 dark:text-green-400'
+                          : 'text-yellow-600 dark:text-yellow-400'
+                      }`}>
+                        {Math.round(altIntent.confidence * 100)}%
+                      </span>
+                    </div>
+                    {/* Confidence bar */}
+                    <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mt-2">
+                      <div
+                        className={`h-full ${
+                          altIntent.confidence >= 0.7
+                            ? 'bg-green-500'
+                            : 'bg-yellow-500'
+                        }`}
+                        style={{ width: `${altIntent.confidence * 100}%` }}
+                      />
+                    </div>
+                    {/* Extracted params preview */}
+                    {Object.keys(altIntent.extractedParams).length > 0 && (
+                      <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        参数: {JSON.stringify(altIntent.extractedParams)}
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              {/* Loading indicator */}
+              {isLoading && (
+                <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
+                  <div className="flex items-center justify-center">
+                    <svg className="animate-spin h-5 w-5 text-blue-600 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span className="text-gray-600 dark:text-gray-400">正在执行...</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : showIntentConfirm && recognizedIntent ? (
             // Intent confirmation view (when confidence < 0.8)
             <div className="p-4">
               {/* Intent header */}
