@@ -45,6 +45,8 @@ export interface IntentResult {
 export interface IntentRecognitionResult {
   intent: IntentResult | null;
   alternativeIntents: IntentResult[];
+  isCommand?: boolean;
+  commandError?: string;
 }
 
 export interface IntentExecutionResult {

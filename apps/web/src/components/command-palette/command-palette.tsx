@@ -31,6 +31,7 @@ export function CommandPalette() {
   const [showIntentConfirm, setShowIntentConfirm] = useState(false);
   const [showIntentSelection, setShowIntentSelection] = useState(false);
   const [isRecognizing, setIsRecognizing] = useState(false);
+  const [commandError, setCommandError] = useState<string | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
   const [modelId, setModelId] = useState<string>('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -89,6 +90,7 @@ export function CommandPalette() {
         setShowIntentConfirm(false);
         setShowIntentSelection(false);
         setAlternativeIntents([]);
+        setCommandError(null);
       }
     }
   }, [isOpen, selectedTool, showIntentConfirm, showIntentSelection]);
@@ -120,6 +122,22 @@ export function CommandPalette() {
       setIsRecognizing(true);
       try {
         const result = await recognizeIntent(inputValue, modelId || undefined);
+
+        // Handle command errors
+        if (result.isCommand && result.commandError) {
+          setCommandError(result.commandError);
+          setRecognizedIntent(null);
+          setAlternativeIntents([]);
+          setShowIntentConfirm(false);
+          setShowIntentSelection(false);
+          setMatchedTools([]);
+          return;
+        }
+
+        // Clear command error when we have a valid intent
+        if (result.intent) {
+          setCommandError(null);
+        }
 
         // Check for multiple high-confidence intents (>= 0.7)
         const highConfidenceIntents: IntentResult[] = [];
@@ -233,6 +251,7 @@ export function CommandPalette() {
           setShowIntentConfirm(false);
           setShowIntentSelection(false);
           setAlternativeIntents([]);
+          setCommandError(null);
           setIsLoggedIn(authService.isAuthenticated);
         }
         return newValue;
@@ -263,6 +282,7 @@ export function CommandPalette() {
       setShowIntentConfirm(false);
       setShowIntentSelection(false);
       setAlternativeIntents([]);
+      setCommandError(null);
     }
   };
 
@@ -537,7 +557,14 @@ export function CommandPalette() {
 
         {/* Results area */}
         <div className="max-h-[50vh] overflow-y-auto">
-          {showIntentSelection && recognizedIntent ? (
+          {/* Command error display */}
+          {commandError ? (
+            <div className="p-4">
+              <div className="p-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                {commandError}
+              </div>
+            </div>
+          ) : showIntentSelection && recognizedIntent ? (
             // Intent selection view (when multiple intents have confidence >= 0.7)
             <div className="p-4">
               {/* Intent selection header */}

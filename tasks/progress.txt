@@ -3,6 +3,7 @@
 - Use AI with confidence scores (>= 0.5 threshold) for tool matching
 - Controllers use ResponseUtil for consistent response format
 - AI tools identified by category: 'ai' in tool-registry.ts
+- Command format (/command): Input starting with / is matched case-insensitively against tool IDs, then exact keywords, then partial keywords
 
 ## 2026-03-08 - US-001
 - Implemented intent recognition API endpoint at /api/command-palette/intent
@@ -91,4 +92,29 @@
   - Natural language support is built into the intent recognition system
   - Parameter extraction is guided via system prompt for each tool
   - The AI model extracts parameters based on natural language patterns
+---
+
+## 2026-03-08 - US-006
+- Implemented /command format support in CommandPaletteIntentService
+- Added recognizeCommand method that:
+  - Detects input starting with /
+  - Matches command (case-insensitive) against tool IDs, keywords, and partial keyword matches
+  - Returns confidence 1.0 for matched commands
+  - Returns error message for unmatched commands
+  - Checks authentication for AI tools
+- Added COMMAND_PARAM_PATTERNS for extracting parameters from command arguments
+- Updated frontend to handle isCommand and commandError in IntentRecognitionResult
+- Added command error display in CommandPalette UI
+- Server and web builds pass successfully
+- Lint passes with only warnings (0 errors)
+- Files changed:
+  - apps/server/src/services/command-palette-intent.service.ts (modified)
+  - apps/web/src/api/tool.ts (modified)
+  - apps/web/src/components/command-palette/command-palette.tsx (modified)
+- **Learnings for future iterations:**
+  - Commands are matched case-insensitively
+  - Try tool ID first, then exact keyword match, then partial keyword match
+  - AI tools via /command also require login
+  - Command parameters are extracted based on predefined patterns per tool
+  - Example commands: /uuid 5, /translate hello world, /json {"a":1}
 ---

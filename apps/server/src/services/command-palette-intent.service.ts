@@ -24,6 +24,8 @@ export interface IntentResult {
 export interface IntentRecognitionResult {
   intent: IntentResult | null;
   alternativeIntents: IntentResult[];
+  isCommand?: boolean;
+  commandError?: string;
 }
 
 /**
@@ -31,6 +33,27 @@ export interface IntentRecognitionResult {
  */
 export const CONFIDENCE_HIGH = 0.8;
 export const CONFIDENCE_MEDIUM = 0.7;
+
+/**
+ * Command parameter extraction patterns for common tools
+ */
+const COMMAND_PARAM_PATTERNS: Record<string, { paramName: string; type: 'number' | 'string' }[]> = {
+  'uuid-generate': [{ paramName: 'count', type: 'number' }],
+  'ai-translate': [{ paramName: 'text', type: 'string' }],
+  'ai-summarize': [{ paramName: 'text', type: 'string' }],
+  'ai-explain-code': [{ paramName: 'code', type: 'string' }],
+  'json-format': [{ paramName: 'json', type: 'string' }],
+  'json-validate': [{ paramName: 'json', type: 'string' }],
+  'base64-encode': [{ paramName: 'text', type: 'string' }],
+  'base64-decode': [{ paramName: 'text', type: 'string' }],
+  'url-encode': [{ paramName: 'text', type: 'string' }],
+  'url-decode': [{ paramName: 'text', type: 'string' }],
+  'markdown-preview': [{ paramName: 'text', type: 'string' }],
+  'hash-md5': [{ paramName: 'text', type: 'string' }],
+  'hash-sha256': [{ paramName: 'text', type: 'string' }],
+  'color-convert': [{ paramName: 'color', type: 'string' }],
+  'timestamp-convert': [{ paramName: 'value', type: 'string' }],
+};
 
 /**
  * Service for intent recognition in command palette
@@ -49,6 +72,115 @@ export class CommandPaletteIntentService {
       },
       temperature: 0.3,
     });
+  }
+
+  /**
+   * Recognize command format input (starts with /)
+   * Commands are matched case-insensitively against tool IDs and keywords
+   */
+  private recognizeCommand(commandInput: string, userId?: string): IntentRecognitionResult {
+    if (!commandInput || commandInput.trim().length === 0) {
+      return {
+        intent: null,
+        alternativeIntents: [],
+        isCommand: true,
+        commandError: '命令不能为空',
+      };
+    }
+
+    const parts = commandInput.trim().split(/\s+/);
+    const command = parts[0].toLowerCase();
+    const args = parts.slice(1).join(' ');
+
+    // Try to match command against tool IDs and keywords
+    let matchedTool: Tool | undefined;
+
+    // First, try exact match with tool ID
+    matchedTool = TOOL_REGISTRY.find((tool) => tool.id.toLowerCase() === command);
+
+    // If no exact match, try keyword match
+    if (!matchedTool) {
+      for (const tool of TOOL_REGISTRY) {
+        if (tool.keywords.some((kw) => kw.toLowerCase() === command)) {
+          matchedTool = tool;
+          break;
+        }
+      }
+    }
+
+    // If still no match, try partial keyword match
+    if (!matchedTool) {
+      for (const tool of TOOL_REGISTRY) {
+        if (tool.keywords.some((kw) => kw.toLowerCase().includes(command))) {
+          matchedTool = tool;
+          break;
+        }
+      }
+    }
+
+    if (!matchedTool) {
+      return {
+        intent: null,
+        alternativeIntents: [],
+        isCommand: true,
+        commandError: `未找到匹配的命令: /${command}，请尝试其他命令`,
+      };
+    }
+
+    // Check if tool requires authentication
+    if (matchedTool.category === 'ai' && !userId) {
+      return {
+        intent: null,
+        alternativeIntents: [],
+        isCommand: true,
+        commandError: 'AI 工具需要登录后使用',
+      };
+    }
+
+    // Extract parameters based on command pattern
+    const extractedParams = this.extractCommandParams(matchedTool.id, args);
+
+    return {
+      intent: {
+        intentId: matchedTool.id,
+        intentName: matchedTool.name,
+        confidence: 1.0,
+        isHighConfidence: true,
+        extractedParams,
+        rawInput: '/' + commandInput,
+      },
+      alternativeIntents: [],
+      isCommand: true,
+    };
+  }
+
+  /**
+   * Extract parameters from command arguments based on tool's parameter patterns
+   */
+  private extractCommandParams(toolId: string, args: string): ExtractedParams {
+    const params: ExtractedParams = {};
+    const patterns = COMMAND_PARAM_PATTERNS[toolId];
+
+    if (!patterns || !args) {
+      return params;
+    }
+
+    // For tools with text parameter, use all remaining args
+    const textParam = patterns.find((p) => p.type === 'string');
+    if (textParam) {
+      params[textParam.paramName] = args;
+    }
+
+    // For tools with number parameter, try to parse from first arg
+    const numberParam = patterns.find((p) => p.type === 'number');
+    if (numberParam) {
+      const num = parseInt(args, 10);
+      if (!isNaN(num)) {
+        params[numberParam.paramName] = num;
+      }
+    }
+
+    return params;
   }
 
   /**
@@ -120,6 +252,13 @@ export class CommandPaletteIntentService {
   ): Promise<IntentRecognitionResult> {
     if (!userInput || userInput.trim().length === 0) {
       return { intent: null, alternativeIntents: [] };
+    }
+
+    const trimmedInput = userInput.trim();
+
+    // Check if input starts with / - treat as command
+    if (trimmedInput.startsWith('/')) {
+      return this.recognizeCommand(trimmedInput.substring(1), userId);
     }
 
     // Determine which model to use
