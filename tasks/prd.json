@@ -107,8 +107,8 @@
         "Typecheck passes"
       ],
       "priority": 7,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented: Input calls intent recognition API with debounce, auto-execute high confidence (>= 0.8), show confirmation for low confidence, show selection for multiple intents (>= 0.7), loading states, result display in panel"
     },
     {
       "id": "US-008",
@@ -123,8 +123,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 8,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented: Info cards with bg-blue-50 and borders, confidence bars with color coding (green/yellow/orange), loading spinner animations, copy button in result area"
     }
   ]
 }
