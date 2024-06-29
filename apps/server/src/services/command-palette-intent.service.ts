@@ -97,6 +97,25 @@ export class CommandPaletteIntentService {
 
     logger.debug(`[CommandPaletteIntent] 解析命令: command="${command}", args="${args}"`);
 
+    // Special command: /help or /list - show all tools
+    if (command === 'help' || command === 'list' || command === '?') {
+      logger.info(`[CommandPaletteIntent] 列出所有工具: ${TOOL_REGISTRY.length} 个工具`);
+      return {
+        intent: {
+          intentId: '__list_tools__',
+          intentName: '列出所有工具',
+          confidence: 1.0,
+          isHighConfidence: true,
+          extractedParams: {
+            tools: TOOL_REGISTRY.map(t => ({ id: t.id, name: t.name, nameEn: t.nameEn, description: t.description, category: t.category })),
+          },
+          rawInput: '/' + commandInput,
+        },
+        alternativeIntents: [],
+        isCommand: true,
+      };
+    }
+
     // Try to match command against tool IDs and keywords
     let matchedTool: Tool | undefined;
 

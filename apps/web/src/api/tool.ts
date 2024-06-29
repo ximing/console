@@ -85,12 +85,14 @@ export const executeTool = async (data: ToolExecutionRequest): Promise<ToolExecu
  * Recognize intent from user input using AI
  */
 export const recognizeIntent = async (input: string, modelId?: string): Promise<IntentRecognitionResult> => {
+  console.log('[API] recognizeIntent called with:', { input, modelId });
   const response = await request.post<unknown, ApiResponse<IntentRecognitionResult>>('/api/command-palette/intent', {
     input,
     modelId: modelId || undefined,
   });
+  console.log('[API] recognizeIntent response:', response);
   if (response.code !== 0) {
-    console.error('Intent recognition error:', response.msg);
+    console.error('[API] Intent recognition error:', response.msg);
     return { intent: null, alternativeIntents: [] };
   }
   return response.data;
