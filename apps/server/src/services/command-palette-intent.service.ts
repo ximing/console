@@ -79,7 +79,10 @@ export class CommandPaletteIntentService {
    * Commands are matched case-insensitively against tool IDs and keywords
    */
   private recognizeCommand(commandInput: string, userId?: string): IntentRecognitionResult {
+    logger.info(`[CommandPaletteIntent] 命令格式识别，输入: "/${commandInput}"`);
+
     if (!commandInput || commandInput.trim().length === 0) {
+      logger.info(`[CommandPaletteIntent] 命令为空`);
       return {
         intent: null,
         alternativeIntents: [],
@@ -92,17 +95,21 @@ export class CommandPaletteIntentService {
     const command = parts[0].toLowerCase();
     const args = parts.slice(1).join(' ');
 
+    logger.debug(`[CommandPaletteIntent] 解析命令: command="${command}", args="${args}"`);
+
     // Try to match command against tool IDs and keywords
     let matchedTool: Tool | undefined;
 
     // First, try exact match with tool ID
     matchedTool = TOOL_REGISTRY.find((tool) => tool.id.toLowerCase() === command);
+    logger.debug(`[CommandPaletteIntent] 工具ID精确匹配: ${matchedTool ? matchedTool.id : '未匹配'}`);
 
     // If no exact match, try keyword match
     if (!matchedTool) {
       for (const tool of TOOL_REGISTRY) {
         if (tool.keywords.some((kw) => kw.toLowerCase() === command)) {
           matchedTool = tool;
+          logger.debug(`[CommandPaletteIntent] 关键词精确匹配: ${matchedTool.id}`);
           break;
         }
       }
@@ -113,12 +120,14 @@ export class CommandPaletteIntentService {
       for (const tool of TOOL_REGISTRY) {
         if (tool.keywords.some((kw) => kw.toLowerCase().includes(command))) {
           matchedTool = tool;
+          logger.debug(`[CommandPaletteIntent] 关键词部分匹配: ${matchedTool.id}`);
           break;
         }
       }
     }
 
     if (!matchedTool) {
+      logger.info(`[CommandPaletteIntent] 未找到匹配的命令: /${command}`);
       return {
         intent: null,
         alternativeIntents: [],
@@ -129,6 +138,7 @@ export class CommandPaletteIntentService {
 
     // Check if tool requires authentication
     if (matchedTool.category === 'ai' && !userId) {
+      logger.info(`[CommandPaletteIntent] AI 工具需要登录: ${matchedTool.id}`);
       return {
         intent: null,
         alternativeIntents: [],
@@ -139,6 +149,14 @@ export class CommandPaletteIntentService {
 
     // Extract parameters based on command pattern
     const extractedParams = this.extractCommandParams(matchedTool.id, args);
+
+    logger.info(`[CommandPaletteIntent] 命令匹配成功:`, {
+      toolId: matchedTool.id,
+      toolName: matchedTool.name,
+      confidence: 1.0,
+      isHighConfidence: true,
+      extractedParams,
+    });
 
     return {
       intent: {
@@ -333,7 +351,10 @@ ${toolsDescription}
 
 请分析用户输入，识别意图并提取参数，返回 JSON 格式的结果。`;
 
+    logger.info(`[CommandPaletteIntent] 开始识别意图，输入: "${userInput.trim()}"`);
+
     try {
+      logger.debug(`[CommandPaletteIntent] 发送请求到 AI 模型...`);
       const response = await modelToUse.invoke([
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
@@ -341,9 +362,31 @@ ${toolsDescription}
 
       const responseContent = typeof response.content === 'string' ? response.content : '';
 
-      return this.parseResponse(responseContent, userInput.trim());
+      logger.info(`[CommandPaletteIntent] AI 原始响应: ${responseContent}`);
+
+      const result = this.parseResponse(responseContent, userInput.trim());
+
+      logger.info(`[CommandPaletteIntent] 解析结果:`, {
+        primaryIntent: result.intent ? {
+          id: result.intent.intentId,
+          name: result.intent.intentName,
+          confidence: result.intent.confidence,
+          isHighConfidence: result.intent.isHighConfidence,
+          params: result.intent.extractedParams,
+        } : null,
+        alternativeIntents: result.alternativeIntents.map(alt => ({
+          id: alt.intentId,
+          name: alt.intentName,
+          confidence: alt.confidence,
+          params: alt.extractedParams,
+        })),
+        isCommand: result.isCommand,
+        commandError: result.commandError,
+      });
+
+      return result;
     } catch (error) {
-      logger.error('Error in intent recognition:', error);
+      logger.error('[CommandPaletteIntent] 意图识别错误:', error);
       return { intent: null, alternativeIntents: [] };
     }
   }
