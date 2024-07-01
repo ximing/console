@@ -722,3 +722,26 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - 认证拦截器可以支持多种认证方式，按优先级验证
   - 前端使用@rabjs/react的Service类管理状态
   - UI组件使用view装饰器实现响应式更新
+
+## 2026-03-08 23:50:00 - US-001 (GitHub Integration)
+- Created github_repos table schema in apps/server/src/db/schema/github-repos.ts
+- Fields: id (PK), user_id (FK -> users.id, cascade delete), name, full_name, pat (encrypted), created_at, updated_at
+- Generated migration 0005_boring_centennial.sql using drizzle-kit
+- Migration ran successfully creating table in MySQL
+- Typecheck and lint pass
+- Files changed:
+  - apps/server/src/db/schema/github-repos.ts (new)
+  - apps/server/src/db/schema/index.ts (export new schema)
+  - apps/server/drizzle/0005_boring_centennial.sql (new migration)
+  - apps/server/drizzle/meta/0005_snapshot.json (new)
+  - apps/server/drizzle/meta/_journal.json (updated)
+  - tasks/prd.json (marked US-001 as complete)
+- **Learnings for future iterations:**
+  - Database uses Drizzle ORM with MySQL (not LanceDB - LanceDB is for vector search)
+  - Schema files in apps/server/src/db/schema/ using mysqlTable() from drizzle-orm/mysql-core
+  - Migration generation: pnpm build && pnpm migrate:generate
+  - VARCHAR(191) limit for keys due to MySQL utf8mb4 index limit
+  - Foreign keys use foreignKey() with .references() and cascade delete rules
+  - Timestamps use millisecond precision with { mode: 'date', fsp: 3 }
+  - Export types: GithubRepo and NewGithubRepo alongside schema
+---
