@@ -787,3 +787,24 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - Services use getEncryptionService() to get singleton instance
   - DTOs export plain TypeScript interfaces from packages/dto
 ---
+
+## 2026-03-09 00:10:00 - US-003 (GitHub Integration)
+- Created frontend API module apps/web/src/api/github.ts:
+  - getRepos() - fetch all repos for current user
+  - getRepo(id) - fetch single repo by ID
+  - addRepo(data) - add new repo (PAT will be encrypted)
+  - updateRepo(id, data) - update repo details
+  - deleteRepo(id) - delete repo
+  - getToken(id) - fetch decrypted PAT for repo
+- Uses existing request wrapper from '../utils/request'
+- Follows same pattern as other API modules (user-model.ts, task.ts, etc.)
+- Typecheck and lint pass
+- Files changed:
+  - apps/web/src/api/github.ts (new)
+  - tasks/prd.json (marked US-003 as complete)
+- **Learnings for future iterations:**
+  - API modules use request.get/post/put/delete/patch from utils/request
+  - Response is wrapped in ApiResponse<T> with code, data, msg fields
+  - Return response.data directly from API calls
+  - Import DTO types from @x-console/dto package
+---
