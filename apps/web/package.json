@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",
+    "@octokit/rest": "^22.0.1",
     "@rabjs/react": "^9.0.0",
     "@x-console/dto": "workspace:*",
     "axios": "^1.13.5",
