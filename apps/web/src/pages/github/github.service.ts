@@ -487,6 +487,134 @@ export class GithubService extends Service {
       current.splice(index, 1);
     }
   }
+
+  /**
+   * Commit changes to GitHub
+   * @param message - Commit message
+   * @param selectedPaths - Array of file paths to commit (if empty, commits all pending changes)
+   */
+  async commitChanges(message: string, selectedPaths: string[] = []): Promise<boolean> {
+    if (!this.selectedRepo || !this.octokit || !this.selectedBranch) {
+      this.error = 'No repository selected';
+      return false;
+    }
+
+    if (!message.trim()) {
+      this.error = 'Commit message is required';
+      return false;
+    }
+
+    const [owner, repo] = this.selectedRepo.full_name.split('/');
+
+    // Determine which files to commit
+    const pathsToCommit = selectedPaths.length > 0
+      ? selectedPaths.filter((p) => this.pendingChanges.has(p))
+      : Array.from(this.pendingChanges.keys());
+
+    if (pathsToCommit.length === 0) {
+      this.error = 'No changes to commit';
+      return false;
+    }
+
+    try {
+      // Step 1: Get current branch HEAD sha
+      const refResponse = await this.octokit.git.getRef({
+        owner,
+        repo,
+        ref: `heads/${this.selectedBranch}`,
+      });
+      const headSha = refResponse.data.object.sha;
+
+      // Step 2: Get the current commit to get its tree sha
+      const currentCommitResponse = await this.octokit.git.getCommit({
+        owner,
+        repo,
+        commit_sha: headSha,
+      });
+      const baseTreeSha = currentCommitResponse.data.tree.sha;
+
+      // Step 3: Build tree entries from pending changes
+      const treeEntries: {
+        path: string;
+        mode: '100644';
+        type: 'blob';
+        sha: string | null;
+      }[] = [];
+
+      for (const filePath of pathsToCommit) {
+        const change = this.pendingChanges.get(filePath);
+        if (!change) continue;
+
+        if (change.type === 'delete') {
+          // Deletion: sha: null removes the file
+          treeEntries.push({
+            path: filePath,
+            mode: '100644',
+            type: 'blob',
+            sha: null as unknown as string, // null removes the file
+          });
+        } else {
+          // Edit or create: need to create blob first
+          const content = change.content || '';
+          const blobResponse = await this.octokit.git.createBlob({
+            owner,
+            repo,
+            content: btoa(content),
+            encoding: 'base64',
+          });
+
+          treeEntries.push({
+            path: filePath,
+            mode: '100644',
+            type: 'blob',
+            sha: blobResponse.data.sha,
+          });
+        }
+      }
+
+      // Step 4: Create new tree
+      const treeResponse = await this.octokit.git.createTree({
+        owner,
+        repo,
+        base_tree: baseTreeSha,
+        tree: treeEntries,
+      });
+
+      // Step 5: Create commit
+      const newCommitResponse = await this.octokit.git.createCommit({
+        owner,
+        repo,
+        message,
+        tree: treeResponse.data.sha,
+        parents: [headSha],
+      });
+
+      // Step 6: Update reference
+      await this.octokit.git.updateRef({
+        owner,
+        repo,
+        ref: `heads/${this.selectedBranch}`,
+        sha: newCommitResponse.data.sha,
+      });
+
+      // Success: clear pending changes and update tabs
+      for (const filePath of pathsToCommit) {
+        this.pendingChanges.delete(filePath);
+
+        // Update tab dirty state
+        const tab = this.openTabs.find((t) => t.path === filePath);
+        if (tab) {
+          tab.isDirty = false;
+        }
+      }
+
+      return true;
+    } catch (err) {
+      this.error = 'Failed to commit changes';
+      console.error('Commit error:', err);
+      return false;
+    }
+  }
 }
 
 // Export singleton instance
