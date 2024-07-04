@@ -1,0 +1,237 @@
+import { useState, useEffect } from 'react';
+import { view, useService } from '@rabjs/react';
+import { githubApi } from '../../../api/github';
+import { ToastService } from '../../../services/toast.service';
+import { Trash2, Plus, Github, Loader2 } from 'lucide-react';
+import type { GithubRepoDto } from '@x-console/dto';
+
+interface RepoManagerProps {
+  onRepoAdded?: () => void;
+}
+
+export const RepoManager = view(({ onRepoAdded }: RepoManagerProps) => {
+  const toastService = useService(ToastService);
+
+  const [repos, setRepos] = useState<GithubRepoDto[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAdding, setIsAdding] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Form state
+  const [name, setName] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [pat, setPat] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Load repos on mount
+  useEffect(() => {
+    loadRepos();
+  }, []);
+
+  const loadRepos = async () => {
+    setIsLoading(true);
+    try {
+      const data = await githubApi.getRepos();
+      setRepos(data.repos || []);
+    } catch (err) {
+      console.error('Failed to load repos:', err);
+      toastService.error('加载仓库列表失败');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!name.trim()) {
+      newErrors.name = '请输入显示名称';
+    }
+
+    if (!fullName.trim()) {
+      newErrors.fullName = '请输入仓库路径';
+    } else if (!/^[^/]+\/[^/]+$/.test(fullName.trim())) {
+      newErrors.fullName = '仓库路径格式应为 owner/repo';
+    }
+
+    if (!pat.trim()) {
+      newErrors.pat = '请输入 GitHub Personal Access Token';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+    try {
+      await githubApi.addRepo({
+        name: name.trim(),
+        full_name: fullName.trim(),
+        pat: pat.trim(),
+      });
+
+      toastService.success('仓库添加成功');
+      setName('');
+      setFullName('');
+      setPat('');
+      setIsAdding(false);
+      await loadRepos();
+      onRepoAdded?.();
+    } catch (err: unknown) {
+      console.error('Failed to add repo:', err);
+      const errorMessage = err instanceof Error ? err.message : '添加仓库失败';
+      toastService.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (id: string, repoName: string) => {
+    if (!confirm(`确定要删除仓库 "${repoName}" 吗？`)) {
+      return;
+    }
+
+    try {
+      await githubApi.deleteRepo(id);
+      toastService.success('仓库删除成功');
+      await loadRepos();
+    } catch (err: unknown) {
+      console.error('Failed to delete repo:', err);
+      const errorMessage = err instanceof Error ? err.message : '删除仓库失败';
+      toastService.error(errorMessage);
+    }
+  };
+
+  const handleCancel = () => {
+    setIsAdding(false);
+    setName('');
+    setFullName('');
+    setPat('');
+    setErrors({});
+  };
+
+  return (
+    <div className="p-4 max-w-2xl mx-auto">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-semibold">GitHub 仓库管理</h2>
+        {!isAdding && (
+          <button
+            onClick={() => setIsAdding(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            添加仓库
+          </button>
+        )}
+      </div>
+
+      {/* Add Form */}
+      {isAdding && (
+        <div className="mb-6 p-4 bg-card border border-border rounded-lg">
+          <h3 className="text-lg font-medium mb-4">添加新仓库</h3>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">显示名称</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="例如：我的项目"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+              {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">仓库路径</label>
+              <input
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="例如：username/my-repo"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+              {errors.fullName && <p className="text-sm text-red-500 mt-1">{errors.fullName}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Personal Access Token</label>
+              <input
+                type="password"
+                value={pat}
+                onChange={(e) => setPat(e.target.value)}
+                placeholder="请输入 GitHub PAT"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+              {errors.pat && <p className="text-sm text-red-500 mt-1">{errors.pat}</p>}
+              <p className="text-xs text-muted-foreground mt-1">
+                需要 repo 权限的 Token
+              </p>
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="px-4 py-2 border border-border rounded-lg hover:bg-muted transition-colors"
+                disabled={isSubmitting}
+              >
+                取消
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
+              >
+                {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                添加
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Repo List */}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : repos.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          <Github className="w-12 h-12 mx-auto mb-3 opacity-50" />
+          <p>暂无关联的仓库</p>
+          <p className="text-sm">点击上方"添加仓库"按钮开始</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {repos.map((repo) => (
+            <div
+              key={repo.id}
+              className="flex items-center justify-between p-4 bg-card border border-border rounded-lg hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Github className="w-5 h-5 text-muted-foreground" />
+                <div>
+                  <p className="font-medium">{repo.name}</p>
+                  <p className="text-sm text-muted-foreground">{repo.full_name}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleDelete(repo.id, repo.name)}
+                className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                title="删除仓库"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+});
