@@ -952,3 +952,24 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - Lucide icons need to be cleaned up - remove unused imports to avoid TS6133 errors
   - Context menus need click-outside handler to close
 ---
+
+## 2026-03-09 01:45:00 - US-011 (GitHub Integration)
+- Created EditorArea component with Tab bar and code editor:
+  - Created apps/web/src/pages/github/components/editor-area.tsx
+  - Tab bar shows all openTabs with file icons
+  - Active tab highlighted with border-bottom
+  - Dirty tabs show • marker before filename
+  - Close button (X) on each tab, appears on hover
+  - Clicking dirty tab prompts for confirmation before closing
+  - Uses textarea for simple code editing
+  - Content changes call updateFile(path, content)
+  - Empty state shows "请从左侧选择文件"
+  - Fixed unused useState import
+- Typecheck and lint pass (pre-existing warnings)
+- Files changed:
+  - apps/web/src/pages/github/components/editor-area.tsx (new)
+  - tasks/prd.json (marked US-011 as complete)
+- **Learnings for future iterations:**
+  - Use forceCloseTab for closing tabs with unsaved changes when user confirms
+  - Tab path shows filename only (split by '/').pop()
+---
