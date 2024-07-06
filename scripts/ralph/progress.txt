@@ -973,3 +973,24 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - Use forceCloseTab for closing tabs with unsaved changes when user confirms
   - Tab path shows filename only (split by '/').pop()
 ---
+
+## 2026-03-09 02:00:00 - US-012 (GitHub Integration)
+- Created CommitDialog component for commit workflow:
+  - Created apps/web/src/pages/github/components/commit-dialog.tsx
+  - Commit button in header shows pending changes count ("提交 (3)")
+  - Dialog shows all pending changes with checkboxes (default all selected)
+  - Change type icons: + (green), - (red), M (yellow)
+  - Commit message textarea required, button disabled when empty
+  - Select all / deselect all functionality
+  - Loading state during submission
+  - Error display for failed commits
+  - CommitButton component for header integration
+- Typecheck and lint pass (pre-existing warnings)
+- Files changed:
+  - apps/web/src/pages/github/components/commit-dialog.tsx (new)
+  - tasks/prd.json (marked US-012 as complete)
+- **Learnings for future iterations:**
+  - commitChanges(message, selectedPaths) commits only selected files
+  - Error handling shows original error message from service
+  - Use Set for tracking selected paths
+---
