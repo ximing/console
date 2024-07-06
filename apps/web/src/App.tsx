@@ -8,6 +8,7 @@ import TasksPage from './pages/tasks';
 import { NotificationsPage } from './pages/notifications';
 import NotFoundPage from './pages/not-found';
 import CommandPalettePage from './pages/command-palette';
+import GithubPage from './pages/github';
 import { ProtectedRoute } from './components/protected-route';
 import { ToastContainer } from './components/toast';
 import { CommandPalette } from './components/command-palette/command-palette';
@@ -97,6 +98,14 @@ function App() {
           }
         />
         <Route path="/command-palette" element={<CommandPalettePage />} />
+        <Route
+          path="/github/*"
+          element={
+            <ProtectedRoute>
+              <GithubPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Router>
