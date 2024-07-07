@@ -1019,3 +1019,21 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - Route paths use /* suffix for nested routes
   - Sidebar nav uses isXxxPage checks with startsWith for sub-routes
 ---
+
+---
+## US-014: 错误处理 - GitHub API 错误 Toast 提示
+**Date:** 2026-03-08
+**Status:** Completed
+
+**Implementation:**
+- Added ToastService integration to GithubService
+- Added handleError() method with specific error handling:
+  - 401/403: 'Token 无效，请重新配置'
+  - 422: '文件已被远程修改，请重新加载'
+  - 403 rate limit: '请求过于频繁，请稍后重试'
+- Integrated handleError into loadBranches, loadFileTree, openFile, and commitChanges methods
+- Uses resolve(ToastService) to get service instance in non-React context
+
+**Files changed:**
+  - apps/web/src/pages/github/github.service.ts (added ToastService import, toast getter, handleError method)
+  - tasks/prd.json (marked US-014 as complete)

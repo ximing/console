@@ -1,6 +1,7 @@
-import { Service } from '@rabjs/react';
+import { Service, resolve } from '@rabjs/react';
 import { Octokit } from '@octokit/rest';
 import { githubApi } from '../../api/github';
+import { ToastService } from '../../services/toast.service';
 import type { GithubRepoDto } from '@x-console/dto';
 
 export interface Branch {
@@ -55,6 +56,47 @@ export class GithubService extends Service {
 
   // Octokit instance (initialized when repo is selected)
   private octokit: Octokit | null = null;
+
+  // Toast service for error notifications
+  private get toast(): ToastService {
+    return resolve(ToastService);
+  }
+
+  /**
+   * Handle GitHub API errors and show toast notifications
+   */
+  private handleError(error: unknown, defaultMessage: string): string {
+    const err = error as { status?: number; message?: string };
+    const status = err.status;
+
+    if (status === 401 || status === 403) {
+      // Invalid token or insufficient permissions
+      const message = 'Token 无效，请重新配置';
+      this.toast.error(message);
+      return message;
+    }
+
+    if (status === 422) {
+      // SHA mismatch - file was modified remotely
+      const message = '文件已被远程修改，请重新加载';
+      this.toast.error(message);
+      return message;
+    }
+
+    if (status === 403 && err.message?.includes('rate limit')) {
+      // Rate limit exceeded
+      const message = '请求过于频繁，请稍后重试';
+      this.toast.error(message);
+      return message;
+    }
+
+    // Generic error
+    const message = err.message || defaultMessage;
+    this.error = message;
+    this.toast.error(message);
+    console.error(defaultMessage, error);
+    return message;
+  }
 
   /**
    * Load all repositories for current user
@@ -131,8 +173,7 @@ export class GithubService extends Service {
         this.selectedBranch = defaultBranch?.name || this.branches[0].name;
       }
     } catch (err) {
-      this.error = 'Failed to load branches';
-      console.error('Load branches error:', err);
+      this.handleError(err, 'Failed to load branches');
       this.branches = [];
     } finally {
       this.isLoadingBranches = false;
@@ -186,8 +227,7 @@ export class GithubService extends Service {
       // Build tree structure from flat list
       this.fileTree = this.buildFileTree(response.data.tree);
     } catch (err) {
-      this.error = 'Failed to load file tree';
-      console.error('Load file tree error:', err);
+      this.handleError(err, 'Failed to load file tree');
       this.fileTree = [];
     } finally {
       this.isLoadingFileTree = false;
@@ -300,8 +340,7 @@ export class GithubService extends Service {
       this.openTabs.push(newTab);
       this.activeTabPath = path;
     } catch (err) {
-      this.error = 'Failed to open file';
-      console.error('Open file error:', err);
+      this.handleError(err, 'Failed to open file');
     }
   }
 
@@ -610,8 +649,7 @@ export class GithubService extends Service {
 
       return true;
     } catch (err) {
-      this.error = 'Failed to commit changes';
-      console.error('Commit error:', err);
+      this.handleError(err, 'Failed to commit changes');
       return false;
     }
   }
