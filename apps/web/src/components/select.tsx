@@ -104,6 +104,9 @@ export const Select = ({
     } else if (e.key === 'Escape') {
       setIsOpen(false);
       triggerRef.current?.focus();
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleSelect(options[index].value);
     }
   };
 
