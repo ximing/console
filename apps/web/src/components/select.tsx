@@ -16,6 +16,7 @@ interface SelectProps {
   className?: string;
   id?: string;
   'aria-label'?: string;
+  footerAction?: { label: string; onClick: () => void };
 }
 
 export const Select = ({
@@ -28,6 +29,7 @@ export const Select = ({
   className = '',
   id,
   'aria-label': ariaLabel,
+  footerAction,
 }: SelectProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -181,6 +183,20 @@ export const Select = ({
               ))
             )}
           </div>
+          {footerAction && (
+            <div className="border-t border-gray-200 dark:border-dark-700">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false);
+                  footerAction.onClick();
+                }}
+                className="flex items-center w-full px-3 py-2 text-sm text-left text-primary-600 dark:text-primary-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-colors"
+              >
+                {footerAction.label}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
