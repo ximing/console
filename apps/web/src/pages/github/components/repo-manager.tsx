@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { view, useService } from '@rabjs/react';
 import { githubApi } from '../../../api/github';
 import { ToastService } from '../../../services/toast.service';
-import { Trash2, Plus, Github, Loader2 } from 'lucide-react';
+import { Trash2, Plus, Github, Loader2, Pencil } from 'lucide-react';
 import type { GithubRepoDto } from '@x-console/dto';
 
 interface RepoManagerProps {
@@ -22,6 +22,14 @@ export const RepoManager = view(({ onRepoAdded }: RepoManagerProps) => {
   const [fullName, setFullName] = useState('');
   const [pat, setPat] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editFullName, setEditFullName] = useState('');
+  const [editPat, setEditPat] = useState('');
+  const [editPatTouched, setEditPatTouched] = useState(false);
+  const [isEditSubmitting, setIsEditSubmitting] = useState(false);
+  const [editErrors, setEditErrors] = useState<Record<string, string>>({});
 
   // Load repos on mount
   useEffect(() => {
@@ -115,6 +123,59 @@ export const RepoManager = view(({ onRepoAdded }: RepoManagerProps) => {
     setErrors({});
   };
 
+  const startEdit = (repo: GithubRepoDto) => {
+    setEditingId(repo.id);
+    setEditName(repo.name);
+    setEditFullName(repo.full_name);
+    setEditPat('');
+    setEditPatTouched(false);
+    setEditErrors({});
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditErrors({});
+  };
+
+  const validateEdit = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    if (!editName.trim()) newErrors.editName = '请输入显示名称';
+    if (!editFullName.trim()) {
+      newErrors.editFullName = '请输入仓库路径';
+    } else if (!/^[^/]+\/[^/]+$/.test(editFullName.trim())) {
+      newErrors.editFullName = '仓库路径格式应为 owner/repo';
+    }
+    setEditErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent, repoId: string) => {
+    e.preventDefault();
+    if (!validateEdit()) return;
+
+    setIsEditSubmitting(true);
+    try {
+      const updateData: { name: string; full_name: string; pat?: string } = {
+        name: editName.trim(),
+        full_name: editFullName.trim(),
+      };
+      // Only send PAT if user actually typed something
+      if (editPatTouched && editPat.trim()) {
+        updateData.pat = editPat.trim();
+      }
+
+      await githubApi.updateRepo(repoId, updateData);
+      toastService.success('仓库更新成功');
+      setEditingId(null);
+      await loadRepos();
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : '更新仓库失败';
+      toastService.error(errorMessage);
+    } finally {
+      setIsEditSubmitting(false);
+    }
+  };
+
   return (
     <div className="p-4 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -132,7 +193,7 @@ export const RepoManager = view(({ onRepoAdded }: RepoManagerProps) => {
 
       {/* Add Form */}
       {isAdding && (
-        <div className="mb-6 p-4 bg-card border border-border rounded-lg">
+        <div className="mb-6 p-4 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg">
           <h3 className="text-lg font-medium mb-4">添加新仓库</h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -142,7 +203,7 @@ export const RepoManager = view(({ onRepoAdded }: RepoManagerProps) => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="例如：我的项目"
-                className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-3 py-2 border border-gray-200 dark:border-dark-700 rounded-lg bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
               {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name}</p>}
             </div>
@@ -154,7 +215,7 @@ export const RepoManager = view(({ onRepoAdded }: RepoManagerProps) => {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="例如：username/my-repo"
-                className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-3 py-2 border border-gray-200 dark:border-dark-700 rounded-lg bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
               {errors.fullName && <p className="text-sm text-red-500 mt-1">{errors.fullName}</p>}
             </div>
@@ -166,10 +227,10 @@ export const RepoManager = view(({ onRepoAdded }: RepoManagerProps) => {
                 value={pat}
                 onChange={(e) => setPat(e.target.value)}
                 placeholder="请输入 GitHub PAT"
-                className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-3 py-2 border border-gray-200 dark:border-dark-700 rounded-lg bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
               {errors.pat && <p className="text-sm text-red-500 mt-1">{errors.pat}</p>}
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 需要 repo 权限的 Token
               </p>
             </div>
@@ -178,7 +239,7 @@ export const RepoManager = view(({ onRepoAdded }: RepoManagerProps) => {
               <button
                 type="button"
                 onClick={handleCancel}
-                className="px-4 py-2 border border-border rounded-lg hover:bg-muted transition-colors"
+                className="px-4 py-2 border border-gray-200 dark:border-dark-700 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-800 transition-colors"
                 disabled={isSubmitting}
               >
                 取消
@@ -199,37 +260,113 @@ export const RepoManager = view(({ onRepoAdded }: RepoManagerProps) => {
       {/* Repo List */}
       {isLoading ? (
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          <Loader2 className="w-6 h-6 animate-spin text-gray-500 dark:text-gray-400" />
         </div>
       ) : repos.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
           <Github className="w-12 h-12 mx-auto mb-3 opacity-50" />
           <p>暂无关联的仓库</p>
           <p className="text-sm">点击上方"添加仓库"按钮开始</p>
         </div>
       ) : (
         <div className="space-y-2">
-          {repos.map((repo) => (
-            <div
-              key={repo.id}
-              className="flex items-center justify-between p-4 bg-card border border-border rounded-lg hover:bg-muted/50 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <Github className="w-5 h-5 text-muted-foreground" />
-                <div>
-                  <p className="font-medium">{repo.name}</p>
-                  <p className="text-sm text-muted-foreground">{repo.full_name}</p>
+          {repos.map((repo) =>
+            editingId === repo.id ? (
+              // Edit form row
+              <div
+                key={repo.id}
+                className="p-4 bg-white dark:bg-dark-800 border border-primary-300 dark:border-primary-700 rounded-lg"
+              >
+                <form onSubmit={(e) => handleEditSubmit(e, repo.id)} className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">显示名称</label>
+                    <input
+                      type="text"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 dark:border-dark-700 rounded-lg bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+                      disabled={isEditSubmitting}
+                    />
+                    {editErrors.editName && <p className="text-xs text-red-500 mt-1">{editErrors.editName}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">仓库路径</label>
+                    <input
+                      type="text"
+                      value={editFullName}
+                      onChange={(e) => setEditFullName(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 dark:border-dark-700 rounded-lg bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+                      disabled={isEditSubmitting}
+                    />
+                    {editErrors.editFullName && <p className="text-xs text-red-500 mt-1">{editErrors.editFullName}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Personal Access Token</label>
+                    <input
+                      type="password"
+                      value={editPat}
+                      placeholder={editPatTouched ? '' : '••••••••'}
+                      onChange={(e) => {
+                        setEditPat(e.target.value);
+                        setEditPatTouched(true);
+                      }}
+                      className="w-full px-3 py-2 border border-gray-200 dark:border-dark-700 rounded-lg bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+                      disabled={isEditSubmitting}
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">留空则不修改 Token</p>
+                  </div>
+                  <div className="flex gap-2 justify-end">
+                    <button
+                      type="button"
+                      onClick={cancelEdit}
+                      disabled={isEditSubmitting}
+                      className="px-3 py-1.5 text-sm border border-gray-200 dark:border-dark-700 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-800 transition-colors"
+                    >
+                      取消
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isEditSubmitting}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
+                    >
+                      {isEditSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                      保存
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : (
+              // Normal read row
+              <div
+                key={repo.id}
+                className="flex items-center justify-between p-4 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg hover:bg-gray-100/50 dark:hover:bg-dark-800/50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Github className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                  <div>
+                    <p className="font-medium">{repo.name}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{repo.full_name}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => startEdit(repo)}
+                    className="p-2 text-gray-500 dark:text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors"
+                    title="编辑仓库"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(repo.id, repo.name)}
+                    className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                    title="删除仓库"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
-              <button
-                onClick={() => handleDelete(repo.id, repo.name)}
-                className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                title="删除仓库"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          ))}
+            )
+          )}
         </div>
       )}
     </div>
