@@ -35,8 +35,7 @@ export const RepoSelector = view(() => {
 
   const handleManageClose = async () => {
     setIsManaging(false);
-    // Refresh repo list in case repos were added/edited/deleted
-    await githubService.loadRepos();
+    await githubService.refreshRepoList();
   };
 
   return (
@@ -78,7 +77,6 @@ export const RepoSelector = view(() => {
       {isManaging && (
         <RepoManager
           onClose={handleManageClose}
-          onRepoAdded={handleManageClose}
         />
       )}
     </>
