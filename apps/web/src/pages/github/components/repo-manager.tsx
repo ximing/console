@@ -2,14 +2,15 @@ import { useState, useEffect } from 'react';
 import { view, useService } from '@rabjs/react';
 import { githubApi } from '../../../api/github';
 import { ToastService } from '../../../services/toast.service';
-import { Trash2, Plus, Github, Loader2, Pencil } from 'lucide-react';
+import { Trash2, Plus, Github, Loader2, Pencil, X } from 'lucide-react';
 import type { GithubRepoDto } from '@x-console/dto';
 
 interface RepoManagerProps {
+  onClose?: () => void;
   onRepoAdded?: () => void;
 }
 
-export const RepoManager = view(({ onRepoAdded }: RepoManagerProps) => {
+export const RepoManager = view(({ onClose, onRepoAdded }: RepoManagerProps) => {
   const toastService = useService(ToastService);
 
   const [repos, setRepos] = useState<GithubRepoDto[]>([]);
@@ -175,19 +176,30 @@ export const RepoManager = view(({ onRepoAdded }: RepoManagerProps) => {
     }
   };
 
-  return (
-    <div className="p-4 max-w-2xl mx-auto">
+  const content = (
+    <div className={onClose ? 'p-4 max-w-2xl w-full' : 'p-4 max-w-2xl mx-auto'}>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold">GitHub 仓库管理</h2>
-        {!isAdding && (
-          <button
-            onClick={() => setIsAdding(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            添加仓库
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {!isAdding && (
+            <button
+              onClick={() => setIsAdding(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              添加仓库
+            </button>
+          )}
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
+              title="关闭"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Add Form */}
@@ -368,4 +380,17 @@ export const RepoManager = view(({ onRepoAdded }: RepoManagerProps) => {
       )}
     </div>
   );
+
+  if (onClose) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+        <div className="relative bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg shadow-xl max-h-[80vh] overflow-y-auto">
+          {content}
+        </div>
+      </div>
+    );
+  }
+
+  return content;
 });
