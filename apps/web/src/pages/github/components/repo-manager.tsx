@@ -27,7 +27,6 @@ export const RepoManager = view(({ onRepoAdded }: RepoManagerProps) => {
   const [editName, setEditName] = useState('');
   const [editFullName, setEditFullName] = useState('');
   const [editPat, setEditPat] = useState('');
-  const [editPatTouched, setEditPatTouched] = useState(false);
   const [isEditSubmitting, setIsEditSubmitting] = useState(false);
   const [editErrors, setEditErrors] = useState<Record<string, string>>({});
 
@@ -128,7 +127,6 @@ export const RepoManager = view(({ onRepoAdded }: RepoManagerProps) => {
     setEditName(repo.name);
     setEditFullName(repo.full_name);
     setEditPat('');
-    setEditPatTouched(false);
     setEditErrors({});
   };
 
@@ -139,11 +137,11 @@ export const RepoManager = view(({ onRepoAdded }: RepoManagerProps) => {
 
   const validateEdit = (): boolean => {
     const newErrors: Record<string, string> = {};
-    if (!editName.trim()) newErrors.editName = '请输入显示名称';
+    if (!editName.trim()) newErrors.name = '请输入显示名称';
     if (!editFullName.trim()) {
-      newErrors.editFullName = '请输入仓库路径';
+      newErrors.fullName = '请输入仓库路径';
     } else if (!/^[^/]+\/[^/]+$/.test(editFullName.trim())) {
-      newErrors.editFullName = '仓库路径格式应为 owner/repo';
+      newErrors.fullName = '仓库路径格式应为 owner/repo';
     }
     setEditErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -160,7 +158,7 @@ export const RepoManager = view(({ onRepoAdded }: RepoManagerProps) => {
         full_name: editFullName.trim(),
       };
       // Only send PAT if user actually typed something
-      if (editPatTouched && editPat.trim()) {
+      if (editPat.trim()) {
         updateData.pat = editPat.trim();
       }
 
@@ -169,6 +167,7 @@ export const RepoManager = view(({ onRepoAdded }: RepoManagerProps) => {
       setEditingId(null);
       await loadRepos();
     } catch (err: unknown) {
+      console.error('Failed to update repo:', err);
       const errorMessage = err instanceof Error ? err.message : '更新仓库失败';
       toastService.error(errorMessage);
     } finally {
@@ -287,7 +286,7 @@ export const RepoManager = view(({ onRepoAdded }: RepoManagerProps) => {
                       className="w-full px-3 py-2 border border-gray-200 dark:border-dark-700 rounded-lg bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
                       disabled={isEditSubmitting}
                     />
-                    {editErrors.editName && <p className="text-xs text-red-500 mt-1">{editErrors.editName}</p>}
+                    {editErrors.name && <p className="text-xs text-red-500 mt-1">{editErrors.name}</p>}
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">仓库路径</label>
@@ -298,18 +297,14 @@ export const RepoManager = view(({ onRepoAdded }: RepoManagerProps) => {
                       className="w-full px-3 py-2 border border-gray-200 dark:border-dark-700 rounded-lg bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
                       disabled={isEditSubmitting}
                     />
-                    {editErrors.editFullName && <p className="text-xs text-red-500 mt-1">{editErrors.editFullName}</p>}
+                    {editErrors.fullName && <p className="text-xs text-red-500 mt-1">{editErrors.fullName}</p>}
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">Personal Access Token</label>
                     <input
                       type="password"
                       value={editPat}
-                      placeholder={editPatTouched ? '' : '••••••••'}
-                      onChange={(e) => {
-                        setEditPat(e.target.value);
-                        setEditPatTouched(true);
-                      }}
+                      onChange={(e) => setEditPat(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-200 dark:border-dark-700 rounded-lg bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
                       disabled={isEditSubmitting}
                     />
@@ -351,14 +346,16 @@ export const RepoManager = view(({ onRepoAdded }: RepoManagerProps) => {
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => startEdit(repo)}
-                    className="p-2 text-gray-500 dark:text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors"
+                    disabled={!!editingId}
+                    className="p-2 text-gray-500 dark:text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                     title="编辑仓库"
                   >
                     <Pencil className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDelete(repo.id, repo.name)}
-                    className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                    disabled={!!editingId}
+                    className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                     title="删除仓库"
                   >
                     <Trash2 className="w-4 h-4" />
