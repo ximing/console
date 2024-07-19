@@ -38,6 +38,10 @@ export const RepoSelector = view(() => {
     await githubService.refreshRepoList();
   };
 
+  const handleRepoAdded = async () => {
+    await githubService.refreshRepoList();
+  };
+
   return (
     <>
       <div className="flex items-center gap-2">
@@ -77,6 +81,7 @@ export const RepoSelector = view(() => {
       {isManaging && (
         <RepoManager
           onClose={handleManageClose}
+          onRepoAdded={handleRepoAdded}
         />
       )}
     </>
