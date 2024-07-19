@@ -270,8 +270,10 @@ export class GithubService extends Service {
         recursive: '1',
       });
 
-      // Build tree structure from flat list
-      this.fileTree = this.buildFileTree(response.data.tree);
+      // Build tree structure from flat list (filter out items without path, e.g. submodules)
+      this.fileTree = this.buildFileTree(
+        response.data.tree.filter((item): item is typeof item & { path: string } => !!item.path)
+      );
     } catch (err) {
       this.handleError(err, 'Failed to load file tree');
       this.fileTree = [];
@@ -302,7 +304,7 @@ export class GithubService extends Service {
         if (!node) {
           node = {
             name: part,
-            path: item.path,
+            path: isLast ? item.path : parts.slice(0, i + 1).join('/'),
             type: isLast ? type : 'tree',
             sha: isLast ? item.sha : undefined,
             children: isLast ? undefined : [],
