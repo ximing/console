@@ -111,13 +111,13 @@ export const CommitDialog = view(({ isOpen, onClose }: CommitDialogProps) => {
       />
 
       {/* Dialog */}
-      <div className="relative bg-card border border-border rounded-lg shadow-xl w-[500px] max-h-[80vh] flex flex-col">
+      <div className="relative bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg shadow-xl w-[500px] max-h-[80vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-dark-700">
           <h2 className="text-lg font-semibold">提交更改</h2>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-muted rounded"
+            className="p-1 hover:bg-gray-100 dark:hover:bg-dark-800 rounded"
             disabled={isSubmitting}
           >
             <X className="w-5 h-5" />
@@ -135,7 +135,7 @@ export const CommitDialog = view(({ isOpen, onClose }: CommitDialogProps) => {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="输入提交信息..."
-              className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+              className="w-full px-3 py-2 border border-gray-200 dark:border-dark-700 rounded-lg bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
               rows={3}
               disabled={isSubmitting}
             />
@@ -149,18 +149,18 @@ export const CommitDialog = view(({ isOpen, onClose }: CommitDialogProps) => {
               </label>
               <button
                 onClick={handleSelectAll}
-                className="text-sm text-primary hover:underline"
+                className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
                 disabled={isSubmitting}
               >
                 {selectedCount === pendingChangesCount ? '取消全选' : '全选'}
               </button>
             </div>
 
-            <div className="border border-border rounded-lg max-h-[200px] overflow-auto">
+            <div className="border border-gray-200 dark:border-dark-700 rounded-lg max-h-[200px] overflow-auto">
               {Array.from(githubService.pendingChanges.entries()).map(([path, change]) => (
                 <div
                   key={path}
-                  className="flex items-center gap-2 px-3 py-2 border-b border-border last:border-b-0 hover:bg-muted/50"
+                  className="flex items-center gap-2 px-3 py-2 border-b border-gray-200 dark:border-dark-700 last:border-b-0 hover:bg-gray-100/50 dark:hover:bg-dark-800/50"
                 >
                   <input
                     type="checkbox"
@@ -193,10 +193,10 @@ export const CommitDialog = view(({ isOpen, onClose }: CommitDialogProps) => {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-border">
+        <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-gray-200 dark:border-dark-700">
           <button
             onClick={onClose}
-            className="px-4 py-2 border border-border rounded-lg hover:bg-muted transition-colors"
+            className="px-4 py-2 border border-gray-200 dark:border-dark-700 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-800 transition-colors"
             disabled={isSubmitting}
           >
             取消

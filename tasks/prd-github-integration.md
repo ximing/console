@@ -149,7 +149,7 @@
 **Description:** As a user, I want to navigate to the GitHub page from the sidebar and see the full editor layout with tab support.
 
 **Acceptance Criteria:**
-- [ ] 创建 `apps/web/src/pages/github/github.tsx` 主组件，布局：顶部工具栏（RepoSelector + 提交按钮）+ 左侧文件树（240px）+ 右侧 EditorArea（Tab 栏 + 编辑器）
+- [ ] 创建 `apps/web/src/pages/github/github.tsx` 主组件，使用 `Layout` 组件（`apps/web/src/components/layout.tsx`）包裹页面内容以继承侧边栏；Layout 内部布局：顶部工具栏（RepoSelector + 提交按钮）+ 左侧文件树（240px）+ 右侧 EditorArea（Tab 栏 + 编辑器）
 - [ ] 创建 `apps/web/src/pages/github/index.tsx` 路由入口
 - [ ] 在路由配置中注册 `/github` 路由
 - [ ] 首次进入且无仓库时，显示 RepoManager 引导添加仓库

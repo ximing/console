@@ -210,7 +210,7 @@
       "title": "GitHub 页面主组件、路由和侧边栏入口",
       "description": "As a user, I want to navigate to the GitHub page from the sidebar and see the full editor layout.",
       "acceptanceCriteria": [
-        "创建 apps/web/src/pages/github/github.tsx 主组件，布局：顶部工具栏（RepoSelector + 提交按钮）+ 左侧文件树（240px）+ 右侧 EditorArea",
+        "创建 apps/web/src/pages/github/github.tsx 主组件，使用 Layout 组件（apps/web/src/components/layout.tsx）包裹页面内容以继承侧边栏；Layout 内部布局：顶部工具栏（RepoSelector + 提交按钮）+ 左侧文件树（240px）+ 右侧 EditorArea",
         "创建 apps/web/src/pages/github/index.tsx 路由入口",
         "在路由配置中注册 /github 路由",
         "首次进入且无仓库时显示 RepoManager 引导添加仓库；有仓库时显示完整编辑器布局",
