@@ -4,6 +4,7 @@ import { eq, and, or, like, inArray, count, isNull, sql } from 'drizzle-orm';
 import { getDatabase } from '../db/connection.js';
 import { blogs, type Blog, type NewBlog } from '../db/schema/blog.js';
 import { blogTags } from '../db/schema/blog-tag.js';
+import { tags } from '../db/schema/tag.js';
 import { generateUid } from '../utils/id.js';
 import { logger } from '../utils/logger.js';
 
@@ -59,6 +60,13 @@ export class BlogService {
       );
     }
 
+    // Apply tagId filter by joining blogTags
+    if (tagId) {
+      conditions.push(
+        sql`${blogs.id} IN (SELECT ${blogTags.blogId} FROM ${blogTags} WHERE ${blogTags.tagId} = ${tagId})`
+      );
+    }
+
     // Get total count
     const countResult = await db
       .select({ count: count() })
@@ -78,11 +86,27 @@ export class BlogService {
 
     // Fetch tags for each blog
     const blogIds = results.map((b) => b.id);
-    let tagsMap: Map<string, Array<{ id: string; name: string; color: string }>> = new Map();
+    const tagsMap: Map<string, Array<{ id: string; name: string; color: string }>> = new Map();
 
     if (blogIds.length > 0) {
-      // This would require a join - simplified for now
-      // In production, you'd want a more efficient query
+      // Batch fetch tags for all blogs
+      const tagResults = await db
+        .select({
+          blogId: blogTags.blogId,
+          tagId: blogTags.tagId,
+          tagName: tags.name,
+          tagColor: tags.color,
+        })
+        .from(blogTags)
+        .innerJoin(tags, eq(blogTags.tagId, tags.id))
+        .where(inArray(blogTags.blogId, blogIds));
+
+      // Group tags by blogId
+      for (const row of tagResults) {
+        const blogTagList = tagsMap.get(row.blogId) ?? [];
+        blogTagList.push({ id: row.tagId, name: row.tagName, color: row.tagColor });
+        tagsMap.set(row.blogId, blogTagList);
+      }
     }
 
     return {
@@ -111,16 +135,24 @@ export class BlogService {
 
     const blog = results[0];
 
-    // Fetch tags
+    // Fetch tags with actual tag data
     const tagResults = await db
-      .select({ id: blogTags.tagId })
+      .select({
+        tagId: blogTags.tagId,
+        tagName: tags.name,
+        tagColor: tags.color,
+      })
       .from(blogTags)
+      .innerJoin(tags, eq(blogTags.tagId, tags.id))
       .where(eq(blogTags.blogId, id));
 
-    // Note: In a real implementation, you'd join with tags table here
-    // For now, return blog with empty tags - will be enhanced in controller
+    const blogTagsList = tagResults.map((t) => ({
+      id: t.tagId,
+      name: t.tagName,
+      color: t.tagColor,
+    }));
 
-    return { ...blog, tags: [] };
+    return { ...blog, tags: blogTagsList };
   }
 
   /**
