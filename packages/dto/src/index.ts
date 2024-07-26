@@ -10,3 +10,4 @@ export * from './notification.js';
 export * from './user-model.js';
 export * from './api-token.js';
 export * from './github-repo.js';
+export * from './blog.js';
