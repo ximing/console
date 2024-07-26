@@ -1,0 +1,243 @@
+import { Service } from '@rabjs/react';
+import { blogApi } from '../api/blog';
+import type { BlogDto, CreateBlogDto, UpdateBlogDto } from '@x-console/dto';
+
+type ToastService = {
+  success(message: string): void;
+  error(message: string): void;
+};
+
+/**
+ * Blog Service
+ * Manages blog post state and operations with auto-save functionality
+ */
+export class BlogService extends Service {
+  // State
+  blogs: BlogDto[] = [];
+  currentBlog: BlogDto | null = null;
+  total = 0;
+  page = 1;
+  pageSize = 10;
+  loading = false;
+  saving = false;
+  lastSavedAt: Date | null = null;
+
+  // Toast service reference (lazy loaded to avoid circular dependency)
+  private toastService: ToastService | null = null;
+
+  // Auto-save timer
+  private autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
+
+  private async getToastService(): Promise<ToastService> {
+    if (!this.toastService) {
+      const module = await import('./toast.service');
+      this.toastService = module.toastService;
+    }
+    return this.toastService;
+  }
+
+  /**
+   * Load blogs with pagination
+   */
+  async loadBlogs(params?: {
+    page?: number;
+    pageSize?: number;
+    directoryId?: string;
+    status?: 'draft' | 'published';
+  }): Promise<void> {
+    this.loading = true;
+
+    try {
+      if (params?.page) this.page = params.page;
+      if (params?.pageSize) this.pageSize = params.pageSize;
+
+      const data = await blogApi.getBlogs({
+        page: this.page,
+        pageSize: this.pageSize,
+        directoryId: params?.directoryId,
+        status: params?.status,
+      });
+
+      this.blogs = data.blogs;
+      this.total = data.total;
+    } catch (err) {
+      console.error('Load blogs error:', err);
+      const toast = await this.getToastService();
+      toast.error('Failed to load blogs');
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  /**
+   * Load a single blog by ID
+   */
+  async loadBlog(id: string): Promise<void> {
+    this.loading = true;
+
+    try {
+      const blog = await blogApi.getBlog(id);
+      this.currentBlog = blog;
+    } catch (err) {
+      console.error('Load blog error:', err);
+      const toast = await this.getToastService();
+      toast.error('Failed to load blog');
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  /**
+   * Create a new blog
+   */
+  async createBlog(data: CreateBlogDto): Promise<BlogDto | null> {
+    try {
+      const blog = await blogApi.createBlog(data);
+      this.blogs = [blog, ...this.blogs];
+      this.currentBlog = blog;
+      return blog;
+    } catch (err) {
+      console.error('Create blog error:', err);
+      const toast = await this.getToastService();
+      toast.error('Failed to create blog');
+      return null;
+    }
+  }
+
+  /**
+   * Update a blog with debounced auto-save (3 seconds)
+   * This method debounces the save to avoid excessive API calls
+   */
+  updateBlog(id: string, data: UpdateBlogDto): void {
+    // Clear any existing auto-save timer
+    if (this.autoSaveTimer) {
+      clearTimeout(this.autoSaveTimer);
+    }
+
+    // Update local state immediately for responsive UI
+    if (this.currentBlog && this.currentBlog.id === id) {
+      this.currentBlog = {
+        ...this.currentBlog,
+        ...data,
+        updatedAt: new Date().toISOString(),
+      };
+    }
+
+    // Set new auto-save timer (3 seconds debounce)
+    this.autoSaveTimer = setTimeout(() => {
+      this.saveBlog(id, data);
+    }, 3000);
+  }
+
+  /**
+   * Save blog immediately (called by auto-save or Ctrl/Cmd+S)
+   */
+  async saveBlog(id: string, data: UpdateBlogDto): Promise<void> {
+    // Clear any pending auto-save timer
+    if (this.autoSaveTimer) {
+      clearTimeout(this.autoSaveTimer);
+      this.autoSaveTimer = null;
+    }
+
+    this.saving = true;
+
+    try {
+      const blog = await blogApi.updateBlog(id, data);
+      this.currentBlog = blog;
+
+      // Update in blogs list if present
+      const index = this.blogs.findIndex((b) => b.id === id);
+      if (index !== -1) {
+        this.blogs[index] = blog;
+      }
+
+      this.lastSavedAt = new Date();
+    } catch (err) {
+      console.error('Save blog error:', err);
+      const toast = await this.getToastService();
+      toast.error('Failed to save blog');
+    } finally {
+      this.saving = false;
+    }
+  }
+
+  /**
+   * Delete a blog
+   */
+  async deleteBlog(id: string): Promise<boolean> {
+    try {
+      await blogApi.deleteBlog(id);
+      this.blogs = this.blogs.filter((b) => b.id !== id);
+      if (this.currentBlog?.id === id) {
+        this.currentBlog = null;
+      }
+      return true;
+    } catch (err) {
+      console.error('Delete blog error:', err);
+      const toast = await this.getToastService();
+      toast.error('Failed to delete blog');
+      return false;
+    }
+  }
+
+  /**
+   * Publish a blog
+   */
+  async publishBlog(id: string): Promise<BlogDto | null> {
+    try {
+      const blog = await blogApi.publishBlog(id);
+      this.currentBlog = blog;
+
+      // Update in blogs list if present
+      const index = this.blogs.findIndex((b) => b.id === id);
+      if (index !== -1) {
+        this.blogs[index] = blog;
+      }
+
+      return blog;
+    } catch (err) {
+      console.error('Publish blog error:', err);
+      const toast = await this.getToastService();
+      toast.error('Failed to publish blog');
+      return null;
+    }
+  }
+
+  /**
+   * Unpublish a blog
+   */
+  async unpublishBlog(id: string): Promise<BlogDto | null> {
+    try {
+      const blog = await blogApi.unpublishBlog(id);
+      this.currentBlog = blog;
+
+      // Update in blogs list if present
+      const index = this.blogs.findIndex((b) => b.id === id);
+      if (index !== -1) {
+        this.blogs[index] = blog;
+      }
+
+      return blog;
+    } catch (err) {
+      console.error('Unpublish blog error:', err);
+      const toast = await this.getToastService();
+      toast.error('Failed to unpublish blog');
+      return null;
+    }
+  }
+
+  /**
+   * Clear current blog state
+   */
+  clearCurrentBlog(): void {
+    if (this.autoSaveTimer) {
+      clearTimeout(this.autoSaveTimer);
+      this.autoSaveTimer = null;
+    }
+    this.currentBlog = null;
+    this.lastSavedAt = null;
+  }
+}
+
+// Export singleton instance
+export const blogService = new BlogService();
