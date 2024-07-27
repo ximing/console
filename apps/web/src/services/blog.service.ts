@@ -1,11 +1,11 @@
 import { Service } from '@rabjs/react';
 import { blogApi } from '../api/blog';
 import type { BlogDto, CreateBlogDto, UpdateBlogDto } from '@x-console/dto';
+import type { ToastService } from './types';
 
-type ToastService = {
-  success(message: string): void;
-  error(message: string): void;
-};
+// Constants
+const DEFAULT_PAGE_SIZE = 10;
+const AUTO_SAVE_DELAY_MS = 3000;
 
 /**
  * Blog Service
@@ -17,7 +17,7 @@ export class BlogService extends Service {
   currentBlog: BlogDto | null = null;
   total = 0;
   page = 1;
-  pageSize = 10;
+  pageSize = DEFAULT_PAGE_SIZE;
   loading = false;
   saving = false;
   lastSavedAt: Date | null = null;
@@ -27,6 +27,9 @@ export class BlogService extends Service {
 
   // Auto-save timer
   private autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
+
+  // Previous blog state for rollback on failed saves
+  private previousBlog: BlogDto | null = null;
 
   private async getToastService(): Promise<ToastService> {
     if (!this.toastService) {
@@ -114,6 +117,11 @@ export class BlogService extends Service {
       clearTimeout(this.autoSaveTimer);
     }
 
+    // Store previous state for rollback on failure
+    if (this.currentBlog && this.currentBlog.id === id) {
+      this.previousBlog = { ...this.currentBlog };
+    }
+
     // Update local state immediately for responsive UI
     if (this.currentBlog && this.currentBlog.id === id) {
       this.currentBlog = {
@@ -126,7 +134,7 @@ export class BlogService extends Service {
     // Set new auto-save timer (3 seconds debounce)
     this.autoSaveTimer = setTimeout(() => {
       this.saveBlog(id, data);
-    }, 3000);
+    }, AUTO_SAVE_DELAY_MS);
   }
 
   /**
@@ -156,6 +164,12 @@ export class BlogService extends Service {
       console.error('Save blog error:', err);
       const toast = await this.getToastService();
       toast.error('Failed to save blog');
+
+      // Rollback to previous state on failure
+      if (this.previousBlog) {
+        this.currentBlog = this.previousBlog;
+        this.previousBlog = null;
+      }
     } finally {
       this.saving = false;
     }
