@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Editor } from '@tiptap/react';
 import {
   Bold,
@@ -16,7 +17,10 @@ import {
   Mic,
   Youtube,
   Link,
+  X,
 } from 'lucide-react';
+
+type InsertType = 'image' | 'audio' | 'youtube' | 'link';
 
 interface EditorToolbarProps {
   editor: Editor | null;
@@ -61,35 +65,79 @@ const ToolbarDivider = () => (
 );
 
 export const EditorToolbar = ({ editor }: EditorToolbarProps) => {
+  const [pendingInsert, setPendingInsert] = useState<{ type: InsertType; url: string } | null>(null);
+
   if (!editor) {
     return null;
   }
 
-  const addImage = () => {
-    const url = window.prompt('输入图片 URL:');
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
-    }
+  const handleInsertClick = (type: InsertType) => {
+    setPendingInsert({ type, url: '' });
   };
 
-  const addLink = () => {
-    const url = window.prompt('输入链接 URL:');
-    if (url) {
-      editor.chain().focus().setLink({ href: url }).run();
-    } else {
-      editor.chain().focus().unsetLink().run();
+  const handleInsertConfirm = () => {
+    if (!pendingInsert || !pendingInsert.url) return;
+
+    const { type, url } = pendingInsert;
+
+    switch (type) {
+      case 'image':
+        editor.chain().focus().setImage({ src: url }).run();
+        break;
+      case 'audio':
+        editor.chain().focus().setAudio({ src: url }).run();
+        break;
+      case 'youtube':
+        editor.commands.setYoutubeVideo({ src: url });
+        break;
+      case 'link':
+        editor.chain().focus().setLink({ href: url }).run();
+        break;
     }
+
+    setPendingInsert(null);
   };
 
-  const addYoutube = () => {
-    const url = window.prompt('输入 YouTube 视频 URL:');
-    if (url) {
-      editor.commands.setYoutubeVideo({ src: url });
+  const handleInsertCancel = () => {
+    setPendingInsert(null);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleInsertConfirm();
+    } else if (e.key === 'Escape') {
+      handleInsertCancel();
     }
   };
 
   const addTable = () => {
     editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+  };
+
+  const getPlaceholder = (type: InsertType): string => {
+    switch (type) {
+      case 'image':
+        return '输入图片 URL';
+      case 'audio':
+        return '输入音频 URL';
+      case 'youtube':
+        return '输入 YouTube 视频 URL';
+      case 'link':
+        return '输入链接 URL';
+    }
+  };
+
+  const getInsertLabel = (type: InsertType): string => {
+    switch (type) {
+      case 'image':
+        return '插入图片';
+      case 'audio':
+        return '插入音频';
+      case 'youtube':
+        return '插入视频';
+      case 'link':
+        return '插入链接';
+    }
   };
 
   return (
@@ -196,30 +244,54 @@ export const EditorToolbar = ({ editor }: EditorToolbarProps) => {
         <Table className="w-4 h-4" />
       </ToolbarButton>
       <ToolbarButton
-        onClick={addImage}
+        onClick={() => handleInsertClick('image')}
         title="插入图片"
       >
         <Image className="w-4 h-4" />
       </ToolbarButton>
       <ToolbarButton
-        onClick={() => editor.chain().focus().setAudio({ src: '' }).run()}
+        onClick={() => handleInsertClick('audio')}
         title="插入音频"
       >
         <Mic className="w-4 h-4" />
       </ToolbarButton>
       <ToolbarButton
-        onClick={addYoutube}
+        onClick={() => handleInsertClick('youtube')}
         title="插入 YouTube 视频"
       >
         <Youtube className="w-4 h-4" />
       </ToolbarButton>
       <ToolbarButton
-        onClick={addLink}
+        onClick={() => handleInsertClick('link')}
         isActive={editor.isActive('link')}
         title="插入链接"
       >
         <Link className="w-4 h-4" />
       </ToolbarButton>
+
+      {/* URL Input for Image/Audio/YouTube/Link insertion */}
+      {pendingInsert && (
+        <div className="flex items-center gap-2 ml-2 pl-2 border-l border-gray-200 dark:border-dark-700">
+          <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+            {getInsertLabel(pendingInsert.type)}:
+          </span>
+          <input
+            type="text"
+            value={pendingInsert.url}
+            onChange={(e) => setPendingInsert({ ...pendingInsert, url: e.target.value })}
+            onKeyDown={handleKeyDown}
+            placeholder={getPlaceholder(pendingInsert.type)}
+            className="flex-1 min-w-[200px] px-2 py-1 text-sm bg-white dark:bg-dark-700 border border-gray-300 dark:border-dark-600 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 text-gray-900 dark:text-white placeholder:text-gray-400"
+            autoFocus
+          />
+          <ToolbarButton onClick={handleInsertConfirm} title="确认">
+            <span className="text-xs font-medium text-primary-600 dark:text-primary-400">确认</span>
+          </ToolbarButton>
+          <ToolbarButton onClick={handleInsertCancel} title="取消">
+            <X className="w-4 h-4" />
+          </ToolbarButton>
+        </div>
+      )}
     </div>
   );
 };
