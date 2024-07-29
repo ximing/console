@@ -15,9 +15,10 @@
   "dependencies": {
     "@headlessui/react": "^2.2.9",
     "@octokit/rest": "^22.0.1",
-    "@rabjs/react": "^9.0.0",
+    "@rabjs/react": "^9.0.5",
     "@tiptap/extension-audio": "^3.21.0",
     "@tiptap/extension-image": "^3.21.0",
+    "@tiptap/extension-link": "^3.21.0",
     "@tiptap/extension-table": "^3.21.0",
     "@tiptap/extension-table-cell": "^3.21.0",
     "@tiptap/extension-table-header": "^3.21.0",

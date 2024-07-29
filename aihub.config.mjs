@@ -1,13 +1,16 @@
 export default {
-  setting: {
-    tools: ['catpaw', 'claude_code'],
+  "setting": {
+    "tools": [
+      "catpaw",
+      "claude_code"
+    ]
   },
-  assets: [
+  "assets": [
     {
-      name: '@km/rs-react',
-      version: '1.1.1',
-      path: '.catpaw/skills/km.rs-react',
-      category: 'skills',
-    },
-  ],
-};
+      "name": "@km/rs-react",
+      "version": "1.1.2",
+      "path": ".catpaw/skills/@km/rs-react",
+      "category": "skills"
+    }
+  ]
+}

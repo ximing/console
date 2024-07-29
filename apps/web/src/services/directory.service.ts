@@ -1,11 +1,8 @@
 import { Service } from '@rabjs/react';
 import { directoryApi } from '../api/blog';
 import type { DirectoryDto, CreateDirectoryDto, UpdateDirectoryDto } from '@x-console/dto';
+import { ToastService } from './toast.service';
 
-type ToastService = {
-  success(message: string): void;
-  error(message: string): void;
-};
 
 export interface DirectoryTreeNode extends DirectoryDto {
   children: DirectoryTreeNode[];
@@ -20,15 +17,8 @@ export class DirectoryService extends Service {
   directories: DirectoryDto[] = [];
   loading = false;
 
-  // Toast service reference (lazy loaded to avoid circular dependency)
-  private toastService: ToastService | null = null;
-
-  private async getToastService(): Promise<ToastService> {
-    if (!this.toastService) {
-      const module = await import('./toast.service');
-      this.toastService = module.toastService;
-    }
-    return this.toastService;
+  get toastService(): ToastService {
+    return this.resolve(ToastService)
   }
 
   /**
@@ -42,8 +32,7 @@ export class DirectoryService extends Service {
       this.directories = data.directories;
     } catch (err) {
       console.error('Load directories error:', err);
-      const toast = await this.getToastService();
-      toast.error('Failed to load directories');
+      this.toastService.error('Failed to load directories');
     } finally {
       this.loading = false;
     }
@@ -59,8 +48,7 @@ export class DirectoryService extends Service {
       return directory;
     } catch (err) {
       console.error('Create directory error:', err);
-      const toast = await this.getToastService();
-      toast.error('Failed to create directory');
+      this.toastService.error('Failed to create directory');
       return null;
     }
   }
@@ -75,8 +63,7 @@ export class DirectoryService extends Service {
       return directory;
     } catch (err) {
       console.error('Update directory error:', err);
-      const toast = await this.getToastService();
-      toast.error('Failed to update directory');
+      this.toastService.error('Failed to update directory');
       return null;
     }
   }
@@ -91,8 +78,7 @@ export class DirectoryService extends Service {
       return true;
     } catch (err) {
       console.error('Delete directory error:', err);
-      const toast = await this.getToastService();
-      toast.error('Failed to delete directory');
+      this.toastService.error('Failed to delete directory');
       return false;
     }
   }
@@ -127,6 +113,3 @@ export class DirectoryService extends Service {
     return roots;
   }
 }
-
-// Export singleton instance
-export const directoryService = new DirectoryService();

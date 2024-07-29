@@ -9,6 +9,8 @@ import { NotificationsPage } from './pages/notifications';
 import NotFoundPage from './pages/not-found';
 import CommandPalettePage from './pages/command-palette';
 import GithubPage from './pages/github';
+import BlogPage from './pages/blogs';
+import BlogEditorPage from './pages/blogs/editor';
 import { ProtectedRoute } from './components/protected-route';
 import { ToastContainer } from './components/toast';
 import { CommandPalette } from './components/command-palette/command-palette';
@@ -103,6 +105,22 @@ function App() {
           element={
             <ProtectedRoute>
               <GithubPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/blogs/*"
+          element={
+            <ProtectedRoute>
+              <BlogPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/blogs/editor/*"
+          element={
+            <ProtectedRoute>
+              <BlogEditorPage />
             </ProtectedRoute>
           }
         />
