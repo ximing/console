@@ -47,6 +47,8 @@ export class BlogService extends Service {
     pageSize?: number;
     directoryId?: string;
     status?: 'draft' | 'published';
+    tagId?: string;
+    search?: string;
   }): Promise<void> {
     this.loading = true;
 
@@ -59,6 +61,8 @@ export class BlogService extends Service {
         pageSize: this.pageSize,
         directoryId: params?.directoryId,
         status: params?.status,
+        tagId: params?.tagId,
+        search: params?.search,
       });
 
       this.blogs = data.blogs;
@@ -150,7 +154,10 @@ export class BlogService extends Service {
     this.saving = true;
 
     try {
-      const blog = await blogApi.updateBlog(id, data);
+      const blog = await blogApi.updateBlog(id, {
+        ...data,
+        updatedAt: this.currentBlog?.updatedAt,
+      });
       this.currentBlog = blog;
 
       // Update in blogs list if present
