@@ -97,9 +97,16 @@ export class BlogService extends Service {
   /**
    * Create a new blog
    */
-  async createBlog(data: CreateBlogDto): Promise<BlogDto | null> {
+  async createBlog(data: CreateBlogDto, directoryId?: string): Promise<BlogDto | null> {
     try {
       const blog = await blogApi.createBlog(data);
+      // If directoryId provided, update the blog to belong to that directory
+      if (directoryId) {
+        const updatedBlog = await blogApi.updateBlog(blog.id, { directoryId });
+        this.blogs = [updatedBlog, ...this.blogs];
+        this.currentBlog = updatedBlog;
+        return updatedBlog;
+      }
       this.blogs = [blog, ...this.blogs];
       this.currentBlog = blog;
       return blog;
@@ -244,6 +251,29 @@ export class BlogService extends Service {
       const toast = await this.getToastService();
       toast.error('Failed to unpublish blog');
       return null;
+    }
+  }
+
+  /**
+   * Move a blog to a different directory
+   */
+  async moveBlog(blogId: string, targetDirectoryId: string): Promise<boolean> {
+    try {
+      const blog = await blogApi.updateBlog(blogId, { directoryId: targetDirectoryId });
+      // Update in local state
+      const index = this.blogs.findIndex((b) => b.id === blogId);
+      if (index !== -1) {
+        this.blogs[index] = blog;
+      }
+      if (this.currentBlog?.id === blogId) {
+        this.currentBlog = blog;
+      }
+      return true;
+    } catch (err) {
+      console.error('Move blog error:', err);
+      const toast = await this.getToastService();
+      toast.error('Failed to move blog');
+      return false;
     }
   }
 
