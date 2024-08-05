@@ -1,259 +1,335 @@
 import { useEffect, useState } from 'react';
 import { view, useService } from '@rabjs/react';
 import { useNavigate } from 'react-router';
-import { Plus, Loader2, FileText, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { Layout } from '../../components/layout';
 import { BlogService } from '../../services/blog.service';
 import { DirectoryService } from '../../services/directory.service';
-import { TagService } from '../../services/tag.service';
 import { ToastService } from '../../services/toast.service';
-import { DirectoryTree } from './components/directory-tree';
-import { TagFilter } from './components/tag-filter';
-import { BlogCard } from './components/blog-card';
+import { Sidebar } from './components/sidebar';
+import { ContentArea } from './components/content';
+import { SearchModal } from './components/search-modal';
+import { ContextMenu, type ContextMenuItem } from './components/context-menu';
+import type { DirectoryTreeNode } from '../../services/directory.service';
+import type { BlogDto } from '@x-console/dto';
 
-type StatusFilter = 'all' | 'published' | 'draft';
+type ContentMode = 'recent' | 'directory' | 'preview';
 
 /**
  * Blog List Page
- * Displays blog posts with directory tree, tag filter, and status tabs
+ * Displays blog posts with wiki-style sidebar + content layout
  */
 export const BlogListPage = view(() => {
   const blogService = useService(BlogService);
   const directoryService = useService(DirectoryService);
-  const tagService = useService(TagService);
   const toastService = useService(ToastService);
   const navigate = useNavigate();
 
-  // Local state
+  // UI State
+  const [contentMode, setContentMode] = useState<ContentMode>('recent');
   const [selectedDirectoryId, setSelectedDirectoryId] = useState<string | null>(null);
-  const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [isCreating, setIsCreating] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
+  const [searchModalVisible, setSearchModalVisible] = useState(false);
+  const [directoryLoading, setDirectoryLoading] = useState(false);
 
-  // Load initial data
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+    type: 'directory' | 'page';
+    data: any;
+  }>({ visible: false, x: 0, y: 0, type: 'directory', data: null });
+
+  // Expanded directories for tree
+  const [expandedDirs, setExpandedDirs] = useState<Set<string>>(new Set());
+
+  // Load directories on mount
   useEffect(() => {
     directoryService.loadDirectories();
-    tagService.loadTags();
-    blogService.loadBlogs({
-      directoryId: selectedDirectoryId || undefined,
-      status: statusFilter === 'all' ? undefined : statusFilter,
-      tagId: selectedTagId || undefined,
-      search: searchQuery || undefined,
-    });
+    blogService.loadBlogs({ pageSize: 20 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Reload blogs when filters change
+  // Load directory blogs when directory is selected
   useEffect(() => {
-    blogService.loadBlogs({
-      directoryId: selectedDirectoryId || undefined,
-      status: statusFilter === 'all' ? undefined : statusFilter,
-      tagId: selectedTagId || undefined,
-      search: searchQuery || undefined,
-    });
+    if (selectedDirectoryId) {
+      setContentMode('directory');
+      setDirectoryLoading(true);
+      blogService
+        .loadBlogs({ directoryId: selectedDirectoryId, pageSize: 1000 })
+        .finally(() => setDirectoryLoading(false));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDirectoryId, statusFilter, selectedTagId, searchQuery]);
+  }, [selectedDirectoryId]);
+
+  // Load full blog content when entering preview
+  useEffect(() => {
+    if (selectedPageId) {
+      setContentMode('preview');
+      blogService.loadBlog(selectedPageId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPageId]);
 
   // Create new blog
-  const handleCreateBlog = async () => {
-    setIsCreating(true);
+  const handleCreateBlog = async (directoryId: string | null) => {
     try {
       const blog = await blogService.createBlog({
         title: '未命名博客',
         excerpt: '',
+        directoryId: directoryId || undefined,
       });
 
       if (blog) {
         toastService.success('博客创建成功');
         navigate(`/blogs/${blog.id}/editor`);
       }
-    } finally {
-      setIsCreating(false);
+    } catch {
+      toastService.error('创建博客失败');
     }
   };
 
-  // Get directory name by ID
-  const getDirectoryName = (directoryId: string | undefined): string | undefined => {
-    if (!directoryId) return undefined;
-    const dir = directoryService.directories.find((d) => d.id === directoryId);
-    return dir?.name;
+  // Create new directory
+  const handleCreateDirectory = async (parentId: string | null) => {
+    // The DirectoryTree component handles directory creation inline
+    // This is a no-op placeholder for the Sidebar action button
   };
 
-  // Use server-filtered blogs directly (tagId and search are now passed to loadBlogs)
-  const filteredBlogs = blogService.blogs;
+  // Rename directory
+  const handleRenameDirectory = async (directoryId: string, newName: string) => {
+    try {
+      await directoryService.updateDirectory(directoryId, { name: newName });
+      toastService.success('目录重命名成功');
+    } catch {
+      toastService.error('重命名目录失败');
+    }
+  };
+
+  // Delete directory
+  const handleDeleteDirectory = async (directoryId: string) => {
+    try {
+      await directoryService.deleteDirectory(directoryId);
+      toastService.success('目录删除成功');
+      if (selectedDirectoryId === directoryId) {
+        setSelectedDirectoryId(null);
+        setContentMode('recent');
+      }
+    } catch {
+      toastService.error('删除目录失败');
+    }
+  };
+
+  // Delete blog
+  const handleDeleteBlog = async (blogId: string) => {
+    try {
+      await blogService.deleteBlog(blogId);
+      toastService.success('博客删除成功');
+      if (selectedPageId === blogId) {
+        setSelectedPageId(null);
+        setContentMode(selectedDirectoryId ? 'directory' : 'recent');
+      }
+    } catch {
+      toastService.error('删除博客失败');
+    }
+  };
+
+  // Move blog to different directory
+  const handleMoveBlog = async (blogId: string, newDirectoryId: string | null) => {
+    try {
+      await blogService.updateBlog(blogId, { directoryId: newDirectoryId || undefined });
+      toastService.success('博客移动成功');
+    } catch {
+      toastService.error('移动博客失败');
+    }
+  };
+
+  // Select directory
+  const handleSelectDirectory = (directoryId: string | null) => {
+    setSelectedDirectoryId(directoryId);
+    if (!directoryId) {
+      setContentMode('recent');
+    }
+  };
+
+  // Select page (blog)
+  const handleSelectPage = (pageId: string) => {
+    setSelectedPageId(pageId);
+    setContentMode('preview');
+    blogService.loadBlog(pageId);
+  };
+
+  // Back to recent list
+  const handleBackToRecent = () => {
+    setContentMode('recent');
+    setSelectedDirectoryId(null);
+    setSelectedPageId(null);
+    blogService.loadBlogs({ pageSize: 20 });
+  };
+
+  // Back to directory
+  const handleBackToDirectory = () => {
+    if (selectedDirectoryId) {
+      setContentMode('directory');
+      setSelectedPageId(null);
+    } else {
+      setContentMode('recent');
+      setSelectedPageId(null);
+    }
+  };
+
+  // Expand directory (called from SearchModal)
+  const handleExpandDirectory = (directoryId: string) => {
+    setExpandedDirs((prev) => new Set([...prev, directoryId]));
+  };
+
+  // Context menu for directory
+  const handleContextMenuDirectory = (e: React.MouseEvent, node: DirectoryTreeNode) => {
+    setContextMenu({
+      visible: true,
+      x: e.clientX,
+      y: e.clientY,
+      type: 'directory',
+      data: node,
+    });
+  };
+
+  // Context menu for page
+  const handleContextMenuPage = (e: React.MouseEvent, blog: BlogDto) => {
+    setContextMenu({
+      visible: true,
+      x: e.clientX,
+      y: e.clientY,
+      type: 'page',
+      data: blog,
+    });
+  };
+
+  // Get context menu items for directory
+  const getDirectoryContextMenuItems = (): ContextMenuItem[] => {
+    const items: ContextMenuItem[] = [
+      {
+        label: '新建博客',
+        onClick: () => handleCreateBlog(contextMenu.data.id),
+      },
+      {
+        label: '新建子目录',
+        onClick: async () => {
+          // Trigger new directory creation with parentId
+          const name = prompt('请输入目录名称：');
+          if (name) {
+            try {
+              await directoryService.createDirectory({
+                name,
+                parentId: contextMenu.data.id,
+              });
+              toastService.success('目录创建成功');
+              // Expand the parent directory
+              setExpandedDirs((prev) => new Set([...prev, contextMenu.data.id]));
+            } catch {
+              toastService.error('创建目录失败');
+            }
+          }
+        },
+      },
+      {
+        label: '重命名',
+        onClick: () => {
+          const newName = prompt('请输入新名称：', contextMenu.data.name);
+          if (newName && newName !== contextMenu.data.name) {
+            handleRenameDirectory(contextMenu.data.id, newName);
+          }
+        },
+      },
+      {
+        label: '删除',
+        danger: true,
+        onClick: () => {
+          if (confirm('确定要删除这个目录吗？目录下的博客不会被删除。')) {
+            handleDeleteDirectory(contextMenu.data.id);
+          }
+        },
+      },
+    ];
+    return items;
+  };
+
+  // Get context menu items for page
+  const getPageContextMenuItems = (): ContextMenuItem[] => {
+    const items: ContextMenuItem[] = [
+      {
+        label: '编辑',
+        onClick: () => navigate(`/blogs/${contextMenu.data.id}/editor`),
+      },
+      {
+        label: '移动到...',
+        onClick: () => {
+          const dirId = prompt('请输入目标目录ID（留空移到根目录）：');
+          handleMoveBlog(contextMenu.data.id, dirId || null);
+        },
+      },
+      {
+        label: '删除',
+        danger: true,
+        onClick: () => {
+          if (confirm('确定要删除这篇博客吗？')) {
+            handleDeleteBlog(contextMenu.data.id);
+          }
+        },
+      },
+    ];
+    return items;
+  };
 
   return (
     <Layout>
       <div className="flex h-full">
-        {/* Left Sidebar - Directory Tree */}
+        {/* Left Sidebar */}
         <div className="w-[240px] flex-shrink-0">
-          <DirectoryTree
+          <Sidebar
             selectedDirectoryId={selectedDirectoryId}
-            onSelectDirectory={setSelectedDirectoryId}
+            selectedPageId={selectedPageId}
+            onSelectDirectory={handleSelectDirectory}
+            onSelectPage={handleSelectPage}
+            onSearchClick={() => setSearchModalVisible(true)}
+            onNewBlog={() => handleCreateBlog(selectedDirectoryId)}
+            onNewDirectory={() => handleCreateDirectory(null)}
+            onContextMenuDirectory={handleContextMenuDirectory}
+            onContextMenuPage={handleContextMenuPage}
+            onExpandDirectory={handleExpandDirectory}
           />
         </div>
 
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-gray-50 dark:bg-dark-900">
-          {/* Header with Tag Filter */}
-          <div className="bg-white dark:bg-dark-800 border-b border-gray-200 dark:border-dark-700 px-4 py-3">
-            {/* Tag Filter */}
-            <div className="mb-3">
-              <TagFilter
-                tags={tagService.tags}
-                selectedTagId={selectedTagId}
-                onSelectTag={setSelectedTagId}
-              />
-            </div>
-
-            {/* Status Tabs and Create Button */}
-            <div className="flex items-center justify-between gap-4">
-              {/* Status Tabs */}
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setStatusFilter('all')}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                    statusFilter === 'all'
-                      ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
-                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700'
-                  }`}
-                >
-                  全部
-                </button>
-                <button
-                  onClick={() => setStatusFilter('published')}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                    statusFilter === 'published'
-                      ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700'
-                  }`}
-                >
-                  已发布
-                </button>
-                <button
-                  onClick={() => setStatusFilter('draft')}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                    statusFilter === 'draft'
-                      ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400'
-                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700'
-                  }`}
-                >
-                  草稿
-                </button>
-              </div>
-
-              {/* Search Input */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="搜索博客..."
-                  className="pl-9 pr-4 py-1.5 w-48 text-sm bg-gray-100 dark:bg-dark-700 border border-gray-200 dark:border-dark-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white dark:placeholder:text-gray-400"
-                />
-              </div>
-
-              {/* Create Blog Button */}
-              <button
-                onClick={handleCreateBlog}
-                disabled={isCreating}
-                className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isCreating ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Plus className="w-4 h-4" />
-                )}
-                新建博客
-              </button>
-            </div>
-          </div>
-
-          {/* Blog Cards List */}
-          <div className="flex-1 overflow-auto p-4">
-            {/* Loading State */}
-            {blogService.loading && (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-6 h-6 animate-spin text-gray-500 dark:text-gray-400" />
-              </div>
-            )}
-
-            {/* Empty State */}
-            {!blogService.loading && filteredBlogs.length === 0 && (
-              <div className="bg-white dark:bg-dark-800 rounded-xl border border-gray-200 dark:border-dark-700 p-12 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-dark-700 rounded-full flex items-center justify-center">
-                  <FileText className="w-8 h-8 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">暂无博客</h3>
-                <p className="text-gray-500 dark:text-gray-400 mb-6">创建您的第一篇博客开始写作吧</p>
-                <button
-                  onClick={handleCreateBlog}
-                  disabled={isCreating}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors disabled:opacity-50"
-                >
-                  {isCreating ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Plus className="w-4 h-4" />
-                  )}
-                  新建博客
-                </button>
-              </div>
-            )}
-
-            {/* Blog Cards Grid */}
-            {!blogService.loading && filteredBlogs.length > 0 && (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {filteredBlogs.map((blog) => (
-                  <BlogCard
-                    key={blog.id}
-                    blog={blog}
-                    directoryName={getDirectoryName(blog.directoryId)}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Pagination Controls */}
-            {!blogService.loading && blogService.total > 0 && (
-              <div className="flex items-center justify-center gap-4 mt-6 pt-4 border-t border-gray-200 dark:border-dark-700">
-                <button
-                  onClick={() => blogService.loadBlogs({
-                    directoryId: selectedDirectoryId || undefined,
-                    status: statusFilter === 'all' ? undefined : statusFilter,
-                    tagId: selectedTagId || undefined,
-                    search: searchQuery || undefined,
-                    page: blogService.page - 1,
-                  })}
-                  disabled={blogService.page <= 1}
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-dark-700 hover:bg-gray-200 dark:hover:bg-dark-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  上一页
-                </button>
-                <span className="text-sm text-gray-500 dark:text-gray-400">
-                  第 {blogService.page} / {Math.ceil(blogService.total / blogService.pageSize)} 页
-                </span>
-                <button
-                  onClick={() => blogService.loadBlogs({
-                    directoryId: selectedDirectoryId || undefined,
-                    status: statusFilter === 'all' ? undefined : statusFilter,
-                    tagId: selectedTagId || undefined,
-                    search: searchQuery || undefined,
-                    page: blogService.page + 1,
-                  })}
-                  disabled={blogService.page >= Math.ceil(blogService.total / blogService.pageSize)}
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-dark-700 hover:bg-gray-200 dark:hover:bg-dark-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  下一页
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-          </div>
+        {/* Right Content Area */}
+        <div className="flex-1 overflow-hidden bg-gray-50 dark:bg-dark-900 p-6">
+          <ContentArea
+            mode={contentMode}
+            selectedDirectoryId={selectedDirectoryId}
+            selectedPageId={selectedPageId}
+            directoryBlogs={blogService.blogs}
+            directoryLoading={directoryLoading}
+            onBackToRecent={handleBackToRecent}
+            onBackToDirectory={handleBackToDirectory}
+            onSelectPage={handleSelectPage}
+          />
         </div>
+
+        {/* Search Modal */}
+        <SearchModal
+          visible={searchModalVisible}
+          onClose={() => setSearchModalVisible(false)}
+          onSelectPage={handleSelectPage}
+          onExpandDirectory={handleExpandDirectory}
+        />
+
+        {/* Context Menu */}
+        <ContextMenu
+          visible={contextMenu.visible}
+          x={contextMenu.x}
+          y={contextMenu.y}
+          items={contextMenu.type === 'directory' ? getDirectoryContextMenuItems() : getPageContextMenuItems()}
+          onClose={() => setContextMenu((prev) => ({ ...prev, visible: false }))}
+        />
       </div>
     </Layout>
   );

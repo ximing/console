@@ -15,6 +15,7 @@ interface SidebarProps {
   onNewDirectory: () => void;
   onContextMenuDirectory: (e: React.MouseEvent, node: any) => void;
   onContextMenuPage: (e: React.MouseEvent, blog: any) => void;
+  onExpandDirectory?: (directoryId: string) => void;
 }
 
 export const Sidebar = view((props: SidebarProps) => {
@@ -37,6 +38,7 @@ export const Sidebar = view((props: SidebarProps) => {
           onSelectPage={props.onSelectPage}
           onContextMenuDirectory={props.onContextMenuDirectory}
           onContextMenuPage={props.onContextMenuPage}
+          onExpandDirectory={props.onExpandDirectory}
         />
       </div>
 
