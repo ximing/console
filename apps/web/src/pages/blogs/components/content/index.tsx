@@ -1,5 +1,5 @@
 import { view, useService } from '@rabjs/react';
-import { DirectoryService } from '../../../services/directory.service';
+import { DirectoryService } from '../../../../services/directory.service';
 import { RecentList } from './recent-list';
 import { PageList } from './page-list';
 import { PagePreview } from './page-preview';
