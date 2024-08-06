@@ -1,9 +1,9 @@
 import { view, useService } from '@rabjs/react';
-import { BlogService } from '../../../services/blog.service';
 import { DirectoryService } from '../../../services/directory.service';
 import { RecentList } from './recent-list';
 import { PageList } from './page-list';
 import { PagePreview } from './page-preview';
+import type { BlogDto } from '@x-console/dto';
 
 type ContentMode = 'recent' | 'directory' | 'preview';
 
@@ -11,7 +11,7 @@ interface ContentAreaProps {
   mode: ContentMode;
   selectedDirectoryId: string | null;
   selectedPageId: string | null;
-  directoryBlogs: any[];
+  directoryBlogs: BlogDto[];
   directoryLoading: boolean;
   onBackToRecent: () => void;
   onBackToDirectory: () => void;
