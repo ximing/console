@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { view, useService } from '@rabjs/react';
+import { view, useService, toRaw } from '@rabjs/react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { ArrowLeft, Edit2, Loader2 } from 'lucide-react';
@@ -22,7 +22,7 @@ export const PagePreview = view(({ pageId, onBack }: PagePreviewProps) => {
   // Initialize read-only Tiptap editor
   const editor = useEditor({
     extensions: [StarterKit],
-    content: blog?.content || '',
+    content: blog?.content ? toRaw(blog.content) : '',
     editable: false,
     immediatelyRender: false,
   });
@@ -30,7 +30,7 @@ export const PagePreview = view(({ pageId, onBack }: PagePreviewProps) => {
   // Update editor content when blog changes
   useEffect(() => {
     if (editor && blog?.content) {
-      editor.commands.setContent(blog.content);
+      editor.commands.setContent(toRaw(blog.content));
     }
   }, [editor, blog?.content]);
 
