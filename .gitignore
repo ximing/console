@@ -15,3 +15,6 @@ apps/server/public
 # Data directories
 lancedb_data/
 attachments/
+
+# Worktrees
+.worktrees/
