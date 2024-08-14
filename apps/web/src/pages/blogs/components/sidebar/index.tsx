@@ -51,6 +51,8 @@ export const Sidebar = view((props: SidebarProps) => {
             onContextMenuDirectory={props.onContextMenuDirectory}
             onContextMenuPage={props.onContextMenuPage}
             onExpandDirectory={props.onExpandDirectory}
+            onNewBlog={props.onNewBlog}
+            onNewDirectory={props.onNewDirectory}
           />
         )}
       </div>
