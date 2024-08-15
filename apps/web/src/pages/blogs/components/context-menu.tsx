@@ -18,18 +18,25 @@ interface ContextMenuProps {
 
 export const ContextMenu = view(({ visible, x, y, items, onClose }: ContextMenuProps) => {
   const ref = useRef<HTMLDivElement>(null);
+  const justOpenedRef = useRef(false);
 
-  // Close on click outside
+  // Close on mousedown outside
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    const handleMouseDownOutside = (e: MouseEvent) => {
+      // Ignore the event that just opened the menu
+      if (justOpenedRef.current) {
+        justOpenedRef.current = false;
+        return;
+      }
       if (ref.current && !ref.current.contains(e.target as Node)) {
         onClose();
       }
     };
 
     if (visible) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
+      justOpenedRef.current = true;
+      document.addEventListener('mousedown', handleMouseDownOutside);
+      return () => document.removeEventListener('mousedown', handleMouseDownOutside);
     }
   }, [visible, onClose]);
 

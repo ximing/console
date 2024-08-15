@@ -41,6 +41,8 @@ export class BlogService extends Service {
 
   /**
    * Load blogs with pagination
+   * When directoryId is specified, appends to existing blogs to preserve data
+   * When directoryId is not specified, replaces with all blogs
    */
   async loadBlogs(params?: {
     page?: number;
@@ -65,7 +67,15 @@ export class BlogService extends Service {
         search: params?.search,
       });
 
-      this.blogs = data.blogs;
+      if (params?.directoryId) {
+        // Append new blogs, avoiding duplicates by id
+        const existingIds = new Set(this.blogs.map((b) => b.id));
+        const newUniqueBlogs = data.blogs.filter((b) => !existingIds.has(b.id));
+        this.blogs = [...this.blogs, ...newUniqueBlogs];
+      } else {
+        // Replace with all blogs when no directoryId
+        this.blogs = data.blogs;
+      }
       this.total = data.total;
     } catch (err) {
       console.error('Load blogs error:', err);

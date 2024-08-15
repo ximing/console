@@ -69,7 +69,7 @@ export const blogApi = {
    * Update a blog
    */
   updateBlog: async (id: string, data: UpdateBlogDto): Promise<BlogDto> => {
-    const response = await request.patch<UpdateBlogDto, ApiResponse<BlogDto>>(
+    const response = await request.put<UpdateBlogDto, ApiResponse<BlogDto>>(
       `/api/v1/blogs/${id}`,
       data
     );

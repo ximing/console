@@ -1,11 +1,13 @@
 import { view, useService } from '@rabjs/react';
 import { DirectoryService } from '../../../../services/directory.service';
+import { BlogService } from '../../../../services/blog.service';
 import { RecentList } from './recent-list';
 import { PageList } from './page-list';
 import { PagePreview } from './page-preview';
+import { InlineBlogEditor } from './inline-blog-editor';
 import type { BlogDto } from '@x-console/dto';
 
-type ContentMode = 'recent' | 'directory' | 'preview';
+type ContentMode = 'recent' | 'directory' | 'preview' | 'edit';
 
 interface ContentAreaProps {
   mode: ContentMode;
@@ -16,16 +18,28 @@ interface ContentAreaProps {
   onBackToRecent: () => void;
   onBackToDirectory: () => void;
   onSelectPage: (pageId: string) => void;
+  onEditPage?: (blog: BlogDto) => void;
 }
 
 export const ContentArea = view((props: ContentAreaProps) => {
   const directoryService = useService(DirectoryService);
+  const blogService = useService(BlogService);
 
   const getDirectoryName = (): string => {
     if (!props.selectedDirectoryId) return '';
     const dir = directoryService.directories.find((d) => d.id === props.selectedDirectoryId);
     return dir?.name || '';
   };
+
+  // Edit mode - show inline editor with pre-loaded blog
+  if (props.mode === 'edit' && props.selectedPageId && blogService.currentBlog) {
+    return (
+      <InlineBlogEditor
+        blog={blogService.currentBlog}
+        onBack={props.onBackToDirectory}
+      />
+    );
+  }
 
   if (props.mode === 'preview' && props.selectedPageId) {
     return <PagePreview pageId={props.selectedPageId} onBack={props.onBackToDirectory} />;
@@ -40,9 +54,10 @@ export const ContentArea = view((props: ContentAreaProps) => {
         loading={props.directoryLoading}
         onBack={props.onBackToRecent}
         onSelectPage={props.onSelectPage}
+        onEditPage={props.onEditPage}
       />
     );
   }
 
-  return <RecentList onSelectPage={props.onSelectPage} />;
+  return <RecentList onSelectPage={props.onSelectPage} onEditPage={props.onEditPage} />;
 });

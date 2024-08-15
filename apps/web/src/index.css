@@ -97,3 +97,143 @@ html.dark {
     border-color 0.3s ease,
     color 0.3s ease;
 }
+
+/* Table Styles */
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1rem 0;
+}
+
+table td,
+table th {
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem 0.75rem;
+  min-width: 100px;
+  vertical-align: top;
+}
+
+table th {
+  background-color: #f9fafb;
+  font-weight: 600;
+  text-align: left;
+}
+
+/* Dark mode table styles */
+html.dark table td,
+html.dark table th {
+  border-color: #374151;
+}
+
+html.dark table th {
+  background-color: #1f2937;
+}
+
+/* Selected cell in table */
+.selectedCell {
+  background-color: #dbeafe !important;
+}
+
+html.dark .selectedCell {
+  background-color: #1e3a5f !important;
+}
+
+/* Prose table overrides */
+.prose table {
+  table-layout: auto;
+}
+
+.prose table td,
+.prose table th {
+  vertical-align: middle;
+}
+
+/* Table cell selection (Tiptap selectedCell attribute) */
+.table-selected-cell,
+td[data-selected-cell='true'],
+th[data-selected-cell='true'] {
+  background-color: #dbeafe !important;
+}
+
+html.dark .table-selected-cell,
+html.dark td[data-selected-cell='true'],
+html.dark th[data-selected-cell='true'] {
+  background-color: #1e3a5f !important;
+}
+
+/* Table cell selection handles */
+.table-selected-cell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid #3b82f6;
+  pointer-events: none;
+}
+
+html.dark .table-selected-cell::after {
+  border-color: #60a5fa;
+}
+
+/* Selected cell with cell selection mode */
+.cell-selection {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+td.cell-selected,
+th.cell-selected {
+  background-color: #dbeafe !important;
+}
+
+html.dark td.cell-selected,
+html.dark th.cell-selected {
+  background-color: #1e3a5f !important;
+}
+
+/* UIW Color Picker Dark Mode */
+html.dark .w-color-sketch {
+  --sketch-background: transparent !important;
+  --sketch-box-shadow: none !important;
+  --sketch-swatch-box-shadow: none !important;
+  --sketch-alpha-box-shadow: none !important;
+  --sketch-swatch-border-top: none !important;
+}
+
+html.dark .w-color-swatch {
+  --sketch-swatch-border-top: 1px solid #525252 !important;
+}
+
+html.dark .w-color-block {
+  --block-background-color: #323232 !important;
+  --block-box-shadow: rgb(0 0 0 / 10%) 0 1px !important;
+}
+
+html.dark .w-color-editable-input {
+  --editable-input-label-color: #757575 !important;
+  --editable-input-box-shadow: #616161 0px 0px 0px 1px inset !important;
+  --editable-input-color: #bbb !important;
+}
+
+html.dark .w-color-github {
+  --github-border: 1px solid rgba(0, 0, 0, 0.2) !important;
+  --github-background-color: #323232 !important;
+  --github-box-shadow: rgb(0 0 0 / 15%) 0px 3px 12px !important;
+  --github-arrow-border-color: rgba(0, 0, 0, 0.15) !important;
+}
+
+html.dark .w-color-compact {
+  --compact-background-color: #323232 !important;
+}
+
+html.dark .w-color-material {
+  --material-background-color: #323232 !important;
+  --material-border-bottom-color: #707070 !important;
+}
+
+html.dark .w-color-alpha {
+  --alpha-pointer-background-color: #6a6a6a !important;
+  --alpha-pointer-box-shadow: rgb(0 0 0 / 37%) 0px 1px 4px 0px !important;
+}

@@ -113,7 +113,7 @@ export const CommitDialog = view(({ isOpen, onClose }: CommitDialogProps) => {
       {/* Dialog */}
       <div className="relative bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg shadow-xl w-[500px] max-h-[80vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-dark-700">
+        <div className="flex items-center justify-between px-2 border-b border-gray-200 dark:border-dark-700">
           <h2 className="text-lg font-semibold">提交更改</h2>
           <button
             onClick={onClose}

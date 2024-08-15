@@ -2,16 +2,6 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { view, useService } from '@rabjs/react';
 import { useParams, useNavigate } from 'react-router';
 import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
-import TiptapImage from '@tiptap/extension-image';
-import { Table as TiptapTable } from '@tiptap/extension-table';
-import { TableRow as TiptapTableRow } from '@tiptap/extension-table-row';
-import { TableHeader as TiptapTableHeader } from '@tiptap/extension-table-header';
-import { TableCell as TiptapTableCell } from '@tiptap/extension-table-cell';
-import TiptapAudio from '@tiptap/extension-audio';
-import Youtube from '@tiptap/extension-youtube';
-import Link from '@tiptap/extension-link';
 import { Loader2, Save, Send, ArrowLeft } from 'lucide-react';
 import slugify from 'slugify';
 import { BlogService } from '../../../services/blog.service';
@@ -20,11 +10,7 @@ import { TagService } from '../../../services/tag.service';
 import { ToastService } from '../../../services/toast.service';
 import { EditorToolbar } from '../components/editor-toolbar';
 import { Select } from '../../../components/select';
-
-// Magic numbers extracted as constants
-const MAX_EXCERPT_LENGTH = 200;
-const DEFAULT_YOUTUBE_WIDTH = 640;
-const DEFAULT_YOUTUBE_HEIGHT = 360;
+import { editableExtensions, MAX_EXCERPT_LENGTH } from './tiptap.config';
 
 interface BlogEditorProps {
   id?: string;
@@ -57,41 +43,12 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
 
   // Initialize editor
   const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Underline,
-      TiptapImage.configure({
-        HTMLAttributes: {
-          class: 'max-w-full h-auto',
-        },
-      }),
-      TiptapTable.configure({
-        resizable: true,
-      }),
-      TiptapTableRow,
-      TiptapTableHeader,
-      TiptapTableCell,
-      TiptapAudio.configure({
-        HTMLAttributes: {
-          class: 'max-w-full',
-        },
-      }),
-      Youtube.configure({
-        width: DEFAULT_YOUTUBE_WIDTH,
-        height: DEFAULT_YOUTUBE_HEIGHT,
-        autoplay: false,
-      }),
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: 'text-primary-600 dark:text-primary-400 underline cursor-pointer',
-        },
-      }),
-    ],
+    extensions: editableExtensions,
     content: '',
     editorProps: {
       attributes: {
-        class: 'prose prose-sm sm:prose-base dark:prose-invert max-w-none focus:outline-none min-h-[300px] px-4 py-3',
+        class:
+          'prose prose-sm sm:prose-base dark:prose-invert max-w-none focus:outline-none min-h-[300px] px-0 py-3',
       },
     },
     onUpdate: ({ editor }) => {
@@ -115,7 +72,8 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
   // Load existing blog if editing
   useEffect(() => {
     if (isEditing && blogId) {
-      blogService.loadBlog(blogId)
+      blogService
+        .loadBlog(blogId)
         .then(() => {
           const blog = blogService.currentBlog;
           if (blog) {
@@ -204,7 +162,7 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
           excerpt: '',
         });
         if (blog) {
-          navigate(`/blogs/${blog.id}/editor`, { replace: true });
+          navigate(`/blogs/editor/${blog.id}`, { replace: true });
         }
       };
       createNewBlog();
@@ -265,7 +223,10 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
 
   // Build directory options
   const directoryOptions = useMemo(() => {
-    const buildOptions = (nodes: ReturnType<DirectoryService['buildTree']>, level = 0): { value: string; label: string }[] => {
+    const buildOptions = (
+      nodes: ReturnType<DirectoryService['buildTree']>,
+      level = 0
+    ): { value: string; label: string }[] => {
       const options: { value: string; label: string }[] = [];
       nodes.forEach((node) => {
         const prefix = level > 0 ? '\u00A0\u00A0'.repeat(level) + '\u251C\u2500 ' : '';
@@ -291,7 +252,7 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
   return (
     <div className="flex flex-col h-full bg-white dark:bg-dark-900">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-dark-700">
+      <div className="flex items-center justify-between p-2 border-b border-gray-200 dark:border-dark-700">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/blogs')}
@@ -300,9 +261,7 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <span className="text-sm text-gray-500 dark:text-gray-400">
-            {saveStatusText}
-          </span>
+          <span className="text-sm text-gray-500 dark:text-gray-400">{saveStatusText}</span>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -330,7 +289,7 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
 
       {/* Content */}
       <div className="flex-1 overflow-auto">
-        <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+        <div className="max-w-6xl mx-auto px-4 py-6 space-y-6 mt-6">
           {/* Title Input */}
           <input
             type="text"
@@ -363,9 +322,10 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
                     onClick={() => toggleTag(tag.id)}
                     className={`
                       px-2 py-1 text-xs font-medium rounded-full transition-colors
-                      ${selectedTagIds.includes(tag.id)
-                        ? 'text-white'
-                        : 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-dark-700 hover:bg-gray-200 dark:hover:bg-dark-600'
+                      ${
+                        selectedTagIds.includes(tag.id)
+                          ? 'text-white'
+                          : 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-dark-700 hover:bg-gray-200 dark:hover:bg-dark-600'
                       }
                     `}
                     style={selectedTagIds.includes(tag.id) ? { backgroundColor: tag.color } : {}}
