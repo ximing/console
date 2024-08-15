@@ -1,10 +1,10 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useMemo, useCallback } from 'react';
 import { view, useService } from '@rabjs/react';
 import { Tree } from 'react-arborist';
+import type { NodeRendererProps, DropParams } from 'react-arborist';
 import { Folder, FileText, Loader2 } from 'lucide-react';
 import { DirectoryService } from '../../../../services/directory.service';
 import { BlogService } from '../../../../services/blog.service';
-import type { DirectoryTreeNode } from '../../../../services/directory.service';
 import type { BlogDto } from '@x-console/dto';
 import type { TreeNodeData } from './types';
 import { buildTreeData, getRootBlogs } from './tree-data';
@@ -18,25 +18,13 @@ interface DirectoryTreeProps {
   selectedPageId: string | null;
   onSelectDirectory: (directoryId: string | null) => void;
   onSelectPage: (pageId: string) => void;
-  onContextMenuDirectory: (e: React.MouseEvent, node: DirectoryTreeNode) => void;
   onContextMenuPage: (e: React.MouseEvent, blog: BlogDto) => void;
   onExpandDirectory?: (directoryId: string) => void;
   onNewBlog: (directoryId?: string) => void;
   onNewDirectory: (parentId?: string) => void;
 }
 
-interface NodeRendererProps {
-  node: any;
-  style: React.CSSProperties;
-  dragHandle: any;
-  onHover: (isHovered: boolean) => void;
-  onNewBlog: (directoryId: string) => void;
-  onNewDirectory: (parentId: string) => void;
-  selectedPageId: string | null;
-  onSelectPage: (pageId: string) => void;
-  onContextMenuPage: (e: React.MouseEvent, blog: BlogDto) => void;
-  blogService: BlogService;
-}
+type ArboristNodeProps = NodeRendererProps<TreeNodeData>;
 
 function NodeRenderer({
   node,
@@ -49,7 +37,7 @@ function NodeRenderer({
   onSelectPage,
   onContextMenuPage,
   blogService,
-}: NodeRendererProps) {
+}: ArboristNodeProps) {
   if (node.data.type === 'directory') {
     return (
       <DirectoryNode
@@ -89,7 +77,6 @@ export const DirectoryTree = view(
     selectedPageId,
     onSelectDirectory,
     onSelectPage,
-    onContextMenuDirectory,
     onContextMenuPage,
     onNewBlog,
     onNewDirectory,
@@ -112,7 +99,7 @@ export const DirectoryTree = view(
     }, [blogService.blogs]);
 
     const handleDropCallback = useCallback(
-      (params: any) => {
+      (params: DropParams<TreeNodeData>) => {
         handleDrop(params, treeData);
       },
       [handleDrop, treeData]
@@ -176,7 +163,7 @@ export const DirectoryTree = view(
             enableFatFingers
             width="100%"
           >
-            {(props: any) => (
+            {(props) => (
               <NodeRenderer
                 {...props}
                 onHover={props.onHover}
