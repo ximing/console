@@ -30,7 +30,6 @@ function NodeRenderer({
   node,
   style,
   dragHandle,
-  onHover,
   onNewBlog,
   onNewDirectory,
   selectedPageId,
@@ -44,7 +43,6 @@ function NodeRenderer({
         node={node}
         style={style}
         dragHandle={dragHandle}
-        onHover={onHover}
         onNewBlog={onNewBlog}
         onNewDirectory={onNewDirectory}
       />
@@ -166,7 +164,6 @@ export const DirectoryTree = view(
             {(props) => (
               <NodeRenderer
                 {...props}
-                onHover={props.onHover}
                 onNewBlog={onNewBlog}
                 onNewDirectory={onNewDirectory}
                 selectedPageId={selectedPageId}

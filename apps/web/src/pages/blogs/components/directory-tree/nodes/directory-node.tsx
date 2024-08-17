@@ -1,17 +1,17 @@
-import { forwardRef } from 'react';
+import { forwardRef, useState } from 'react';
 import { ChevronRight, ChevronDown, Folder, FolderOpen, Plus, FolderPlus } from 'lucide-react';
 import type { DirectoryNodeRendererProps } from '../types';
 
 interface Props extends DirectoryNodeRendererProps {
-  onHover: (isHovered: boolean) => void;
   onNewBlog: (directoryId: string) => void;
   onNewDirectory: (parentId: string) => void;
 }
 
 export const DirectoryNode = forwardRef<HTMLDivElement, Props>(
-  ({ node, style, onHover, onNewBlog, onNewDirectory }, ref) => {
+  ({ node, style, onNewBlog, onNewDirectory }, ref) => {
     const { data, isOpen, isSelected, isDropTarget } = node;
     const hasChildren = data.children && data.children.length > 0;
+    const [isHovered, setIsHovered] = useState(false);
 
     return (
       <div
@@ -22,8 +22,8 @@ export const DirectoryNode = forwardRef<HTMLDivElement, Props>(
           ${isSelected ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' : 'hover:bg-gray-100 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300'}
           ${isDropTarget ? 'bg-green-100 dark:bg-green-900/30' : ''}
         `}
-        onMouseEnter={() => onHover(true)}
-        onMouseLeave={() => onHover(false)}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
         {/* Expand/Collapse Icon */}
         <span className="w-4 h-4 flex-shrink-0">

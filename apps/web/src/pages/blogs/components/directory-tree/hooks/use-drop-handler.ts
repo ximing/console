@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useService } from '@rabjs/react';
-import { BlogService } from '../../../../services/blog.service';
-import { DirectoryService } from '../../../../services/directory.service';
+import { BlogService } from '../../../../../services/blog.service';
+import { DirectoryService } from '../../../../../services/directory.service';
 import type { TreeNodeData } from '../types';
 
 interface DropParams {
