@@ -32,17 +32,24 @@ function NodeRenderer({
   dragHandle,
   onNewBlog,
   onNewDirectory,
+  selectedDirectoryId,
   selectedPageId,
+  onSelectDirectory,
   onSelectPage,
   onContextMenuPage,
   blogService,
-}: ArboristNodeProps) {
+}: ArboristNodeProps & {
+  selectedDirectoryId: string | null;
+  onSelectDirectory: (directoryId: string | null) => void;
+}) {
   if (node.data.type === 'directory') {
     return (
       <DirectoryNode
         node={node}
         style={style}
         dragHandle={dragHandle}
+        selectedDirectoryId={selectedDirectoryId}
+        onSelectDirectory={onSelectDirectory}
         onNewBlog={onNewBlog}
         onNewDirectory={onNewDirectory}
       />
@@ -157,6 +164,13 @@ export const DirectoryTree = view(
             openIds={openIdsArray}
             onOpenChange={setOpenIds}
             onDrop={handleDropCallback}
+            onSelect={(nodeIds) => {
+              // nodeIds is array of selected node ids - we only support single selection
+              const selectedId = nodeIds[0];
+              if (selectedId) {
+                onSelectDirectory(selectedId);
+              }
+            }}
             draggable
             enableFatFingers
             width="100%"
@@ -166,7 +180,9 @@ export const DirectoryTree = view(
                 {...props}
                 onNewBlog={onNewBlog}
                 onNewDirectory={onNewDirectory}
+                selectedDirectoryId={selectedDirectoryId}
                 selectedPageId={selectedPageId}
+                onSelectDirectory={onSelectDirectory}
                 onSelectPage={onSelectPage}
                 onContextMenuPage={onContextMenuPage}
                 blogService={blogService}
