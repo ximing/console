@@ -13,14 +13,26 @@
 | 博客选中 | `/blogs/:blogId` | 显示博客预览 |
 
 **刷新定位逻辑：**
-- `/blogs/:blogId` → 加载博客，查找其所属目录，自动展开目录并高亮博客
+- `/blogs/:blogId` → 加载博客，从 `blog.directoryId` 获取所属目录，自动展开目录并高亮博客
 - `/blogs?dir=:dirId` → 加载该目录下的博客，高亮目录
+
+**定位实现：**
+1. 解析 URL 获取 blogId 或 dirId
+2. 如果是 blogId：调用 `blogService.loadBlog(blogId)` 获取 `directoryId`
+3. 设置 `expandedIds` 包含目标目录
+4. 设置 `selectedPageId` 或 `selectedDirectoryId`
 
 ## 3. 技术栈
 
-- **@dnd-kit/core** + **@dnd-kit/sortable** - 拖拽交互
+- **@dnd-kit/core** - 拖拽交互（不用 @dnd-kit/sortable，因为它是列表排序用的，不适合树形结构跨容器拖拽）
 - **自定义递归组件** - 树形结构渲染
 - **原生 React hooks** - 状态管理
+
+**@dnd-kit 树形拖拽方案：**
+- 使用 `closestCenter` 或自定义 `rectIntersection` collision detection
+- 区分 `DragOverlay`（视觉反馈）和实际 drop 逻辑
+- 博客拖入目录节点 = 移动博客到该目录
+- 博客拖入博客节点 = 移动博客到根级（因为博客不能嵌套在博客下）
 
 ## 4. 组件结构
 
@@ -47,12 +59,14 @@ interface DirectoryTreeProps {
   selectedPageId: string | null;
   onSelectDirectory: (directoryId: string | null) => void;
   onSelectPage: (pageId: string) => void;
-  onContextMenuDirectory: (e: React.MouseEvent, nodeId: string) => void;
+  onContextMenuDirectory: (e: React.MouseEvent, nodeId: string, nodeName: string) => void;
   onContextMenuPage: (e: React.MouseEvent, blogId: string) => void;
   onNewBlog: (directoryId?: string) => void;
   onNewDirectory: (parentId?: string) => void;
 }
 ```
+
+注：`onContextMenuDirectory` 传递 `nodeId` 和 `nodeName`，因为目录重命名时需要显示当前名称。
 
 ## 6. 交互设计
 
@@ -80,8 +94,17 @@ interface DirectoryTreeProps {
 ```
 
 **校验：**
-- 不能把目录拖入自己的子目录中
+- 不能把目录拖入自己的子目录中（会导致循环引用）
 - 不能把博客拖入自己所在的目录（无意义操作）
+
+**拖放边界情况：**
+- 拖入折叠的目录节点 → 作为该目录的子节点放下（无需展开）
+- 拖入博客节点 → 移动博客到根级（博客不能嵌套在博客下）
+- 拖入空白区域 → 移动到根级
+
+**右键菜单交互：**
+- 点击菜单外部 → 关闭菜单
+- 按 Escape 键 → 关闭菜单
 
 ### 6.4 Hover 快捷操作
 
@@ -147,7 +170,13 @@ A: 是，目录可以拖入其他目录成为其子目录。
 **Q3: 删除目录时其中的博客如何处理？**
 A: 博客保留在原位置（不随目录删除），目录删除后博客变成根级博客。
 
-## 11. 实现步骤
+## 11. 未来优化方向（本期不做）
+
+- 键盘导航（方向键遍历、Enter 选中/展开）
+- 展开/收起动画
+- 拖拽排序时显示位置指示线
+
+## 12. 实现步骤
 
 1. 创建组件结构，定义类型
 2. 实现 TreeNode 递归组件
