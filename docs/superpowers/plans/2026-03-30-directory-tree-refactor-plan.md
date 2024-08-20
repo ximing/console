@@ -64,7 +64,29 @@ export interface DirectoryTreeProps {
 }
 ```
 
-注：`onContextMenuDirectory` 传递 `nodeId` 和 `nodeName`。SideBar 和 blogs.tsx 需要更新回调签名以匹配。
+注：`onContextMenuDirectory` 传递 `nodeId` 和 `nodeName`。需要更新以下文件的回调签名：
+
+**Sidebar (sidebar/index.tsx):**
+```typescript
+// 修改前
+onContextMenuDirectory: (e: React.MouseEvent, node: DirectoryTreeNode) => void;
+
+// 修改后
+onContextMenuDirectory: (e: React.MouseEvent, nodeId: string, nodeName: string) => void;
+```
+
+**blogs.tsx 中的 handleContextMenuDirectory:**
+```typescript
+// 修改前
+const handleContextMenuDirectory = (e: React.MouseEvent, node: DirectoryTreeNode) => {
+  setContextMenu({ ...node.id ... });
+};
+
+// 修改后
+const handleContextMenuDirectory = (e: React.MouseEvent, nodeId: string, nodeName: string) => {
+  setContextMenu({ visible: true, x: e.clientX, y: e.clientY, type: 'directory', data: { id: nodeId, name: nodeName } });
+};
+```
 
 - [ ] **Step 3: 创建 useTreeState.ts**
 
@@ -591,6 +613,18 @@ const handleDragEnd = useCallback((event: DragEndEvent) => {
     dropTarget = findNodeById(treeData, overId);
   }
 
+// Helper function to find node by ID in tree
+function findNodeById(nodes: TreeNodeData[], id: string): TreeNodeData | null {
+  for (const node of nodes) {
+    if (node.id === id) return node;
+    if (node.children) {
+      const found = findNodeById(node.children, id);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
   // Call handleDragEnd from hook
   handleTreeDragEnd({ dragNode, dropTarget, isRootLevel });
 }, [treeData, handleTreeDragEnd]);
@@ -659,12 +693,15 @@ export const DraggableTreeNode = forwardRef<HTMLDivElement, DraggableTreeNodePro
       disabled: node.type !== 'directory', // Only directories are drop targets
     });
 
-    // Merge refs
+    // Merge refs - handle both callback refs and object refs
     const setRefs = useCallback((el: HTMLDivElement | null) => {
       setDragRef(el);
       setDropRef(el);
-      if (typeof ref === 'function') ref(el);
-      else if (ref) ref.current = el;
+      if (typeof ref === 'function') {
+        ref(el);
+      } else if (ref) {
+        (ref as React.MutableRefObject<HTMLDivElement | null>).current = el;
+      }
     }, [setDragRef, setDropRef, ref]);
 
     // Pass through rendering to TreeNode but with drag/drop refs
