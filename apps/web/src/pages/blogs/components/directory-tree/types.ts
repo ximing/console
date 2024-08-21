@@ -1,38 +1,35 @@
-// Unified tree node data for react-arborist
-export interface DirectoryTreeNodeData {
+export interface TreeNodeData {
   id: string;
-  type: 'directory';
+  type: 'directory' | 'blog';
   name: string;
   children?: TreeNodeData[];
-}
-
-export interface BlogTreeNodeData {
-  id: string;
-  type: 'blog';
-  title: string;
+  // Blog specific
+  title?: string;
   directoryId?: string;
 }
 
-export type TreeNodeData = DirectoryTreeNodeData | BlogTreeNodeData;
-
-// Props for directory node renderer
-export interface DirectoryNodeRendererProps {
-  node: {
-    data: DirectoryTreeNodeData;
-    isOpen: boolean;
-    isSelected: boolean;
-    isDropTarget: boolean;
-  };
-  style: React.CSSProperties;
-  dragHandle?: React.Ref<HTMLDivElement>;
+export interface TreeNodeProps {
+  node: TreeNodeData;
+  depth: number;
+  expandedIds: Set<string>;
+  selectedDirectoryId: string | null;
+  selectedPageId: string | null;
+  onToggle: (id: string) => void;
+  onSelectDirectory: (id: string) => void;
+  onSelectPage: (id: string) => void;
+  onContextMenuDirectory: (e: React.MouseEvent, nodeId: string, nodeName: string) => void;
+  onContextMenuPage: (e: React.MouseEvent, blogId: string) => void;
+  onNewBlog: (directoryId?: string) => void;
+  onNewDirectory: (parentId?: string) => void;
 }
 
-// Props for blog node renderer
-export interface BlogNodeRendererProps {
-  node: {
-    data: BlogTreeNodeData;
-    isSelected: boolean;
-  };
-  style: React.CSSProperties;
-  dragHandle?: React.Ref<HTMLDivElement>;
+export interface DirectoryTreeProps {
+  selectedDirectoryId: string | null;
+  selectedPageId: string | null;
+  onSelectDirectory: (directoryId: string | null) => void;
+  onSelectPage: (pageId: string) => void;
+  onContextMenuDirectory: (e: React.MouseEvent, nodeId: string, nodeName: string) => void;
+  onContextMenuPage: (e: React.MouseEvent, blogId: string) => void;
+  onNewBlog: (directoryId?: string) => void;
+  onNewDirectory: (parentId?: string) => void;
 }

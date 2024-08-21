@@ -1,80 +1,11 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo } from 'react';
 import { view, useService } from '@rabjs/react';
-import { Tree } from 'react-arborist';
-import type { NodeRendererProps, DropParams } from 'react-arborist';
 import { Folder, FileText, Loader2 } from 'lucide-react';
 import { DirectoryService } from '../../../../services/directory.service';
 import { BlogService } from '../../../../services/blog.service';
-import type { BlogDto } from '@x-console/dto';
-import type { TreeNodeData } from './types';
-import { buildTreeData, getRootBlogs } from './tree-data';
-import { DirectoryNode } from './nodes/directory-node';
-import { BlogNode } from './nodes/blog-node';
-import { useDropHandler } from './hooks/use-drop-handler';
-import { useTreeState } from './hooks/use-tree-state';
-
-interface DirectoryTreeProps {
-  selectedDirectoryId: string | null;
-  selectedPageId: string | null;
-  onSelectDirectory: (directoryId: string | null) => void;
-  onSelectPage: (pageId: string) => void;
-  onContextMenuPage: (e: React.MouseEvent, blog: BlogDto) => void;
-  onExpandDirectory?: (directoryId: string) => void;
-  onNewBlog: (directoryId?: string) => void;
-  onNewDirectory: (parentId?: string) => void;
-}
-
-type ArboristNodeProps = NodeRendererProps<TreeNodeData>;
-
-function NodeRenderer({
-  node,
-  style,
-  dragHandle,
-  onNewBlog,
-  onNewDirectory,
-  selectedDirectoryId,
-  selectedPageId,
-  onSelectDirectory,
-  onSelectPage,
-  onContextMenuPage,
-  blogService,
-}: ArboristNodeProps & {
-  selectedDirectoryId: string | null;
-  onSelectDirectory: (directoryId: string | null) => void;
-}) {
-  if (node.data.type === 'directory') {
-    return (
-      <DirectoryNode
-        node={node}
-        style={style}
-        dragHandle={dragHandle}
-        selectedDirectoryId={selectedDirectoryId}
-        onSelectDirectory={onSelectDirectory}
-        onNewBlog={onNewBlog}
-        onNewDirectory={onNewDirectory}
-      />
-    );
-  }
-
-  const handleContextMenu = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const blog = blogService.blogs.find((b) => b.id === node.data.id);
-    if (blog) {
-      onContextMenuPage(e, blog);
-    }
-  };
-
-  return (
-    <BlogNode
-      node={node}
-      style={style}
-      dragHandle={dragHandle}
-      selectedPageId={selectedPageId}
-      onSelectPage={onSelectPage}
-      onContextMenu={handleContextMenu}
-    />
-  );
-}
+import { TreeNode } from './TreeNode';
+import { useTreeState } from './hooks/useTreeState';
+import type { TreeNodeData, DirectoryTreeProps } from './types';
 
 export const DirectoryTree = view(
   ({
@@ -82,33 +13,59 @@ export const DirectoryTree = view(
     selectedPageId,
     onSelectDirectory,
     onSelectPage,
+    onContextMenuDirectory,
     onContextMenuPage,
     onNewBlog,
     onNewDirectory,
   }: DirectoryTreeProps) => {
     const directoryService = useService(DirectoryService);
     const blogService = useService(BlogService);
-    const { handleDrop } = useDropHandler();
-    const { openIdsArray, setOpenIds } = useTreeState();
+    const { expandedIds, toggleNode } = useTreeState();
 
     // Build tree data from services
     const treeData = useMemo(() => {
+      const buildTree = (nodes: ReturnType<DirectoryService['buildTree']>): TreeNodeData[] => {
+        return nodes.map(node => ({
+          id: node.id,
+          type: 'directory' as const,
+          name: node.name,
+          children: [
+            ...buildTree(node.children),
+            ...blogService.blogs
+              .filter(b => b.directoryId === node.id)
+              .map(b => ({
+                id: b.id,
+                type: 'blog' as const,
+                name: b.title,
+                title: b.title,
+                directoryId: b.directoryId,
+              })),
+          ],
+        }));
+      };
+
       const dirTree = directoryService.buildTree();
-      const blogs = blogService.blogs;
-      return buildTreeData(dirTree, blogs);
-    }, [directoryService.buildTree, blogService.blogs]);
+      return buildTree(dirTree);
+    }, [directoryService, blogService.blogs]);
 
     // Root-level blogs (outside any directory)
     const rootBlogs = useMemo(() => {
-      return getRootBlogs(blogService.blogs);
+      return blogService.blogs
+        .filter(b => !b.directoryId)
+        .map(b => ({
+          id: b.id,
+          type: 'blog' as const,
+          name: b.title,
+          title: b.title,
+          directoryId: b.directoryId,
+        }));
     }, [blogService.blogs]);
 
-    const handleDropCallback = useCallback(
-      (params: DropParams<TreeNodeData>) => {
-        handleDrop(params, treeData);
-      },
-      [handleDrop, treeData]
-    );
+    // All blogs combined with root blogs
+    const allData: TreeNodeData[] = [
+      ...rootBlogs,
+      ...treeData,
+    ];
 
     if (directoryService.loading) {
       return (
@@ -135,7 +92,7 @@ export const DirectoryTree = view(
         {/* Root-level Blogs */}
         {rootBlogs.length > 0 && (
           <div>
-            {rootBlogs.map((blog) => (
+            {rootBlogs.map(blog => (
               <div
                 key={blog.id}
                 className={`
@@ -144,10 +101,9 @@ export const DirectoryTree = view(
                 `}
                 style={{ paddingLeft: '24px' }}
                 onClick={() => onSelectPage(blog.id)}
-                onContextMenu={(e) => {
+                onContextMenu={e => {
                   e.preventDefault();
-                  const foundBlog = blogService.blogs.find((b) => b.id === blog.id);
-                  if (foundBlog) onContextMenuPage(e, foundBlog);
+                  onContextMenuPage(e, blog.id);
                 }}
               >
                 <FileText className="w-4 h-4 text-blue-500 flex-shrink-0" />
@@ -159,41 +115,30 @@ export const DirectoryTree = view(
 
         {/* Directory Tree */}
         {treeData.length > 0 ? (
-          <Tree
-            data={treeData}
-            openIds={openIdsArray}
-            onOpenChange={setOpenIds}
-            onDrop={handleDropCallback}
-            onSelect={(nodeIds) => {
-              // nodeIds is array of selected node ids - we only support single selection
-              const selectedId = nodeIds[0];
-              if (selectedId) {
-                onSelectDirectory(selectedId);
-              }
-            }}
-            draggable
-            enableFatFingers
-            width="100%"
-          >
-            {(props) => (
-              <NodeRenderer
-                {...props}
-                onNewBlog={onNewBlog}
-                onNewDirectory={onNewDirectory}
+          <div>
+            {treeData.map(node => (
+              <TreeNode
+                key={node.id}
+                node={node}
+                depth={0}
+                expandedIds={expandedIds}
                 selectedDirectoryId={selectedDirectoryId}
                 selectedPageId={selectedPageId}
+                onToggle={toggleNode}
                 onSelectDirectory={onSelectDirectory}
                 onSelectPage={onSelectPage}
+                onContextMenuDirectory={onContextMenuDirectory}
                 onContextMenuPage={onContextMenuPage}
-                blogService={blogService}
+                onNewBlog={onNewBlog}
+                onNewDirectory={onNewDirectory}
               />
-            )}
-          </Tree>
-        ) : (
+            ))}
+          </div>
+        ) : rootBlogs.length === 0 ? (
           <div className="text-center py-4 text-sm text-gray-500 dark:text-gray-400">
             暂无目录
           </div>
-        )}
+        ) : null}
       </div>
     );
   }
