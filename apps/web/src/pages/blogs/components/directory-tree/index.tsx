@@ -1,10 +1,22 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { view, useService } from '@rabjs/react';
 import { Folder, FileText, Loader2 } from 'lucide-react';
+import {
+  DndContext,
+  DragOverlay,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from '@dnd-kit/core';
 import { DirectoryService } from '../../../../services/directory.service';
 import { BlogService } from '../../../../services/blog.service';
-import { TreeNode } from './TreeNode';
+import { DraggableTreeNode } from './TreeNode';
+import { TreeDragOverlay } from './TreeDragOverlay';
 import { useTreeState } from './hooks/useTreeState';
+import { useTreeDragDrop } from './hooks/useTreeDragDrop';
 import type { TreeNodeData, DirectoryTreeProps } from './types';
 
 export const DirectoryTree = view(
@@ -21,6 +33,7 @@ export const DirectoryTree = view(
     const directoryService = useService(DirectoryService);
     const blogService = useService(BlogService);
     const { expandedIds, toggleNode } = useTreeState();
+    const [activeNode, setActiveNode] = useState<TreeNodeData | null>(null);
 
     // Build tree data from services
     const treeData = useMemo(() => {
@@ -67,6 +80,65 @@ export const DirectoryTree = view(
       ...treeData,
     ];
 
+    const { handleDragEnd } = useTreeDragDrop({ treeData: allData });
+
+    const sensors = useSensors(
+      useSensor(PointerSensor, {
+        activationConstraint: {
+          distance: 8,
+        },
+      })
+    );
+
+    // Helper to find node by ID
+    const findNodeById = useCallback(
+      (id: string): TreeNodeData | null => {
+        function search(nodes: TreeNodeData[]): TreeNodeData | null {
+          for (const node of nodes) {
+            if (node.id === id) return node;
+            if (node.children) {
+              const found = search(node.children);
+              if (found) return found;
+            }
+          }
+          return null;
+        }
+        return search(allData);
+      },
+      [allData]
+    );
+
+    const handleDragStart = useCallback(
+      (event: DragStartEvent) => {
+        const { active } = event;
+        const node = findNodeById(active.id as string);
+        setActiveNode(node);
+      },
+      [findNodeById]
+    );
+
+    const onDragEnd = useCallback(
+      (event: DragEndEvent) => {
+        const { active, over } = event;
+        setActiveNode(null);
+
+        if (!over) return;
+
+        const dragNode = findNodeById(active.id as string);
+        if (!dragNode) return;
+
+        const isRootDropZone = over.id === 'root-drop-zone';
+        const dropTarget = isRootDropZone ? null : findNodeById(over.id as string);
+
+        handleDragEnd({
+          dragNode,
+          dropTarget,
+          isRootLevel: isRootDropZone,
+        });
+      },
+      [findNodeById, handleDragEnd]
+    );
+
     if (directoryService.loading) {
       return (
         <div className="flex items-center justify-center py-4">
@@ -76,7 +148,13 @@ export const DirectoryTree = view(
     }
 
     return (
-      <div>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={onDragEnd}
+      >
+        <div>
         {/* All Blogs option */}
         <div
           className={`
@@ -117,7 +195,7 @@ export const DirectoryTree = view(
         {treeData.length > 0 ? (
           <div>
             {treeData.map(node => (
-              <TreeNode
+              <DraggableTreeNode
                 key={node.id}
                 node={node}
                 depth={0}
@@ -139,7 +217,11 @@ export const DirectoryTree = view(
             暂无目录
           </div>
         ) : null}
-      </div>
+        </div>
+        <DragOverlay>
+          <TreeDragOverlay node={activeNode} />
+        </DragOverlay>
+      </DndContext>
     );
   }
 );
