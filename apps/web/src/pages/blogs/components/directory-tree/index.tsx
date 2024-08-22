@@ -171,22 +171,21 @@ export const DirectoryTree = view(
         {rootBlogs.length > 0 && (
           <div>
             {rootBlogs.map(blog => (
-              <div
+              <DraggableTreeNode
                 key={blog.id}
-                className={`
-                  flex items-center gap-1 px-2 py-1.5 cursor-pointer rounded mx-2
-                  ${selectedPageId === blog.id ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' : 'hover:bg-gray-100 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300'}
-                `}
-                style={{ paddingLeft: '24px' }}
-                onClick={() => onSelectPage(blog.id)}
-                onContextMenu={e => {
-                  e.preventDefault();
-                  onContextMenuPage(e, blog.id);
-                }}
-              >
-                <FileText className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                <span className="truncate text-sm">{blog.title}</span>
-              </div>
+                node={blog}
+                depth={0}
+                expandedIds={expandedIds}
+                selectedDirectoryId={selectedDirectoryId}
+                selectedPageId={selectedPageId}
+                onToggle={toggleNode}
+                onSelectDirectory={onSelectDirectory}
+                onSelectPage={onSelectPage}
+                onContextMenuDirectory={onContextMenuDirectory}
+                onContextMenuPage={onContextMenuPage}
+                onNewBlog={onNewBlog}
+                onNewDirectory={onNewDirectory}
+              />
             ))}
           </div>
         )}
@@ -217,6 +216,13 @@ export const DirectoryTree = view(
             暂无目录
           </div>
         ) : null}
+
+        {/* Root Drop Zone - for dropping items at root level */}
+        <div
+          id="root-drop-zone"
+          className="h-2"
+          data-empty={treeData.length === 0 && rootBlogs.length === 0 ? true : undefined}
+        />
         </div>
         <DragOverlay>
           <TreeDragOverlay node={activeNode} />
