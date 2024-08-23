@@ -20,15 +20,32 @@ export function useTreeDragDrop({ treeData, onDataChange }: UseTreeDragDropProps
   const directoryService = useService(DirectoryService);
 
   // Check if targetId is descendant of ancestorId
+  // Returns true if ancestorId is in the subtree rooted at targetId
   const isDescendant = useCallback((targetId: string, ancestorId: string): boolean => {
-    function check(nodes: TreeNodeData[], depth = 0): boolean {
+    // First, find the targetId node, then check if ancestorId exists in its subtree
+    function findNodeAndCheckDescendant(nodes: TreeNodeData[]): boolean {
       for (const node of nodes) {
-        if (node.id === ancestorId && depth > 0) return true;
-        if (node.children && check(node.children, depth + 1)) return true;
+        if (node.id === targetId) {
+          // Found targetId, now check if ancestorId is in its subtree
+          return containsId(node.children || [], ancestorId);
+        }
+        if (node.children && findNodeAndCheckDescendant(node.children)) {
+          return true;
+        }
       }
       return false;
     }
-    return check(treeData);
+
+    // Check if a node with given id exists in the subtree
+    function containsId(nodes: TreeNodeData[], id: string): boolean {
+      for (const node of nodes) {
+        if (node.id === id) return true;
+        if (node.children && containsId(node.children, id)) return true;
+      }
+      return false;
+    }
+
+    return findNodeAndCheckDescendant(treeData);
   }, [treeData]);
 
   const handleDragEnd = useCallback((result: DropResult) => {

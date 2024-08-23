@@ -1,11 +1,12 @@
-import { forwardRef, useState, type Ref } from 'react';
+import { forwardRef, useState, type Ref, type ReactNode } from 'react';
 import { ChevronRight, ChevronDown, Folder, FolderOpen, FileText, Plus, FolderPlus } from 'lucide-react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import type { TreeNodeProps, TreeNodeData } from './types';
 
-interface Props extends Omit<TreeNodeProps, 'node' | 'dragRef'> {
+interface Props extends Omit<TreeNodeProps, 'node' | 'dragRef' | 'children'> {
   node: TreeNodeData;
   depth: number;
+  children?: ReactNode;
 }
 
 const DEPTH_INDENT = 16; // pixels per depth level
@@ -30,6 +31,7 @@ export const TreeNode = forwardRef<HTMLDivElement, Props>(
       dragListeners,
       isDragging,
       isDropTarget,
+      children,
     },
     ref
   ) => {
@@ -148,7 +150,7 @@ export const TreeNode = forwardRef<HTMLDivElement, Props>(
         {/* Children */}
         {isDirectory && isExpanded && node.children && (
           <div>
-            {node.children.map(child => (
+            {children || node.children.map(child => (
               <TreeNode
                 key={child.id}
                 node={child}
@@ -194,7 +196,7 @@ function mergeRefs<T>(
   };
 }
 
-interface DraggableTreeNodeProps extends Omit<TreeNodeProps, 'dragRef' | 'dragAttributes' | 'dragListeners' | 'isDragging' | 'isDropTarget'> {
+export interface DraggableTreeNodeProps extends Omit<TreeNodeProps, 'dragRef' | 'dragAttributes' | 'dragListeners' | 'isDragging' | 'isDropTarget' | 'children'> {
   node: TreeNodeData;
   depth: number;
 }
@@ -231,6 +233,27 @@ export const DraggableTreeNode = forwardRef<HTMLDivElement, DraggableTreeNodePro
       }
     };
 
+    // Render children with DraggableTreeNode for full drag support
+    const renderedChildren = isDirectory && node.children ? (
+      node.children.map(child => (
+        <DraggableTreeNode
+          key={child.id}
+          node={child}
+          depth={props.depth + 1}
+          expandedIds={treeNodeProps.expandedIds}
+          selectedDirectoryId={treeNodeProps.selectedDirectoryId}
+          selectedPageId={treeNodeProps.selectedPageId}
+          onToggle={treeNodeProps.onToggle}
+          onSelectDirectory={treeNodeProps.onSelectDirectory}
+          onSelectPage={treeNodeProps.onSelectPage}
+          onContextMenuDirectory={treeNodeProps.onContextMenuDirectory}
+          onContextMenuPage={treeNodeProps.onContextMenuPage}
+          onNewBlog={treeNodeProps.onNewBlog}
+          onNewDirectory={treeNodeProps.onNewDirectory}
+        />
+      ))
+    ) : null;
+
     return (
       <TreeNode
         ref={handleRef as React.Ref<HTMLDivElement>}
@@ -251,6 +274,7 @@ export const DraggableTreeNode = forwardRef<HTMLDivElement, DraggableTreeNodePro
         dragListeners={listeners}
         isDragging={isDragging}
         isDropTarget={isDropTarget}
+        children={renderedChildren}
       />
     );
   }
