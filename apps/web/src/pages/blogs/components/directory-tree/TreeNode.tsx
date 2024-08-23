@@ -1,4 +1,4 @@
-import { forwardRef, useState, type Ref, type ReactNode } from 'react';
+import { forwardRef, useState, type ReactNode } from 'react';
 import { ChevronRight, ChevronDown, Folder, FolderOpen, FileText, Plus, FolderPlus } from 'lucide-react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import type { TreeNodeProps, TreeNodeData } from './types';
@@ -33,6 +33,7 @@ export const TreeNode = forwardRef<HTMLDivElement, Props>(
       isDropTarget,
       children,
     },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     ref
   ) => {
     const isDirectory = node.type === 'directory';
@@ -98,7 +99,10 @@ export const TreeNode = forwardRef<HTMLDivElement, Props>(
           onMouseLeave={() => setIsHovered(false)}
         >
           {/* Expand/Collapse Icon */}
-          <span className="w-4 h-4 flex-shrink-0">
+          <span
+            className="w-4 h-4 flex-shrink-0"
+            onClick={handleToggle}
+          >
             {isDirectory && hasChildren ? (
               isExpanded ? (
                 <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
@@ -176,89 +180,40 @@ export const TreeNode = forwardRef<HTMLDivElement, Props>(
 
 TreeNode.displayName = 'TreeNode';
 
-// Helper to merge refs
-function mergeRefs<T>(
-  dragRef: React.Ref<T> | undefined,
-  nodeRef: React.Ref<T> | undefined
-): React.Ref<T> | undefined {
-  return (node: T) => {
-    // Handle callback refs
-    if (typeof dragRef === 'function') {
-      dragRef(node);
-    } else if (dragRef && 'current' in dragRef) {
-      (dragRef as React.MutableRefObject<T | null>).current = node;
-    }
-    if (typeof nodeRef === 'function') {
-      nodeRef(node);
-    } else if (nodeRef && 'current' in nodeRef) {
-      (nodeRef as React.MutableRefObject<T | null>).current = node;
-    }
-  };
-}
-
 export interface DraggableTreeNodeProps extends Omit<TreeNodeProps, 'dragRef' | 'dragAttributes' | 'dragListeners' | 'isDragging' | 'isDropTarget' | 'children'> {
   node: TreeNodeData;
   depth: number;
 }
 
-export const DraggableTreeNode = forwardRef<HTMLDivElement, DraggableTreeNodeProps>(
-  (props, ref) => {
-    const { node, ...treeNodeProps } = props;
+export function DraggableTreeNode(props: DraggableTreeNodeProps) {
+  const { node, ...treeNodeProps } = props;
 
-    const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
-      id: node.id,
-      data: node,
-    });
+  const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
+    id: node.id,
+    data: node,
+  });
 
-    // Only directories can be drop targets
-    const isDirectory = node.type === 'directory';
-    const { isOver: isDropTarget, setNodeRef: setDropRef } = useDroppable({
-      id: node.id,
-      data: node,
-      disabled: !isDirectory,
-    });
+  // Only directories can be drop targets
+  const isDirectory = node.type === 'directory';
+  const { isOver: isDropTarget, setNodeRef: setDropRef } = useDroppable({
+    id: node.id,
+    data: node,
+    disabled: !isDirectory,
+  });
 
-    // Merge drag and drop refs
-    const mergedRef = mergeRefs(ref, setDragRef);
+  // Create a callback ref that sets all refs without reading any ref.current during render
+  const combinedRef = (domNode: HTMLDivElement | null) => {
+    setDragRef(domNode);
+    setDropRef(domNode);
+  };
 
-    // Also set the drop ref on the same element
-    const handleRef = (node: HTMLDivElement | null) => {
-      if (typeof mergedRef === 'function') {
-        mergedRef(node);
-      } else if (mergedRef && 'current' in mergedRef) {
-        (mergedRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
-      }
-      if (setDropRef) {
-        setDropRef(node);
-      }
-    };
-
-    // Render children with DraggableTreeNode for full drag support
-    const renderedChildren = isDirectory && node.children ? (
-      node.children.map(child => (
-        <DraggableTreeNode
-          key={child.id}
-          node={child}
-          depth={props.depth + 1}
-          expandedIds={treeNodeProps.expandedIds}
-          selectedDirectoryId={treeNodeProps.selectedDirectoryId}
-          selectedPageId={treeNodeProps.selectedPageId}
-          onToggle={treeNodeProps.onToggle}
-          onSelectDirectory={treeNodeProps.onSelectDirectory}
-          onSelectPage={treeNodeProps.onSelectPage}
-          onContextMenuDirectory={treeNodeProps.onContextMenuDirectory}
-          onContextMenuPage={treeNodeProps.onContextMenuPage}
-          onNewBlog={treeNodeProps.onNewBlog}
-          onNewDirectory={treeNodeProps.onNewDirectory}
-        />
-      ))
-    ) : null;
-
-    return (
-      <TreeNode
-        ref={handleRef as React.Ref<HTMLDivElement>}
-        node={node}
-        depth={props.depth}
+  // Render children with DraggableTreeNode for full drag support
+  const renderedChildren = isDirectory && node.children ? (
+    node.children.map(child => (
+      <DraggableTreeNode
+        key={child.id}
+        node={child}
+        depth={props.depth + 1}
         expandedIds={treeNodeProps.expandedIds}
         selectedDirectoryId={treeNodeProps.selectedDirectoryId}
         selectedPageId={treeNodeProps.selectedPageId}
@@ -269,15 +224,31 @@ export const DraggableTreeNode = forwardRef<HTMLDivElement, DraggableTreeNodePro
         onContextMenuPage={treeNodeProps.onContextMenuPage}
         onNewBlog={treeNodeProps.onNewBlog}
         onNewDirectory={treeNodeProps.onNewDirectory}
-        dragRef={handleRef as React.Ref<HTMLDivElement>}
-        dragAttributes={attributes}
-        dragListeners={listeners}
-        isDragging={isDragging}
-        isDropTarget={isDropTarget}
-        children={renderedChildren}
       />
-    );
-  }
-);
+    ))
+  ) : null;
 
-DraggableTreeNode.displayName = 'DraggableTreeNode';
+  return (
+    <TreeNode
+      ref={combinedRef}
+      node={node}
+      depth={props.depth}
+      expandedIds={treeNodeProps.expandedIds}
+      selectedDirectoryId={treeNodeProps.selectedDirectoryId}
+      selectedPageId={treeNodeProps.selectedPageId}
+      onToggle={treeNodeProps.onToggle}
+      onSelectDirectory={treeNodeProps.onSelectDirectory}
+      onSelectPage={treeNodeProps.onSelectPage}
+      onContextMenuDirectory={treeNodeProps.onContextMenuDirectory}
+      onContextMenuPage={treeNodeProps.onContextMenuPage}
+      onNewBlog={treeNodeProps.onNewBlog}
+      onNewDirectory={treeNodeProps.onNewDirectory}
+      dragRef={combinedRef}
+      dragAttributes={attributes}
+      dragListeners={listeners}
+      isDragging={isDragging}
+      isDropTarget={isDropTarget}
+      children={renderedChildren}
+    />
+  );
+}

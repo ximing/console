@@ -12,10 +12,9 @@ interface DropResult {
 
 interface UseTreeDragDropProps {
   treeData: TreeNodeData[];
-  onDataChange?: (newData: TreeNodeData[]) => void;
 }
 
-export function useTreeDragDrop({ treeData, onDataChange }: UseTreeDragDropProps) {
+export function useTreeDragDrop({ treeData }: UseTreeDragDropProps) {
   const blogService = useService(BlogService);
   const directoryService = useService(DirectoryService);
 

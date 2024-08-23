@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback } from 'react';
 import { view, useService } from '@rabjs/react';
-import { Folder, FileText, Loader2 } from 'lucide-react';
+import { Folder, Loader2 } from 'lucide-react';
 import {
   DndContext,
   DragOverlay,
