@@ -50,6 +50,7 @@ export const DirectoryTree = view(
     // Context menu handlers
     const handleContextMenuDirectory = useCallback((e: React.MouseEvent, nodeId: string, nodeName: string) => {
       e.preventDefault();
+      onContextMenuDirectory(e, nodeId, nodeName);
       setContextMenu({
         visible: true,
         x: e.clientX,
@@ -57,10 +58,11 @@ export const DirectoryTree = view(
         type: 'directory',
         data: { id: nodeId, name: nodeName },
       });
-    }, []);
+    }, [onContextMenuDirectory]);
 
     const handleContextMenuPage = useCallback((e: React.MouseEvent, blogId: string) => {
       e.preventDefault();
+      onContextMenuPage(e, blogId);
       setContextMenu({
         visible: true,
         x: e.clientX,
@@ -68,7 +70,7 @@ export const DirectoryTree = view(
         type: 'page',
         data: { id: blogId },
       });
-    }, []);
+    }, [onContextMenuPage]);
 
     // Get context menu items based on type
     const getContextMenuItems = useCallback((menu: typeof contextMenu): ContextMenuItem[] => {
