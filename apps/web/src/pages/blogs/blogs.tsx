@@ -31,6 +31,7 @@ export const BlogListPage = view(() => {
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
   const [searchModalVisible, setSearchModalVisible] = useState(false);
   const [directoryLoading, setDirectoryLoading] = useState(false);
+  const [initialExpandedIds, setInitialExpandedIds] = useState<string[]>([]);
 
   // Context menu state
   const [contextMenu, setContextMenu] = useState<{
@@ -49,16 +50,33 @@ export const BlogListPage = view(() => {
     const pathParts = location.pathname.split('/').filter(Boolean);
     // pathParts: ['blogs', 'pageId'] or ['blogs', 'pageId', 'edit']
 
+    // Check for query param: /blogs?dir=:directoryId
+    const searchParams = new URLSearchParams(location.search);
+    const dirParam = searchParams.get('dir');
+
     if (pathParts[0] === 'blogs' && pathParts.length >= 2) {
+      // URL is /blogs/:blogId or /blogs/:blogId/edit
       const pageId = pathParts[1];
       const isEditMode = pathParts[2] === 'edit';
 
       // Only update if different from current state to avoid infinite loops
       if (selectedPageId !== pageId || contentMode === 'recent') {
         setSelectedPageId(pageId);
+        setInitialExpandedIds([]); // Reset expanded ids before loading
         blogService.loadBlog(pageId).then(() => {
+          // After loading, expand the blog's directory if it has one
+          if (blogService.currentBlog?.directoryId) {
+            setInitialExpandedIds([blogService.currentBlog.directoryId]);
+          }
           setContentMode(isEditMode ? 'edit' : 'preview');
         });
+      }
+    } else if (dirParam) {
+      // URL is /blogs?dir=:directoryId
+      if (selectedDirectoryId !== dirParam) {
+        setSelectedDirectoryId(dirParam);
+        setSelectedPageId(null);
+        setInitialExpandedIds([dirParam]);
       }
     } else if (pathParts.length === 1 && pathParts[0] === 'blogs') {
       // Root /blogs path - show recent list
@@ -66,10 +84,11 @@ export const BlogListPage = view(() => {
         setContentMode('recent');
         setSelectedDirectoryId(null);
         setSelectedPageId(null);
+        setInitialExpandedIds([]);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.pathname]);
+  }, [location.pathname, location.search]);
 
   // Load directories on mount
   useEffect(() => {
@@ -340,6 +359,7 @@ export const BlogListPage = view(() => {
         {/* Left Sidebar */}
         <div className="w-[240px] flex-shrink-0">
           <Sidebar
+            initialExpandedIds={initialExpandedIds}
             selectedDirectoryId={selectedDirectoryId}
             selectedPageId={selectedPageId}
             onSelectDirectory={handleSelectDirectory}
