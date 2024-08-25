@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { view, useService } from '@rabjs/react';
 import { useNavigate, useLocation } from 'react-router';
 import { Layout } from '../../components/layout';
@@ -45,6 +45,9 @@ export const BlogListPage = view(() => {
   // Expanded directories for tree - stored but currently not read back
   const [, setExpandedDirs] = useState<Set<string>>(new Set());
 
+  // Track previous pathname to detect navigation back to same blog
+  const prevPathnameRef = useRef<string | null>(null);
+
   // Sync URL to state on mount and URL change
   useEffect(() => {
     const pathParts = location.pathname.split('/').filter(Boolean);
@@ -58,9 +61,11 @@ export const BlogListPage = view(() => {
       // URL is /blogs/:blogId or /blogs/:blogId/edit
       const pageId = pathParts[1];
       const isEditMode = pathParts[2] === 'edit';
+      const pathnameChanged = prevPathnameRef.current !== location.pathname;
 
-      // Only update if different from current state to avoid infinite loops
-      if (selectedPageId !== pageId || contentMode === 'recent') {
+      // Update if pathname changed, or if pageId changed, or if in recent mode
+      if (pathnameChanged || selectedPageId !== pageId || contentMode === 'recent') {
+        prevPathnameRef.current = location.pathname;
         setSelectedPageId(pageId);
         setInitialExpandedIds([]); // Reset expanded ids before loading
         blogService.loadBlog(pageId).then(() => {
@@ -80,7 +85,9 @@ export const BlogListPage = view(() => {
       }
     } else if (pathParts.length === 1 && pathParts[0] === 'blogs') {
       // Root /blogs path - show recent list
-      if (contentMode !== 'recent') {
+      const pathnameChanged = prevPathnameRef.current !== location.pathname;
+      if (pathnameChanged || contentMode !== 'recent') {
+        prevPathnameRef.current = location.pathname;
         setContentMode('recent');
         setSelectedDirectoryId(null);
         setSelectedPageId(null);
