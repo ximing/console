@@ -3,8 +3,6 @@ import { DirectoryService } from '../../../../services/directory.service';
 import { BlogService } from '../../../../services/blog.service';
 import { SearchButton } from './search-button';
 import { DirectoryTree } from '../directory-tree';
-import type { DirectoryTreeNode } from '../../../../services/directory.service';
-import type { BlogDto } from '@x-console/dto';
 import { Plus, FolderPlus, Loader2 } from 'lucide-react';
 
 interface SidebarProps {
