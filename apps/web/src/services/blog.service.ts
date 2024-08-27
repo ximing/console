@@ -271,10 +271,7 @@ export class BlogService extends Service {
     try {
       const blog = await blogApi.updateBlog(blogId, { directoryId: targetDirectoryId });
       // Update in local state
-      const index = this.blogs.findIndex((b) => b.id === blogId);
-      if (index !== -1) {
-        this.blogs[index] = blog;
-      }
+      this.blogs = this.blogs.map((b) => (b.id === blogId ? blog : b));
       if (this.currentBlog?.id === blogId) {
         this.currentBlog = blog;
       }
