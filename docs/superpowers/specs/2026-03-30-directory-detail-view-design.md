@@ -26,12 +26,13 @@ ContentArea (px-6 py-4, flex-col, h-full)
 ├── Header (pb-4 mb-4 border-b)
 │   ├── Left: BackButton + Title + BlogCount Badge
 │   └── Right: ViewToggle + SortDropdown
-├── FilterBar (mb-4) [仅 directory 模式]
+├── FilterBar (mb-4) [directory 模式]
 │   └── StatusFilter | TagFilter | ClearFilters
 └── Content
-    └── BlogGridView (grid gap-4 md:grid-cols-2 lg:grid-cols-3)
-       或 BlogListView (divide-y)
+    └── BlogCard Grid 或 BlogListItem List
 ```
+
+**目录模式判断：** 当 `selectedDirectoryId !== null` 时为目录模式，FilterBar 显示。
 
 ## 组件设计
 
@@ -99,16 +100,39 @@ ContentArea (px-6 py-4, flex-col, h-full)
 
 ## 视图状态管理
 
+**状态管理策略：**
+- viewMode 存储在 ContentArea 组件的 useState 中
+- 通过 props 传递给 PageList 和 RecentList
+- 不持久化到 localStorage（默认卡片视图，保持简单）
+
 ```tsx
 type ViewMode = 'card' | 'list';
 
-// PageList 和 RecentList 共享视图状态
 interface PageListProps {
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
   // ...其他 props
 }
 ```
+
+## SortDropdown 接口
+
+复用现有的 `<select>` 元素样式，选项：
+- `updatedAt` → "更新时间↓" (默认)
+- `createdAt` → "创建时间↓"
+- `title` → "标题 A-Z"
+
+不支持升序/降序切换，使用默认降序。
+
+## 空状态
+
+| 场景 | 展示 |
+|------|------|
+| 加载中 | `<Loader2 className="w-6 h-6 animate-spin text-gray-500" />` 居中 |
+| 无博客 | "该目录下暂无博客" 居中显示 |
+| 无筛选结果 | "没有符合条件的博客" + "清除筛选" 链接 |
+
+卡片视图和列表视图使用相同的空状态组件。
 
 ## 统一间距规范
 
@@ -118,7 +142,19 @@ interface PageListProps {
 | Header | `pb-4 mb-4 border-b border-gray-200 dark:border-dark-700` |
 | FilterBar | `mb-4` |
 | Card Grid | `grid gap-4 md:grid-cols-2 lg:grid-cols-3` |
-| List View | `divide-y divide-gray-200 dark:divide-dark-700` |
+| List View | 每个 item 使用 `border-b border-gray-200 dark:border-dark-700` 分隔 |
+
+**列表分隔统一使用 border-b**，不用 divide-y。
+
+## 博客数量徽章
+
+```tsx
+<span className="px-2 py-0.5 text-xs rounded-full bg-gray-100 dark:bg-dark-700">
+  {count === 1 ? '1 篇' : `${count} 篇`}
+</span>
+```
+
+单数用 "1 篇"，复数用 "{n} 篇"。
 
 ## 文件变更
 
@@ -140,3 +176,20 @@ interface PageListProps {
 5. 修改 BlogCard：修复 ml-7 对齐问题
 6. 修改 ContentArea：传递 viewMode 状态
 7. 测试两种视图切换和样式一致性
+
+## 无障碍考虑
+
+**ViewToggle：**
+- 使用 `<button>` 元素
+- `aria-label="切换视图" aria-pressed={isListView}`
+- 键盘支持：Tab 聚焦，Enter/Space 切换
+
+**BlogListItem：**
+- 点击区域使用 `<button>` 或 `role="button"`
+- 编辑按钮添加 `aria-label="编辑 {title}"`
+
+## 移动端考虑
+
+- 移动端 (< md) 保持两列网格 `md:grid-cols-2`
+- 列表视图在移动端同样适用
+- ViewToggle 按钮在移动端保持可见
