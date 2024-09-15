@@ -12,6 +12,7 @@ import { ApiTokenController } from './v1/api-token.controller.js';
 import { CommandPaletteIntentController } from './v1/command-palette-intent.controller.js';
 import { GithubController } from './v1/github.controller.js';
 import { BlogController } from './v1/blog.controller.js';
+import { BlogMediaController } from './v1/blog-media.controller.js';
 import { StaticController } from './static.controller.js';
 
 export const controllers = [
@@ -28,5 +29,6 @@ export const controllers = [
   CommandPaletteIntentController,
   GithubController,
   BlogController,
+  BlogMediaController,
   StaticController,
 ];
