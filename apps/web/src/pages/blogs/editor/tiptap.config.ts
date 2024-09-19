@@ -13,6 +13,7 @@ import { Color } from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
 import TextAlign from '@tiptap/extension-text-align';
 import FontFamily from '@tiptap/extension-font-family';
+import { ExternalVideo } from './extensions/external-video';
 
 export const DEFAULT_YOUTUBE_WIDTH = 640;
 export const DEFAULT_YOUTUBE_HEIGHT = 360;
@@ -56,6 +57,7 @@ export const baseContentExtensions = [
   imageExtensions,
   audioExtensions,
   youtubeExtensions,
+  ExternalVideo,
 ];
 
 /** 只读预览扩展 */
