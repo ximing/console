@@ -16,16 +16,25 @@ export function ResizableSidebar({
   children,
   onSearchClick,
   onNewBlog,
+  defaultWidth,
+  minWidth: minWidthProp,
+  maxWidth: maxWidthProp,
+  collapsedWidth: collapsedWidthProp,
 }: ResizableSidebarProps) {
   const {
     isCollapsed,
     sidebarWidth,
-    collapsedWidth,
-    minWidth,
-    maxWidth,
+    collapsedWidth: collapsedWidthHook,
+    minWidth: minWidthHook,
+    maxWidth: maxWidthHook,
     toggleCollapse,
     setWidth,
   } = useSidebarState();
+
+  // Use prop overrides if provided, otherwise use hook defaults
+  const minWidth = minWidthProp ?? minWidthHook;
+  const maxWidth = maxWidthProp ?? maxWidthHook;
+  const collapsedWidth = collapsedWidthProp ?? collapsedWidthHook;
 
   const [isDragging, setIsDragging] = useState(false);
   const dragStartX = useRef(0);
