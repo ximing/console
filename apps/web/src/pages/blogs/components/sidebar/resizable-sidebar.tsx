@@ -6,7 +6,6 @@ interface ResizableSidebarProps {
   children: React.ReactNode;
   onSearchClick: () => void;
   onNewBlog: () => void;
-  defaultWidth?: number;
   minWidth?: number;
   maxWidth?: number;
   collapsedWidth?: number;
@@ -16,7 +15,6 @@ export function ResizableSidebar({
   children,
   onSearchClick,
   onNewBlog,
-  defaultWidth,
   minWidth: minWidthProp,
   maxWidth: maxWidthProp,
   collapsedWidth: collapsedWidthProp,
