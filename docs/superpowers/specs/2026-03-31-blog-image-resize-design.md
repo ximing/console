@@ -29,67 +29,152 @@ Add drag-to-resize capability to images in the Tiptap-based blog editor. Users c
 ## Technical Approach
 
 ### Architecture
-Create a custom React component `ImageResizer` that:
-1. Listens to Tiptap editor selection changes
-2. When an image node is selected, renders an overlay with handles
-3. Handles mouse drag events to calculate new dimensions
-4. Updates the Tiptap image node with new width/height attributes
+Create a custom Tiptap NodeView (`ImageResizer`) as a React component that:
+1. Uses `NodeViewWrapper` pattern (standard Tiptap React integration)
+2. Listens to node selection changes within the node view
+3. Renders an overlay with 8 draggable handles
+4. Updates the image node's `width` and `height` attributes on resize
 
 ### File Structure
 ```
 apps/web/src/pages/blogs/editor/
 ├── extensions/
-│   └── image-resize.ts          # Custom image extension with resize attributes
-├── components/
-│   └── image-resizer.tsx         # React component for resize handles
+│   └── image-with-resize.ts      # Custom image extension with resize attributes
+└── components/
+    └── image-resizer.tsx         # NodeView React component for resize handles
 ```
 
-### Key Implementation Details
+### Integration with Tiptap
 
-#### Image Node Attributes
-Extend TiptapImage with:
-- `width`: number (current width in px)
-- `height`: number (current height in px)
-- `aspectRatio`: number (stored on initial render, used for locked resize)
+#### Extend TiptapImage Configuration
+Modify `tiptap.config.ts` to pass resize-enabled flag:
+```typescript
+const imageExtensions = TiptapImage.configure({
+  HTMLAttributes: {
+    class: 'max-w-full h-auto',
+    'data-resizable': 'true',
+  },
+});
+```
 
-#### Resize Logic
-- On handle drag start: Store initial image dimensions and mouse position
-- On drag: Calculate delta, apply to dimension opposite to drag direction (if corner) or direct dimension (if edge)
-- Maintain aspect ratio: newHeight = newWidth / storedAspectRatio
-- Clamp dimensions: Min 50px, Max container width
-- On drag end: Update Tiptap node with final dimensions
+#### Custom Extension for Attributes
+Create `image-with-resize.ts` to extend image node with resize metadata:
+```typescript
+import TiptapImage from '@tiptap/extension-image';
 
-#### Event Handling
-- Handle mousedown: Prevent default, store start position
-- Handle mousemove (document): Calculate new dimensions, update local state
-- Handle mouseup (document): Call Tiptap command to update image attributes
+export const ImageWithResize = TiptapImage.extend({
+  addAttributes() {
+    return {
+      ...this.parent(),
+      width: {
+        default: null,
+        parseHTML: element => element.getAttribute('width'),
+        renderHTML: attributes => ({
+          width: attributes.width,
+        }),
+      },
+      height: {
+        default: null,
+        parseHTML: element => element.getAttribute('height'),
+        renderHTML: attributes => ({
+          height: attributes.height,
+        }),
+      },
+    };
+  },
+});
+```
+
+#### NodeView Component Pattern
+Use standard Tiptap NodeView integration:
+```typescript
+import { NodeViewWrapper } from '@tiptap/react';
+
+export const ImageResizer = NodeViewWrapper(({ node, selected }) => {
+  // Render handles when selected
+  if (!selected) return null;
+  // ... handle rendering and drag logic
+});
+```
+
+### Resize Logic
+
+#### State
+- `isResizing`: boolean
+- `startPos`: { x: number, y: number }
+- `startDim`: { width: number, height: number }
+- `aspectRatio`: number (calculated from natural dimensions on first selection)
+
+#### Drag Calculations
+1. **On handle mousedown**:
+   - Prevent default and stop propagation
+   - Store initial mouse position
+   - Store initial image dimensions
+   - Calculate aspect ratio = width / height
+
+2. **On document mousemove**:
+   - Calculate deltaX and deltaY from start position
+   - For corner handles: use the larger delta to determine new width, then calculate height
+   - For edge handles: update only the corresponding dimension
+   - Clamp: min 50px, max = min(containerWidth, naturalWidth)
+   - Apply aspect ratio: height = width / aspectRatio
+
+3. **On document mouseup**:
+   - Update the Tiptap node with `width` and `height` attributes
+   - Remove document-level event listeners
+
+#### Click vs Drag Distinction
+- If total mouse movement < 3px on mouseup, treat as click (deselect)
+- If movement >= 3px, treat as resize and persist dimensions
 
 ### Edge Cases
-- Images without explicit width/height: Use natural dimensions on first click, then enable resize
-- Very small images: Minimum resize dimension is 50px
-- Images at container max-width: Resize up to original or container, whichever is smaller
-- Multiple images: Only one image shows handles at a time
-- Click vs drag: Small movement (< 3px) on mouseup = click, not resize
+
+| Case | Handling |
+|------|----------|
+| Animated GIFs | Do not apply resize handles; allow natural playback |
+| Images without width/height | On first click, get `naturalWidth`/`naturalHeight` for aspect ratio |
+| Images at container max | Cap resize at `editor.contentContainer.offsetWidth` |
+| Resize cancelled (Escape) | Rollback to original dimensions, deselect |
+| Touch/mobile | Not in initial scope; handles are desktop-only |
+| Keyboard accessibility | Not in initial scope |
+| Images inside links | Resize the image, link remains intact |
+| Memory leaks | All document listeners removed on mouseup or component unmount |
+| Undo/redo | Dimensions stored in node attributes, naturally supported by ProseMirror |
+
+### Style Isolation
+The resize overlay styles should use a unique prefix to avoid conflicts:
+```css
+.image-resizer-overlay { pointer-events: none; position: absolute; inset: -4px; }
+.image-resizer-handle {
+  pointer-events: auto;
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: white;
+  border: 1px solid #333;
+  box-sizing: border-box;
+}
+```
 
 ## Component Specs
 
-### ImageResizer Component
+### ImageResizer NodeView
 
-**Props:**
-- `editor`: Tiptap Editor instance
-- `image`: HTMLImageElement reference
-- `onResizeEnd`: (width: number, height: number) => void
+**Props (Tiptap NodeView props):**
+- `node`: ProseMirror Node
+- `selected`: boolean
+- `updateAttributes`: (attrs: object) => void
 
-**States:**
+**Local State:**
 - `isResizing`: boolean
 - `startPos`: { x: number, y: number }
 - `startDim`: { width: number, height: number }
 
-**Render:**
-- Returns null if no image selected
-- Renders overlay div with 8 positioned handle divs
-- Overlay has `pointer-events: none` except for handles
-- Handles have `pointer-events: auto`
+**Lifecycle:**
+1. `onMouseDown` on handle → start resize tracking, add document listeners
+2. `onMouseMove` on document → calculate new dimensions, update local state
+3. `onMouseUp` on document → if delta > 3px, call `updateAttributes()`, remove listeners
+4. `onUnmount` → cleanup all listeners
 
 ## Testing Considerations
 
@@ -97,7 +182,9 @@ Extend TiptapImage with:
 2. Click outside → handles disappear
 3. Drag corner handle → aspect ratio maintained
 4. Drag edge handle → single dimension changes
-5. Drag to minimum (50px) → stops at 50px
-6. Drag to maximum → stops at container/original width
+5. Resize to minimum (50px) → stops at 50px
+6. Resize to maximum → stops at container/original width
 7. Resize persists after deselect
-8. Resize works with undo/redo
+8. Undo/redo preserves resize
+9. Escape cancels resize
+10. Rapid click (no drag) → click behavior, not resize
