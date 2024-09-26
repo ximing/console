@@ -48,21 +48,36 @@ apps/web/src/pages/blogs/editor/
 
 ### Integration with Tiptap
 
-#### Custom Image Extension with NodeView
-Create `image-with-resize.ts` that extends TiptapImage with a NodeView for resize handles:
+#### Custom Image Extension with NodeView and Attributes
+Create `image-with-resize.ts` that extends TiptapImage with a NodeView for resize handles and explicit width/height attributes:
 ```typescript
 import TiptapImage from '@tiptap/extension-image';
-import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react';
-import { ImageResizer } from './components/image-resizer';
+import { ReactNodeViewRenderer } from '@tiptap/react';
+import { ImageResizer } from '../components/image-resizer';
 
 export const ImageWithResize = TiptapImage.extend({
+  addAttributes() {
+    return {
+      ...this.parent(),
+      width: {
+        default: null,
+        parseHTML: element => element.getAttribute('width') || null,
+        renderHTML: attributes => attributes.width ? { width: attributes.width } : {},
+      },
+      height: {
+        default: null,
+        parseHTML: element => element.getAttribute('height') || null,
+        renderHTML: attributes => attributes.height ? { height: attributes.height } : {},
+      },
+    };
+  },
   addNodeView() {
     return ReactNodeViewRenderer(ImageResizer);
   },
 });
 ```
 
-**Note:** `TiptapImage` already provides `width` and `height` attributes by default, so no custom attribute extension is needed.
+**Note:** The `width` and `height` attributes default to `null`, meaning images render at their natural size until resized.
 
 #### NodeView Component Pattern
 The `ImageResizer` component uses standard Tiptap NodeView integration:
@@ -100,19 +115,26 @@ const imageExtensions = ImageWithResize.configure({
 1. **On handle mousedown**:
    - Prevent default and stop propagation
    - Store initial mouse position
-   - Store initial image dimensions
+   - Store initial image dimensions from `getBoundingClientRect()`
    - Calculate aspect ratio = width / height
+   - If image has `naturalWidth`/`naturalHeight`, store those as max bounds
 
 2. **On document mousemove**:
    - Calculate deltaX and deltaY from start position
    - For corner handles: use the larger delta to determine new width, then calculate height
    - For edge handles: update only the corresponding dimension
-   - Clamp: min 50px, max = min(containerWidth, naturalWidth)
+   - Clamp: min 50px, max = min(contentContainerWidth, naturalWidth or currentWidth)
    - Apply aspect ratio: height = width / aspectRatio
 
 3. **On document mouseup**:
    - Update the Tiptap node with `width` and `height` attributes
    - Remove document-level event listeners
+
+#### Aspect Ratio Initialization
+- On first handle mousedown, if image has no explicit width/height set:
+  - Wait for `img.naturalWidth` to be available (may need to wait for `onload`)
+  - If natural dimensions not yet available, use `img.getBoundingClientRect()` as fallback
+  - Store aspect ratio for the duration of the resize operation
 
 #### Click vs Drag Distinction
 - If total mouse movement < 3px on mouseup, treat as click (deselect)
@@ -124,7 +146,7 @@ const imageExtensions = ImageWithResize.configure({
 |------|----------|
 | Animated GIFs | Do not apply resize handles; allow natural playback |
 | Images without width/height | On first click, get `naturalWidth`/`naturalHeight` for aspect ratio |
-| Images at container max | Cap resize at `editor.contentContainer.offsetWidth` |
+| Images at container max | Cap resize at the editor's content container width (`editor.view.dom.offsetWidth`) |
 | Resize cancelled (Escape) | Rollback to original dimensions, deselect |
 | Touch/mobile | Not in initial scope; handles are desktop-only |
 | Keyboard accessibility | Not in initial scope |
@@ -133,9 +155,20 @@ const imageExtensions = ImageWithResize.configure({
 | Undo/redo | Dimensions stored in node attributes, naturally supported by ProseMirror |
 
 ### Style Isolation
-The resize overlay styles should use a unique prefix to avoid conflicts:
+The resize overlay styles should use a unique prefix to avoid conflicts. **Important:** The image element must have `position: relative` set via CSS for the overlay to position correctly relative to the image:
 ```css
-.image-resizer-overlay { pointer-events: none; position: absolute; inset: -4px; }
+/* Image wrapper - set position relative on the img element */
+.ProseMirror img { position: relative; }
+
+/* Overlay container - positions itself relative to the image */
+.image-resizer-overlay {
+  pointer-events: none;
+  position: absolute;
+  inset: -4px;
+  z-index: 10;
+}
+
+/* Individual handle styling */
 .image-resizer-handle {
   pointer-events: auto;
   position: absolute;
