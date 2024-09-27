@@ -3,8 +3,10 @@
 import {
   JsonController,
   Post,
+  Get,
   CurrentUser,
   UploadedFile,
+  QueryParams,
 } from 'routing-controllers';
 import { Service } from 'typedi';
 import multer from 'multer';
@@ -130,6 +132,39 @@ export class BlogMediaController {
         return ResponseUtility.error(ErrorCode.UNSUPPORTED_FILE_TYPE, error.message);
       }
       return ResponseUtility.error(ErrorCode.FILE_UPLOAD_ERROR, 'Failed to upload file');
+    }
+  }
+
+  /**
+   * GET /api/v1/blogs/media/url - Get presigned URL from path
+   */
+  @Get('/url')
+  async getMediaUrl(
+    @CurrentUser() userDto: UserInfoDto,
+    @QueryParams() params: { path: string }
+  ) {
+    try {
+      if (!userDto?.id) {
+        return ResponseUtility.error(ErrorCode.UNAUTHORIZED);
+      }
+
+      if (!params.path) {
+        return ResponseUtility.error(ErrorCode.PARAMS_ERROR, 'Path is required');
+      }
+
+      // Verify the path belongs to this user (path format: blogs/media/{userId}/...)
+      const pathParts = params.path.split('/');
+      if (pathParts.length < 3 || pathParts[0] !== 'blogs' || pathParts[1] !== 'media' || pathParts[2] !== userDto.id) {
+        return ResponseUtility.error(ErrorCode.FORBIDDEN, 'Access denied');
+      }
+
+      // Generate presigned URL
+      const url = await this.storageService.getPresignedUrl(params.path);
+
+      return ResponseUtility.success({ url });
+    } catch (error) {
+      logger.error('Get media URL error:', error);
+      return ResponseUtility.error(ErrorCode.FILE_UPLOAD_ERROR, 'Failed to get media URL');
     }
   }
 }
