@@ -442,7 +442,12 @@ export const EditorToolbar = ({ editor }: EditorToolbarProps) => {
         if (editor) {
           switch (type) {
             case 'image':
-              editor.chain().focus().setImage({ src: result.url }).run();
+              editor.chain().focus().setCustomImage({
+                path: result.path,
+                alt: result.filename,
+                width: result.width,
+                height: result.height,
+              }).run();
               break;
             case 'audio':
               editor.chain().focus().setAudio({ src: result.url }).run();
