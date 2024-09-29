@@ -123,18 +123,24 @@ const imageExtensions = ImageWithResize.configure({
    - Calculate deltaX and deltaY from start position
    - For corner handles: use the larger delta to determine new width, then calculate height
    - For edge handles: update only the corresponding dimension
-   - Clamp: min 50px, max = min(contentContainerWidth, naturalWidth or currentWidth)
+   - Clamp: min 50px, max = min(image's parent container width, naturalWidth or startDim.width)
    - Apply aspect ratio: height = width / aspectRatio
 
 3. **On document mouseup**:
    - Update the Tiptap node with `width` and `height` attributes
    - Remove document-level event listeners
 
+#### Image in Link Handling
+- Images wrapped in Tiptap Link nodes will have their resize handles work correctly
+- On `mousedown` on handles, call `event.stopPropagation()` to prevent link click behavior
+- The Link extension's click handler checks if a resize is in progress before navigating
+
 #### Aspect Ratio Initialization
-- On first handle mousedown, if image has no explicit width/height set:
-  - Wait for `img.naturalWidth` to be available (may need to wait for `onload`)
-  - If natural dimensions not yet available, use `img.getBoundingClientRect()` as fallback
-  - Store aspect ratio for the duration of the resize operation
+- On first handle mousedown:
+  - If image has existing width/height attributes, use those as start dimensions
+  - If no explicit dimensions, use `getBoundingClientRect()` as start dimensions
+  - Use `naturalWidth/naturalHeight` (when available) for max bounds calculation
+  - Store aspect ratio = startDim.width / startDim.height
 
 #### Click vs Drag Distinction
 - If total mouse movement < 3px on mouseup, treat as click (deselect)
@@ -157,9 +163,23 @@ const imageExtensions = ImageWithResize.configure({
 | Copy/paste | Width/height attributes preserved via parseHTML/renderHTML |
 
 ### Style Isolation
-The resize overlay styles should use a unique prefix. Handles are positioned at the image corners and edges, not extending beyond:
+The resize overlay uses a scoped wrapper div to avoid CSS conflicts:
+```tsx
+// In ImageResizer NodeView - wrap image in a relative container
+return (
+  <NodeViewWrapper>
+    <div style={{ position: 'relative', display: 'inline-block' }}>
+      <img {...} />
+      <div className="image-resizer-overlay">
+        {/* handles */}
+      </div>
+    </div>
+  </NodeViewWrapper>
+);
+```
+
 ```css
-/* Overlay container - positions itself relative to the image via CSS class on the img */
+/* Overlay container - positions relative to the wrapper div */
 .image-resizer-overlay {
   pointer-events: none;
   position: absolute;
@@ -168,7 +188,7 @@ The resize overlay styles should use a unique prefix. Handles are positioned at 
   outline: 1px dashed #333;
 }
 
-/* Individual handle styling - positioned at corners and edges */
+/* Individual handle styling */
 .image-resizer-handle {
   pointer-events: auto;
   position: absolute;
@@ -179,7 +199,7 @@ The resize overlay styles should use a unique prefix. Handles are positioned at 
   box-sizing: border-box;
 }
 
-/* Handle positions */
+/* Handle positions - corners use diagonal cursors, edges use directional */
 .image-resizer-handle.top-left { top: -5px; left: -5px; cursor: nwse-resize; }
 .image-resizer-handle.top-center { top: -5px; left: calc(50% - 5px); cursor: ns-resize; }
 .image-resizer-handle.top-right { top: -5px; right: -5px; cursor: nesw-resize; }
@@ -190,9 +210,7 @@ The resize overlay styles should use a unique prefix. Handles are positioned at 
 .image-resizer-handle.bottom-right { bottom: -5px; right: -5px; cursor: nwse-resize; }
 ```
 
-**Note:** Handles extend 5px outside the image bounds (from -5px to +5px) so they're easily clickable.
-
-**CSS Scope:** Do NOT apply global `position: relative` to all images. Instead, the NodeView wrapper applies `position: relative` to the image via inline style or a scoped class when the image is selected.
+**Note:** Handles extend 5px outside the image bounds so they're easily clickable.
 
 ## Component Specs
 
