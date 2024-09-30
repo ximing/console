@@ -4,51 +4,42 @@
 
 **Goal:** Add drag-to-resize handles to images in the Tiptap blog editor with aspect ratio locking.
 
-**Architecture:** Extend the existing `CustomImage` Tiptap extension with a React NodeView that renders resize handles when the image is selected. The handles allow dragging to resize while maintaining aspect ratio.
+**Architecture:** Modify the existing `CustomImageNodeView` component to add resize handles when the image is selected. The existing URL fetching logic is preserved.
 
-**Tech Stack:** Tiptap, React, TypeScript, @rabjs/react (for view pattern)
+**Tech Stack:** Tiptap, React, TypeScript
 
 ---
 
 ## File Structure
 
 ```
-apps/web/src/pages/blogs/editor/
-├── extensions/
-│   └── custom-image.ts           # MODIFY: Add NodeView and width/height attributes
-└── components/
-    └── image-resizer.tsx          # CREATE: NodeView component with resize handles
-
-apps/web/src/pages/blogs/editor/tiptap.config.ts  # NO CHANGES NEEDED - already uses CustomImage
+apps/web/src/pages/blogs/editor/extensions/
+└── custom-image-nodeview.tsx    # MODIFY: Add resize handles to existing NodeView
+    custom-image.ts              # NO CHANGES NEEDED - already has NodeView renderer
 ```
 
 ---
 
-## Chunk 1: Create ImageResizer NodeView Component
+## Chunk 1: Add Resize Handles to CustomImageNodeView
 
 **Files:**
-- Create: `apps/web/src/pages/blogs/editor/components/image-resizer.tsx`
+- Modify: `apps/web/src/pages/blogs/editor/extensions/custom-image-nodeview.tsx`
 - Test: Manual testing in browser
 
-- [ ] **Step 1: Create the ImageResizer NodeView component**
+- [ ] **Step 1: Read the existing CustomImageNodeView to understand its structure**
+
+The existing component:
+- Fetches image URL from `/api/v1/blogs/media/url?path=...`
+- Shows loading/error states
+- Renders `<img>` with URL fetched from API
+
+- [ ] **Step 2: Add resize state and refs to CustomImageNodeView**
+
+Modify `custom-image-nodeview.tsx`. Add the following imports and interface:
 
 ```tsx
 import { NodeViewWrapper } from '@tiptap/react';
-import { useEffect, useState, useRef, useCallback } from 'react';
-
-interface ImageResizerProps {
-  node: {
-    attrs: {
-      path: string;
-      alt: string | null;
-      title: string | null;
-      width: number | null;
-      height: number | null;
-    };
-  };
-  selected: boolean;
-  updateAttributes: (attrs: Record<string, number | null>) => void;
-}
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 type HandlePosition =
   | 'top-left'
@@ -68,8 +59,34 @@ interface ResizeState {
   handle: HandlePosition | null;
   totalMovement: number;
 }
+```
 
-export const ImageResizer = NodeViewWrapper<ImageResizerProps>(({ node, selected, updateAttributes }) => {
+- [ ] **Step 3: Add resize state to the component**
+
+Modify the component function signature to receive `selected` prop and add state:
+
+```tsx
+interface CustomImageNodeViewProps {
+  node: {
+    attrs: {
+      path: string;
+      alt?: string;
+      title?: string;
+      width?: number;
+      height?: number;
+    };
+  };
+  selected: boolean;  // Add this - Tiptap provides it
+  updateAttributes: (attrs: Record<string, number | null>) => void;  // Add this
+}
+
+export function CustomImageNodeView({ node, selected, updateAttributes }: CustomImageNodeViewProps) {
+  const { path, alt, title, width, height } = node.attrs;
+  const [loading, setLoading] = useState(true);
+  const [url, setUrl] = useState<string | null>(null);
+  const [error, setError] = useState(false);
+
+  // Resize state
   const imgRef = useRef<HTMLImageElement>(null);
   const [resizeState, setResizeState] = useState<ResizeState>({
     isResizing: false,
@@ -79,40 +96,51 @@ export const ImageResizer = NodeViewWrapper<ImageResizerProps>(({ node, selected
     handle: null,
     totalMovement: 0,
   });
-
   const [localDimensions, setLocalDimensions] = useState<{ width: number; height: number } | null>(null);
+```
+
+- [ ] **Step 4: Add resize refs and sync effect**
+
+Add after the existing `useEffect` for URL fetching:
+
+```tsx
+  // Refs for values accessed in callbacks to avoid stale closures
+  const updateAttrsRef = useRef(updateAttributes);
+  const localDimRef = useRef(localDimensions);
+
+  useEffect(() => {
+    updateAttrsRef.current = updateAttributes;
+  }, [updateAttributes]);
+
+  useEffect(() => {
+    localDimRef.current = localDimensions;
+  }, [localDimensions]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMoveRef.current);
+      document.removeEventListener('mouseup', handleMouseUpRef.current);
+    };
+  }, []);
 
   // Reset local dimensions when selection changes
   useEffect(() => {
     if (!selected) {
       setLocalDimensions(null);
-      setResizeState(prev => ({ ...prev, isResizing: false, handle: null }));
+      setResizeState(prev => ({ ...prev, isResizing: false, handle: null, totalMovement: 0 }));
     }
   }, [selected]);
+```
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, []);
+- [ ] **Step 5: Add resize callbacks using refs**
 
-  // Use refs for values accessed in callbacks to avoid dependency issues
-  const nodeAttrsRef = useRef({ width: node.attrs.width, height: node.attrs.height });
-  const updateAttrsRef = useRef(updateAttributes);
-  const localDimRef = useRef(localDimensions);
+Add these callback refs before the component return:
 
-  // Keep refs in sync
-  useEffect(() => {
-    nodeAttrsRef.current = { width: node.attrs.width, height: node.attrs.height };
-  }, [node.attrs.width, node.attrs.height]);
-  useEffect(() => {
-    updateAttrsRef.current = updateAttributes;
-  }, [updateAttributes]);
-  useEffect(() => {
-    localDimRef.current = localDimensions;
-  }, [localDimensions]);
+```tsx
+  // Store callbacks in refs to avoid dependency issues
+  const handleMouseMoveRef = useRef<((e: MouseEvent) => void) | null>(null);
+  const handleMouseUpRef = useRef<(() => void) | null>(null);
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent, handle: HandlePosition) => {
@@ -122,9 +150,9 @@ export const ImageResizer = NodeViewWrapper<ImageResizerProps>(({ node, selected
       const img = imgRef.current;
       if (!img) return;
 
-      // Get current dimensions - use refs to avoid stale closures
-      const currentWidth = localDimRef.current?.width ?? nodeAttrsRef.current.width ?? img.naturalWidth ?? img.getBoundingClientRect().width;
-      const currentHeight = localDimRef.current?.height ?? nodeAttrsRef.current.height ?? img.naturalHeight ?? img.getBoundingClientRect().height;
+      // Get current dimensions
+      const currentWidth = localDimRef.current?.width ?? width ?? img.naturalWidth ?? img.getBoundingClientRect().width;
+      const currentHeight = localDimRef.current?.height ?? height ?? img.naturalHeight ?? img.getBoundingClientRect().height;
 
       // Guard against division by zero
       const safeHeight = currentHeight || currentWidth || 1;
@@ -139,27 +167,26 @@ export const ImageResizer = NodeViewWrapper<ImageResizerProps>(({ node, selected
         totalMovement: 0,
       });
 
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener('mousemove', handleMouseMoveRef.current!);
+      document.addEventListener('mouseup', handleMouseUpRef.current!);
     },
-    [] // No deps - uses refs
+    [width, height]  // Only these change when node updates
   );
 
-  const handleMouseMove = useCallback(
-    (e: MouseEvent) => {
+  // Initialize the callbacks
+  if (!handleMouseMoveRef.current) {
+    handleMouseMoveRef.current = (e: MouseEvent) => {
       setResizeState(prev => {
         if (!prev.isResizing || !prev.handle) return prev;
 
         const deltaX = e.clientX - prev.startPos.x;
         const deltaY = e.clientY - prev.startPos.y;
         const totalMovement = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-
         const { startDim, aspectRatio, handle } = prev;
 
         let newWidth = startDim.width;
         let newHeight = startDim.height;
 
-        // Calculate new dimensions based on handle position
         switch (handle) {
           case 'top-left':
           case 'top-right':
@@ -198,38 +225,41 @@ export const ImageResizer = NodeViewWrapper<ImageResizerProps>(({ node, selected
 
         return { ...prev, totalMovement };
       });
-    },
-    [] // No deps - uses functional update
-  );
+    };
 
-  const handleMouseUp = useCallback(() => {
-    setResizeState(prev => {
-      if (!prev.isResizing) return prev;
+    handleMouseUpRef.current = () => {
+      setResizeState(prev => {
+        if (!prev.isResizing) return prev;
 
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+        document.removeEventListener('mousemove', handleMouseMoveRef.current!);
+        document.removeEventListener('mouseup', handleMouseUpRef.current!);
 
-      // Only persist if there was actual movement (>= 3px)
-      if (localDimRef.current && prev.totalMovement >= 3) {
-        updateAttrsRef.current({
-          width: localDimRef.current.width,
-          height: localDimRef.current.height,
-        });
-      } else if (prev.totalMovement < 3) {
-        // Reset if no meaningful resize occurred
-        setLocalDimensions(null);
-      }
+        if (localDimRef.current && prev.totalMovement >= 3) {
+          updateAttrsRef.current({
+            width: localDimRef.current.width,
+            height: localDimRef.current.height,
+          });
+        } else if (prev.totalMovement < 3) {
+          setLocalDimensions(null);
+        }
 
-      return { ...prev, isResizing: false, handle: null, totalMovement: 0 };
-    });
-  }, []); // No deps - uses functional update and refs
+        return { ...prev, isResizing: false, handle: null, totalMovement: 0 };
+      });
+    };
+  }
+```
 
-  // Handle keyboard escape
+- [ ] **Step 6: Add escape key handling**
+
+Add after the resize callbacks initialization:
+
+```tsx
+  // Handle escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && resizeState.isResizing) {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
+        document.removeEventListener('mousemove', handleMouseMoveRef.current!);
+        document.removeEventListener('mouseup', handleMouseUpRef.current!);
         setLocalDimensions(null);
         setResizeState(prev => ({ ...prev, isResizing: false, handle: null, totalMovement: 0 }));
       }
@@ -237,10 +267,52 @@ export const ImageResizer = NodeViewWrapper<ImageResizerProps>(({ node, selected
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [resizeState.isResizing]); // Only depends on isResizing
+  }, [resizeState.isResizing]);
+```
 
-  const currentWidth = localDimensions?.width ?? node.attrs.width;
-  const currentHeight = localDimensions?.height ?? node.attrs.height;
+- [ ] **Step 7: Add CSS styles for resize handles**
+
+Add this CSS block to the file or to a CSS file imported by the component:
+
+```tsx
+// Add as a style tag in the component or import from CSS file
+const resizeStyles = `
+  .image-resizer-overlay {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    outline: 1px dashed #333;
+  }
+
+  .image-resizer-handle {
+    pointer-events: auto;
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: white;
+    border: 1px solid #333;
+    box-sizing: border-box;
+  }
+
+  .image-resizer-handle.top-left { top: -5px; left: -5px; cursor: nwse-resize; }
+  .image-resizer-handle.top-center { top: -5px; left: calc(50% - 5px); cursor: ns-resize; }
+  .image-resizer-handle.top-right { top: -5px; right: -5px; cursor: nesw-resize; }
+  .image-resizer-handle.middle-left { top: calc(50% - 5px); left: -5px; cursor: ew-resize; }
+  .image-resizer-handle.middle-right { top: calc(50% - 5px); right: -5px; cursor: ew-resize; }
+  .image-resizer-handle.bottom-left { bottom: -5px; left: -5px; cursor: nesw-resize; }
+  .image-resizer-handle.bottom-center { bottom: -5px; left: calc(50% - 5px); cursor: ns-resize; }
+  .image-resizer-handle.bottom-right { bottom: -5px; right: -5px; cursor: nwse-resize; }
+`;
+```
+
+- [ ] **Step 8: Update the image render section**
+
+Replace the existing `<img>` render with:
+
+```tsx
+  const currentWidth = localDimensions?.width ?? width;
+  const currentHeight = localDimensions?.height ?? height;
 
   const handleClasses: Record<HandlePosition, string> = {
     'top-left': 'image-resizer-handle top-left',
@@ -253,30 +325,50 @@ export const ImageResizer = NodeViewWrapper<ImageResizerProps>(({ node, selected
     'bottom-right': 'image-resizer-handle bottom-right',
   };
 
-  const handleCursors: Record<HandlePosition, string> = {
-    'top-left': 'nwse-resize',
-    'top-center': 'ns-resize',
-    'top-right': 'nesw-resize',
-    'middle-left': 'ew-resize',
-    'middle-right': 'ew-resize',
-    'bottom-left': 'nesw-resize',
-    'bottom-center': 'ns-resize',
-    'bottom-right': 'nwse-resize',
-  };
-
   const handles: HandlePosition[] = [
-    'top-left',
-    'top-center',
-    'top-right',
-    'middle-left',
-    'middle-right',
-    'bottom-left',
-    'bottom-center',
-    'bottom-right',
+    'top-left', 'top-center', 'top-right',
+    'middle-left', 'middle-right',
+    'bottom-left', 'bottom-center', 'bottom-right',
   ];
+
+  if (loading || !url) {
+    return (
+      <NodeViewWrapper>
+        <style>{resizeStyles}</style>
+        <div
+          className="bg-gray-200 dark:bg-dark-700 animate-pulse flex items-center justify-center"
+          style={{
+            width: currentWidth || '100%',
+            height: currentHeight || 200,
+            maxWidth: '100%',
+          }}
+        >
+          <span className="text-gray-400 text-sm">{loading ? 'Loading...' : 'Error'}</span>
+        </div>
+      </NodeViewWrapper>
+    );
+  }
+
+  if (error) {
+    return (
+      <NodeViewWrapper>
+        <style>{resizeStyles}</style>
+        <div
+          className="bg-red-100 dark:bg-red-900/20 flex items-center justify-center"
+          style={{
+            width: currentWidth || '100%',
+            height: currentHeight || 200,
+          }}
+        >
+          <span className="text-red-500 text-sm">Failed to load image</span>
+        </div>
+      </NodeViewWrapper>
+    );
+  }
 
   return (
     <NodeViewWrapper>
+      <style>{resizeStyles}</style>
       <div
         style={{
           position: 'relative',
@@ -287,15 +379,13 @@ export const ImageResizer = NodeViewWrapper<ImageResizerProps>(({ node, selected
       >
         <img
           ref={imgRef}
-          src={node.attrs.path}
-          alt={node.attrs.alt ?? ''}
-          title={node.attrs.title ?? undefined}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
-          }}
-          data-path={node.attrs.path}
+          src={url}
+          alt={alt || ''}
+          title={title}
+          width={currentWidth}
+          height={currentHeight}
+          className="max-w-full h-auto"
+          draggable={true}
         />
         {selected && (
           <div className="image-resizer-overlay">
@@ -303,7 +393,6 @@ export const ImageResizer = NodeViewWrapper<ImageResizerProps>(({ node, selected
               <div
                 key={handle}
                 className={handleClasses[handle]}
-                style={{ cursor: handleCursors[handle] }}
                 onMouseDown={e => handleMouseDown(e, handle)}
               />
             ))}
@@ -312,53 +401,9 @@ export const ImageResizer = NodeViewWrapper<ImageResizerProps>(({ node, selected
       </div>
     </NodeViewWrapper>
   );
-});
 ```
 
-- [ ] **Step 2: Create CSS styles for the resize handles**
-
-Add to `apps/web/src/pages/blogs/editor/components/image-resizer.css`:
-
-```css
-/* Overlay container */
-.image-resizer-overlay {
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  z-index: 10;
-  outline: 1px dashed #333;
-}
-
-/* Individual handle styling */
-.image-resizer-handle {
-  pointer-events: auto;
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  background: white;
-  border: 1px solid #333;
-  box-sizing: border-box;
-}
-
-/* Handle positions */
-.image-resizer-handle.top-left { top: -5px; left: -5px; cursor: nwse-resize; }
-.image-resizer-handle.top-center { top: -5px; left: calc(50% - 5px); cursor: ns-resize; }
-.image-resizer-handle.top-right { top: -5px; right: -5px; cursor: nesw-resize; }
-.image-resizer-handle.middle-left { top: calc(50% - 5px); left: -5px; cursor: ew-resize; }
-.image-resizer-handle.middle-right { top: calc(50% - 5px); right: -5px; cursor: ew-resize; }
-.image-resizer-handle.bottom-left { bottom: -5px; left: -5px; cursor: nesw-resize; }
-.image-resizer-handle.bottom-center { bottom: -5px; left: calc(50% - 5px); cursor: ns-resize; }
-.image-resizer-handle.bottom-right { bottom: -5px; right: -5px; cursor: nwse-resize; }
-```
-
-- [ ] **Step 3: Import CSS in the component file**
-
-Add at the top of `image-resizer.tsx`:
-```tsx
-import './image-resizer.css';
-```
-
-- [ ] **Step 4: Test manually**
+- [ ] **Step 9: Test manually**
 
 Run the app and:
 1. Insert an image into the blog editor
@@ -366,171 +411,47 @@ Run the app and:
 3. Click outside - verify handles disappear
 4. Drag corner handles - verify aspect ratio is maintained
 5. Drag edge handles - verify single dimension changes
+6. Verify the loading state still works
+7. Verify the error state still works
 
 ---
 
-## Chunk 2: Integrate ImageResizer with CustomImage Extension
+## Chunk 2: Integration and Edge Cases
 
 **Files:**
-- Modify: `apps/web/src/pages/blogs/editor/extensions/custom-image.ts`
-- Test: Manual testing + verify undo/redo works
+- None - verify existing integration
 
-- [ ] **Step 1: Add ReactNodeViewRenderer to CustomImage extension**
+- [ ] **Step 1: Verify tiptap.config.ts doesn't need changes**
 
-Modify `custom-image.ts`:
+The existing config already uses `CustomImage` which has `addNodeView()`. No changes needed.
 
-```typescript
-import { Node, mergeAttributes } from '@tiptap/core';
-import { Plugin, PluginKey } from '@tiptap/pm/state';
-import { ReactNodeViewRenderer } from '@tiptap/react';
-import { ImageResizer } from '../components/image-resizer';
-
-export interface CustomImageOptions {
-  HTMLAttributes: Record<string, unknown>;
-}
-
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    customImage: {
-      setCustomImage: (options: { path: string; alt?: string; title?: string; width?: number; height?: number }) => ReturnType;
-    };
-  }
-}
-
-export const CustomImage = Node.create<CustomImageOptions>({
-  name: 'customImage',
-
-  group: 'block',
-
-  atom: true,
-
-  addOptions() {
-    return {
-      HTMLAttributes: {},
-    };
-  },
-
-  addAttributes() {
-    return {
-      path: {
-        default: null,
-      },
-      alt: {
-        default: null,
-      },
-      title: {
-        default: null,
-      },
-      width: {
-        default: null,
-        parseHTML: element => element.getAttribute('data-width') ? Number(element.getAttribute('data-width')) : null,
-        renderHTML: attributes => attributes.width ? { 'data-width': attributes.width } : {},
-      },
-      height: {
-        default: null,
-        parseHTML: element => element.getAttribute('data-height') ? Number(element.getAttribute('data-height')) : null,
-        renderHTML: attributes => attributes.height ? { 'data-height': attributes.height } : {},
-      },
-    };
-  },
-
-  parseHTML() {
-    return [
-      {
-        tag: 'img[data-path]',
-      },
-    ];
-  },
-
-  renderHTML({ HTMLAttributes }) {
-    return [
-      'img',
-      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
-        'data-path': HTMLAttributes.path,
-        'data-width': HTMLAttributes.width,
-        'data-height': HTMLAttributes.height,
-        alt: HTMLAttributes.alt,
-        title: HTMLAttributes.title,
-      }),
-    ];
-  },
-
-  addNodeView() {
-    return ReactNodeViewRenderer(ImageResizer);
-  },
-
-  addCommands() {
-    return {
-      setCustomImage:
-        (options: { path: string; alt?: string; title?: string; width?: number; height?: number }) =>
-        ({ commands }) => {
-          return commands.insertContent({
-            type: this.name,
-            attrs: options,
-          });
-        },
-    };
-  },
-});
-```
-
-- [ ] **Step 2: Verify the extension compiles**
-
-Run: `pnpm typecheck --filter @x-console/web`
-Expected: No TypeScript errors
-
-- [ ] **Step 3: Test resize with undo/redo**
+- [ ] **Step 2: Test undo/redo**
 
 1. Insert an image
 2. Resize it
-3. Press Ctrl+Z to undo
-4. Verify image returns to original size
-5. Press Ctrl-Y to redo
-6. Verify resize is reapplied
+3. Press Ctrl+Z to undo - verify image returns to original size
+4. Press Ctrl+Y to redo - verify resize is reapplied
 
----
+- [ ] **Step 3: Test edge cases**
 
-## Chunk 3: Final Integration and Testing
+1. Insert image without dimensions - verify natural size used
+2. Resize to very small (below 50px) - verify stops at 50px
+3. Resize very large - verify doesn't exceed natural size
+4. Press Escape during resize - verify cancelled
+5. Click image (no drag) - verify no resize persisted
+6. Refresh page - verify dimensions persist
 
-**Files:**
-- Review: `apps/web/src/pages/blogs/editor/tiptap.config.ts`
-- Test: Full workflow
-
-- [ ] **Step 1: Verify tiptap.config.ts integration**
-
-The existing config already uses `CustomImage`. No changes needed:
-
-```typescript
-// Already configured:
-const imageExtensions = CustomImage.configure({
-  HTMLAttributes: {
-    class: 'max-w-full h-auto',
-  },
-});
-```
-
-- [ ] **Step 2: Full workflow test**
-
-1. Open blog editor
-2. Insert multiple images
-3. Resize each image independently
-4. Verify clicking one image only shows its handles
-5. Verify clicking outside hides handles
-6. Verify undo/redo works for all images
-7. Save and refresh - verify dimensions persist
-8. Copy/paste image - verify dimensions preserved
-
-- [ ] **Step 3: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
-git add apps/web/src/pages/blogs/editor/components/image-resizer.tsx apps/web/src/pages/blogs/editor/components/image-resizer.css apps/web/src/pages/blogs/editor/extensions/custom-image.ts
+git add apps/web/src/pages/blogs/editor/extensions/custom-image-nodeview.tsx
 git commit -m "feat(blogs): add drag-to-resize handles for images
 
-- Add ImageResizer NodeView component with 8 resize handles
-- Extend CustomImage with NodeView renderer
+- Add resize handles (8 points) to CustomImageNodeView
 - Aspect ratio locked during resize
 - Min size: 50px, Max size: natural dimensions
 - Escape cancels resize, Ctrl+Z/Y undo/redo works
+- Loading/error states preserved
 
 Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
 ```
@@ -541,6 +462,5 @@ Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
 
 | Chunk | Tasks | Files Changed |
 |-------|-------|---------------|
-| 1 | Create ImageResizer NodeView component with resize handles | `image-resizer.tsx`, `image-resizer.css` (new) |
-| 2 | Integrate with CustomImage extension | `custom-image.ts` |
-| 3 | Final integration and testing | None (verification only) |
+| 1 | Add resize handles to CustomImageNodeView | `custom-image-nodeview.tsx` |
+| 2 | Integration and edge case testing | None (verification only) |
