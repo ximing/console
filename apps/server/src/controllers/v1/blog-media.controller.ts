@@ -152,10 +152,19 @@ export class BlogMediaController {
         return ResponseUtility.error(ErrorCode.PARAMS_ERROR, 'Path is required');
       }
 
-      // Verify the path belongs to this user (path format: blogs/media/{userId}/...)
+      // Verify the path belongs to this user
+      // Path format: {S3_PREFIX}/{userId}/{filename} e.g., dev/console/{userId}/abc.png
       const pathParts = params.path.split('/');
-      if (pathParts.length < 3 || pathParts[0] !== 'blogs' || pathParts[1] !== 'media' || pathParts[2] !== userDto.id) {
+      if (!pathParts || pathParts.length < 2) {
+        return ResponseUtility.error(ErrorCode.PARAMS_ERROR, 'Invalid path format');
+      }
+      // Check that userId is in the path (path was created by our upload endpoint)
+      if (!pathParts.includes(userDto.id)) {
         return ResponseUtility.error(ErrorCode.FORBIDDEN, 'Access denied');
+      }
+      // Prevent path traversal
+      if (params.path.includes('..') || params.path.startsWith('/')) {
+        return ResponseUtility.error(ErrorCode.PARAMS_ERROR, 'Invalid path');
       }
 
       // Generate presigned URL
