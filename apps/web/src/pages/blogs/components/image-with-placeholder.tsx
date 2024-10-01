@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ImageIcon } from 'lucide-react';
+import axios from 'axios';
 
 interface ImageWithPlaceholderProps {
   path: string;
@@ -27,12 +28,14 @@ export function ImageWithPlaceholder({
     setLoading(true);
     setError(false);
 
-    // Fetch presigned URL from server
-    fetch(`/api/v1/blogs/media/url?path=${encodeURIComponent(path)}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.code === 0 && data.data?.url) {
-          setUrl(data.data.url);
+    // Use axios with withCredentials to send cookies/auth
+    axios
+      .get(`/api/v1/blogs/media/url?path=${encodeURIComponent(path)}`, {
+        withCredentials: true,
+      })
+      .then((res) => {
+        if (res.data.code === 0 && res.data.data?.url) {
+          setUrl(res.data.data.url);
         } else {
           setError(true);
         }

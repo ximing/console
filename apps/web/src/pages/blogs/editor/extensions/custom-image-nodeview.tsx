@@ -1,5 +1,6 @@
 import { NodeViewWrapper, NodeViewContent } from '@tiptap/react';
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 interface CustomImageNodeViewProps {
   node: {
@@ -25,11 +26,14 @@ export function CustomImageNodeView({ node }: CustomImageNodeViewProps) {
     setLoading(true);
     setError(false);
 
-    fetch(`/api/v1/blogs/media/url?path=${encodeURIComponent(path)}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.code === 0 && data.data?.url) {
-          setUrl(data.data.url);
+    // Use axios with withCredentials to send cookies/auth
+    axios
+      .get(`/api/v1/blogs/media/url?path=${encodeURIComponent(path)}`, {
+        withCredentials: true,
+      })
+      .then((res) => {
+        if (res.data.code === 0 && res.data.data?.url) {
+          setUrl(res.data.data.url);
         } else {
           setError(true);
         }
