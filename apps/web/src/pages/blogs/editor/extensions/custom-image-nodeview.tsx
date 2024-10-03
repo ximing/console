@@ -40,7 +40,7 @@ export function CustomImageNodeView({ node }: CustomImageNodeViewProps) {
     const url = `/api/v1/blogs/media/url?path=${encodeURIComponent(path)}`;
     console.log('Fetching URL:', url);
 
-    fetch(url)
+    fetch(url, { credentials: 'include' })
       .then((res) => {
         console.log('Fetch response status:', res.status);
         return res.json();
