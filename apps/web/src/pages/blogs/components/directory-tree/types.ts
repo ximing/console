@@ -1,4 +1,5 @@
 import React from 'react';
+import type { DraggableAttributes } from '@dnd-kit/core';
 
 export interface TreeNodeData {
   id: string;
@@ -24,7 +25,7 @@ export interface TreeNodeProps {
   onNewDirectory: (parentId?: string) => void;
   // drag props
   dragRef?: (el: HTMLDivElement | null) => void;
-  dragAttributes?: Record<string, unknown>;
+  dragAttributes?: DraggableAttributes;
   dragListeners?: Record<string, unknown>;
   isDragging?: boolean;
   isDropTarget?: boolean;

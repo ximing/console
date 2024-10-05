@@ -3,7 +3,7 @@ import { ChevronRight, ChevronDown, Folder, FolderOpen, FileText, Plus, FolderPl
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import type { TreeNodeProps, TreeNodeData } from './types';
 
-interface Props extends Omit<TreeNodeProps, 'node' | 'dragRef' | 'children'> {
+interface Props extends Omit<TreeNodeProps, 'node' | 'children'> {
   node: TreeNodeData;
   depth: number;
   children?: ReactNode;
@@ -33,8 +33,7 @@ export const TreeNode = forwardRef<HTMLDivElement, Props>(
       isDropTarget,
       children,
     },
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    ref
+    _ref
   ) => {
     const isDirectory = node.type === 'directory';
     const isExpanded = expandedIds.has(node.id);

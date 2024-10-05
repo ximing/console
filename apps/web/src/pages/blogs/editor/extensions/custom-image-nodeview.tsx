@@ -1,4 +1,4 @@
-import { NodeViewWrapper, NodeViewContent } from '@tiptap/react';
+import { NodeViewWrapper } from '@tiptap/react';
 import { useState, useEffect } from 'react';
 
 interface CustomImageNodeViewProps {

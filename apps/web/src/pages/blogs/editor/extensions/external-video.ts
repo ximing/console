@@ -111,7 +111,7 @@ export const ExternalVideo = Node.create<ExternalVideoOptions>({
                 const embedUrl = config.embedUrl.replace('{id}', videoId);
 
                 // Insert the iframe
-                const { tr, selection } = view.state;
+                const { tr } = view.state;
                 const node = this.type.create({
                   src: embedUrl,
                   type: platform,

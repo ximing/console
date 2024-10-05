@@ -144,55 +144,6 @@ export const BlogListPage = view(() => {
     }
   };
 
-  // Rename directory
-  const handleRenameDirectory = async (directoryId: string, newName: string) => {
-    try {
-      await directoryService.updateDirectory(directoryId, { name: newName });
-      toastService.success('目录重命名成功');
-    } catch {
-      toastService.error('重命名目录失败');
-    }
-  };
-
-  // Delete directory
-  const handleDeleteDirectory = async (directoryId: string) => {
-    try {
-      await directoryService.deleteDirectory(directoryId);
-      toastService.success('目录删除成功');
-      if (selectedDirectoryId === directoryId) {
-        setSelectedDirectoryId(null);
-        setContentMode('directory');
-      }
-    } catch {
-      toastService.error('删除目录失败');
-    }
-  };
-
-  // Delete blog
-  const handleDeleteBlog = async (blogId: string) => {
-    try {
-      await blogService.deleteBlog(blogId);
-      toastService.success('博客删除成功');
-      if (selectedPageId === blogId) {
-        setSelectedPageId(null);
-        setContentMode('directory');
-        navigate('/blogs');
-      }
-    } catch {
-      toastService.error('删除博客失败');
-    }
-  };
-
-  // Move blog to different directory
-  const handleMoveBlog = async (blogId: string, newDirectoryId: string | null) => {
-    try {
-      await blogService.updateBlog(blogId, { directoryId: newDirectoryId || undefined });
-      toastService.success('博客移动成功');
-    } catch {
-      toastService.error('移动博客失败');
-    }
-  };
-
   // Select directory
   const handleSelectDirectory = (directoryId: string | null) => {
     setSelectedDirectoryId(directoryId);
