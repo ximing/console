@@ -1,5 +1,16 @@
 import { NodeViewWrapper } from '@tiptap/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+
+// Step 2: Add types and interfaces
+type HandlePosition = 'top-left' | 'top-center' | 'top-right' | 'middle-left' | 'middle-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
+
+interface ResizeState {
+  isResizing: boolean;
+  startPos: { x: number; y: number };
+  startDim: { width: number; height: number };
+  aspectRatio: number;
+  handle: HandlePosition | null;
+}
 
 interface CustomImageNodeViewProps {
   node: {
@@ -11,11 +22,11 @@ interface CustomImageNodeViewProps {
       height?: number;
     };
   };
+  selected: boolean;  // Tiptap provides this when node is selected
+  updateAttributes: (attrs: Record<string, number | null>) => void;  // Tiptap method to update node attrs
 }
 
-export function CustomImageNodeView({ node }: CustomImageNodeViewProps) {
-  console.log('CustomImageNodeView render, node.attrs:', node.attrs);
-
+export function CustomImageNodeView({ node, selected, updateAttributes }: CustomImageNodeViewProps) {
   const path = node.attrs?.path;
   const alt = node.attrs?.alt;
   const title = node.attrs?.title;
@@ -26,27 +37,243 @@ export function CustomImageNodeView({ node }: CustomImageNodeViewProps) {
   const [url, setUrl] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
+  // Step 4: Add resize logic state and refs
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [resizeState, setResizeState] = useState<ResizeState>({
+    isResizing: false,
+    startPos: { x: 0, y: 0 },
+    startDim: { width: 0, height: 0 },
+    aspectRatio: 1,
+    handle: null,
+  });
+  const [localDimensions, setLocalDimensions] = useState<{ width: number; height: number } | null>(null);
+
+  // Refs for event handlers to avoid stale closures
+  const resizeStateRef = useRef(resizeState);
+  resizeStateRef.current = resizeState;
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    const state = resizeStateRef.current;
+    if (!state.isResizing || !state.handle) return;
+
+    const deltaX = e.clientX - state.startPos.x;
+    const deltaY = e.clientY - state.startPos.y;
+
+    let newWidth = state.startDim.width;
+    let newHeight = state.startDim.height;
+    let movement = 0;
+
+    // Calculate movement based on handle position
+    switch (state.handle) {
+      case 'top-left':
+        movement = -deltaX - deltaY;
+        newWidth = state.startDim.width - deltaX;
+        newHeight = state.startDim.height - deltaY;
+        break;
+      case 'top-center':
+        movement = -deltaY;
+        newHeight = state.startDim.height - deltaY;
+        break;
+      case 'top-right':
+        movement = deltaX - deltaY;
+        newWidth = state.startDim.width + deltaX;
+        newHeight = state.startDim.height - deltaY;
+        break;
+      case 'middle-left':
+        movement = -deltaX;
+        newWidth = state.startDim.width - deltaX;
+        break;
+      case 'middle-right':
+        movement = deltaX;
+        newWidth = state.startDim.width + deltaX;
+        break;
+      case 'bottom-left':
+        movement = -deltaX + deltaY;
+        newWidth = state.startDim.width - deltaX;
+        newHeight = state.startDim.height + deltaY;
+        break;
+      case 'bottom-center':
+        movement = deltaY;
+        newHeight = state.startDim.height + deltaY;
+        break;
+      case 'bottom-right':
+        movement = deltaX + deltaY;
+        newWidth = state.startDim.width + deltaX;
+        newHeight = state.startDim.height + deltaY;
+        break;
+    }
+
+    // Apply minimum constraints
+    newWidth = Math.max(50, newWidth);
+    newHeight = Math.max(50, newHeight);
+
+    // Apply aspect ratio locking based on handle type
+    const aspectRatio = state.aspectRatio;
+    const isCornerHandle = ['top-left', 'top-right', 'bottom-left', 'bottom-right'].includes(state.handle!);
+    const isVerticalEdge = ['top-center', 'bottom-center'].includes(state.handle!);
+    const isHorizontalEdge = ['middle-left', 'middle-right'].includes(state.handle!);
+
+    if (isCornerHandle) {
+      // For corner handles, use aspect ratio to constrain the secondary dimension
+      if (state.handle === 'top-left' || state.handle === 'top-right') {
+        // These handles adjust height via deltaY (negative when dragging up)
+        newHeight = newWidth / aspectRatio;
+      } else {
+        // bottom-left and bottom-right - height increases with positive deltaY
+        newHeight = newWidth / aspectRatio;
+      }
+    } else if (isVerticalEdge) {
+      // top-center, bottom-center: constrain width based on height
+      newWidth = newHeight * aspectRatio;
+    } else if (isHorizontalEdge) {
+      // middle-left, middle-right: constrain height based on width
+      newHeight = newWidth / aspectRatio;
+    }
+
+    // Apply minimum constraints again after aspect ratio correction
+    newWidth = Math.max(50, newWidth);
+    newHeight = Math.max(50, newHeight);
+
+    setLocalDimensions({ width: newWidth, height: newHeight });
+  }, []);
+
+  const handleMouseUp = useCallback(() => {
+    const state = resizeStateRef.current;
+    if (!state.isResizing) return;
+
+    if (localDimensions) {
+      // Apply the final dimensions
+      updateAttributes({
+        width: Math.round(localDimensions.width),
+        height: Math.round(localDimensions.height),
+      });
+    }
+
+    setResizeState((prev) => ({
+      ...prev,
+      isResizing: false,
+      handle: null,
+    }));
+    setLocalDimensions(null);
+
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+  }, [handleMouseMove, localDimensions, updateAttributes]);
+
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent, handle: HandlePosition) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const img = imgRef.current;
+      if (!img) return;
+
+      const rect = img.getBoundingClientRect();
+      const currentWidth = localDimensions?.width ?? rect.width;
+      const currentHeight = localDimensions?.height ?? rect.height;
+
+      setResizeState({
+        isResizing: true,
+        startPos: { x: e.clientX, y: e.clientY },
+        startDim: { width: currentWidth, height: currentHeight },
+        aspectRatio: currentWidth / currentHeight,
+        handle,
+      });
+
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    },
+    [handleMouseMove, handleMouseUp, localDimensions]
+  );
+
+  // Step 5: Add CSS styles for resize handles
+  const resizeStyles = `
+    .image-resizer-overlay {
+      position: absolute;
+      inset: 0;
+      border: 2px solid #3b82f6;
+      pointer-events: none;
+    }
+    .image-resizer-handle {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: white;
+      border: 2px solid #3b82f6;
+      border-radius: 2px;
+      pointer-events: auto;
+      z-index: 10;
+    }
+    .image-resizer-handle.top-left { top: -6px; left: -6px; cursor: nwse-resize; }
+    .image-resizer-handle.top-center { top: -6px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+    .image-resizer-handle.top-right { top: -6px; right: -6px; cursor: nesw-resize; }
+    .image-resizer-handle.middle-left { top: 50%; left: -6px; transform: translateY(-50%); cursor: ew-resize; }
+    .image-resizer-handle.middle-right { top: 50%; right: -6px; transform: translateY(-50%); cursor: ew-resize; }
+    .image-resizer-handle.bottom-left { bottom: -6px; left: -6px; cursor: nesw-resize; }
+    .image-resizer-handle.bottom-center { bottom: -6px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+    .image-resizer-handle.bottom-right { bottom: -6px; right: -6px; cursor: nwse-resize; }
+  `;
+
+  // Cleanup event listeners on unmount
+  useEffect(() => {
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [handleMouseMove, handleMouseUp]);
+
+  // Reset local dimensions when selection is lost
+  useEffect(() => {
+    if (!selected) {
+      setLocalDimensions(null);
+      if (resizeStateRef.current.isResizing) {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        setResizeState((prev) => ({
+          ...prev,
+          isResizing: false,
+          handle: null,
+        }));
+      }
+    }
+  }, [selected, handleMouseMove, handleMouseUp]);
+
+  // Handle Escape key to cancel resize
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && resizeStateRef.current.isResizing) {
+        setResizeState((prev) => ({
+          ...prev,
+          isResizing: false,
+          handle: null,
+        }));
+        setLocalDimensions(null);
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleMouseMove, handleMouseUp]);
+
   useEffect(() => {
     if (!path) {
-      console.log('No path provided');
       setLoading(false);
       setFetchError('No path');
       return;
     }
 
+    let cancelled = false;
     setLoading(true);
     setFetchError(null);
 
     const url = `/api/v1/blogs/media/url?path=${encodeURIComponent(path)}`;
-    console.log('Fetching URL:', url);
 
     fetch(url, { credentials: 'include' })
-      .then((res) => {
-        console.log('Fetch response status:', res.status);
-        return res.json();
-      })
+      .then((res) => res.json())
       .then((data) => {
-        console.log('Image URL response:', data);
+        if (cancelled) return;
         if (data.code === 0 && data.data?.url) {
           setUrl(data.data.url);
         } else {
@@ -54,20 +281,27 @@ export function CustomImageNodeView({ node }: CustomImageNodeViewProps) {
         }
       })
       .catch((err) => {
-        console.error('Image URL error:', err);
+        if (cancelled) return;
         setFetchError(err.message);
       })
       .finally(() => {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       });
+
+    return () => {
+      cancelled = true;
+    };
   }, [path]);
 
   // Error state
   if (fetchError) {
     return (
       <NodeViewWrapper>
+        <style>{resizeStyles}</style>
         <div
-          className="bg-red-100 dark:bg-red-900/20 flex items-center justify-center p-4"
+          className="bg-red-100 dark:bg-red-900/20 flex items-center justify-center p-4 relative"
           style={{
             width: width || '100%',
             height: height || 200,
@@ -83,8 +317,9 @@ export function CustomImageNodeView({ node }: CustomImageNodeViewProps) {
   if (loading || !url) {
     return (
       <NodeViewWrapper>
+        <style>{resizeStyles}</style>
         <div
-          className="bg-gray-200 dark:bg-dark-700 animate-pulse flex items-center justify-center"
+          className="bg-gray-200 dark:bg-dark-700 animate-pulse flex items-center justify-center relative"
           style={{
             width: width || '100%',
             height: height || 200,
@@ -97,18 +332,51 @@ export function CustomImageNodeView({ node }: CustomImageNodeViewProps) {
     );
   }
 
-  // Success state
+  // Step 6: Success state with resize handles
+  const handlePositions: HandlePosition[] = [
+    'top-left',
+    'top-center',
+    'top-right',
+    'middle-left',
+    'middle-right',
+    'bottom-left',
+    'bottom-center',
+    'bottom-right',
+  ];
+
   return (
     <NodeViewWrapper>
-      <img
-        src={url}
-        alt={alt || ''}
-        title={title}
-        width={width}
-        height={height}
-        className="max-w-full h-auto"
-        draggable={true}
-      />
+      <style>{resizeStyles}</style>
+      <div
+        className="relative inline-block"
+        style={{
+          width: localDimensions?.width ?? width ?? '100%',
+          height: localDimensions?.height ?? height ?? 'auto',
+          maxWidth: '100%',
+        }}
+      >
+        <img
+          ref={imgRef}
+          src={url}
+          alt={alt || ''}
+          title={title}
+          width={localDimensions?.width ?? width}
+          height={localDimensions?.height ?? height}
+          className="max-w-full h-auto block"
+          draggable={true}
+        />
+        {selected && (
+          <div className="image-resizer-overlay">
+            {handlePositions.map((pos) => (
+              <div
+                key={pos}
+                className={`image-resizer-handle ${pos}`}
+                onMouseDown={(e) => handleMouseDown(e, pos)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </NodeViewWrapper>
   );
 }
