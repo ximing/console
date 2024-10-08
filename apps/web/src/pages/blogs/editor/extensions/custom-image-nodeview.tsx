@@ -52,6 +52,14 @@ export function CustomImageNodeView({ node, selected, updateAttributes }: Custom
   const resizeStateRef = useRef(resizeState);
   resizeStateRef.current = resizeState;
 
+  // Use ref for local dimensions during drag to avoid recreating handleMouseMove
+  const localDimensionsRef = useRef(localDimensions);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    localDimensionsRef.current = localDimensions;
+  }, [localDimensions]);
+
   const handleMouseMove = useCallback((e: MouseEvent) => {
     const state = resizeStateRef.current;
     if (!state.isResizing || !state.handle) return;
@@ -61,43 +69,34 @@ export function CustomImageNodeView({ node, selected, updateAttributes }: Custom
 
     let newWidth = state.startDim.width;
     let newHeight = state.startDim.height;
-    let movement = 0;
 
     // Calculate movement based on handle position
     switch (state.handle) {
       case 'top-left':
-        movement = -deltaX - deltaY;
         newWidth = state.startDim.width - deltaX;
         newHeight = state.startDim.height - deltaY;
         break;
       case 'top-center':
-        movement = -deltaY;
         newHeight = state.startDim.height - deltaY;
         break;
       case 'top-right':
-        movement = deltaX - deltaY;
         newWidth = state.startDim.width + deltaX;
         newHeight = state.startDim.height - deltaY;
         break;
       case 'middle-left':
-        movement = -deltaX;
         newWidth = state.startDim.width - deltaX;
         break;
       case 'middle-right':
-        movement = deltaX;
         newWidth = state.startDim.width + deltaX;
         break;
       case 'bottom-left':
-        movement = -deltaX + deltaY;
         newWidth = state.startDim.width - deltaX;
         newHeight = state.startDim.height + deltaY;
         break;
       case 'bottom-center':
-        movement = deltaY;
         newHeight = state.startDim.height + deltaY;
         break;
       case 'bottom-right':
-        movement = deltaX + deltaY;
         newWidth = state.startDim.width + deltaX;
         newHeight = state.startDim.height + deltaY;
         break;
@@ -115,13 +114,7 @@ export function CustomImageNodeView({ node, selected, updateAttributes }: Custom
 
     if (isCornerHandle) {
       // For corner handles, use aspect ratio to constrain the secondary dimension
-      if (state.handle === 'top-left' || state.handle === 'top-right') {
-        // These handles adjust height via deltaY (negative when dragging up)
-        newHeight = newWidth / aspectRatio;
-      } else {
-        // bottom-left and bottom-right - height increases with positive deltaY
-        newHeight = newWidth / aspectRatio;
-      }
+      newHeight = newWidth / aspectRatio;
     } else if (isVerticalEdge) {
       // top-center, bottom-center: constrain width based on height
       newWidth = newHeight * aspectRatio;
@@ -134,6 +127,7 @@ export function CustomImageNodeView({ node, selected, updateAttributes }: Custom
     newWidth = Math.max(50, newWidth);
     newHeight = Math.max(50, newHeight);
 
+    localDimensionsRef.current = { width: newWidth, height: newHeight };
     setLocalDimensions({ width: newWidth, height: newHeight });
   }, []);
 
@@ -141,11 +135,12 @@ export function CustomImageNodeView({ node, selected, updateAttributes }: Custom
     const state = resizeStateRef.current;
     if (!state.isResizing) return;
 
-    if (localDimensions) {
+    const finalDimensions = localDimensionsRef.current;
+    if (finalDimensions) {
       // Apply the final dimensions
       updateAttributes({
-        width: Math.round(localDimensions.width),
-        height: Math.round(localDimensions.height),
+        width: Math.round(finalDimensions.width),
+        height: Math.round(finalDimensions.height),
       });
     }
 
@@ -154,11 +149,12 @@ export function CustomImageNodeView({ node, selected, updateAttributes }: Custom
       isResizing: false,
       handle: null,
     }));
+    localDimensionsRef.current = null;
     setLocalDimensions(null);
 
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
-  }, [handleMouseMove, localDimensions, updateAttributes]);
+  }, [handleMouseMove, updateAttributes]);
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent, handle: HandlePosition) => {
@@ -191,10 +187,14 @@ export function CustomImageNodeView({ node, selected, updateAttributes }: Custom
     .image-resizer-wrapper {
       user-select: none;
       -webkit-user-select: none;
+      position: relative !important;
     }
     .image-resizer-overlay {
       position: absolute;
-      inset: 0;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       border: 2px solid #3b82f6;
       pointer-events: none;
     }
@@ -225,6 +225,18 @@ export function CustomImageNodeView({ node, selected, updateAttributes }: Custom
       document.removeEventListener('mouseup', handleMouseUp);
     };
   }, [handleMouseMove, handleMouseUp]);
+
+  // Debug: document-level mousedown to catch handle clicks
+  useEffect(() => {
+    const debugHandler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.classList.contains('image-resizer-handle')) {
+        console.log('Document mousedown caught on handle:', target.className);
+      }
+    };
+    document.addEventListener('mousedown', debugHandler);
+    return () => document.removeEventListener('mousedown', debugHandler);
+  }, []);
 
   // Reset local dimensions when selection is lost
   useEffect(() => {
@@ -383,7 +395,11 @@ export function CustomImageNodeView({ node, selected, updateAttributes }: Custom
               <div
                 key={pos}
                 className={`image-resizer-handle ${pos}`}
-                onMouseDown={(e) => handleMouseDown(e, pos)}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  handleMouseDown(e, pos);
+                }}
               />
             ))}
           </div>

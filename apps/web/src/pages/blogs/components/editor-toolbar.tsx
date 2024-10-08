@@ -41,6 +41,7 @@ type InsertType = 'image' | 'audio' | 'youtube' | 'link';
 
 interface EditorToolbarProps {
   editor: Editor | null;
+  blogId: string;
 }
 
 interface ToolbarButtonProps {
@@ -293,7 +294,7 @@ const HeadingSelect = ({ editor }: { editor: Editor }) => {
   );
 };
 
-export const EditorToolbar = ({ editor }: EditorToolbarProps) => {
+export const EditorToolbar = ({ editor, blogId }: EditorToolbarProps) => {
   const [pendingInsert, setPendingInsert] = useState<{ type: InsertType; url: string } | null>(
     null
   );
@@ -392,7 +393,7 @@ export const EditorToolbar = ({ editor }: EditorToolbarProps) => {
     }
   };
 
-  const handleFileUpload = async (type: 'image' | 'audio' | 'video') => {
+  const handleFileUpload = async (type: 'image' | 'audio' | 'video', blogId: string) => {
     const input = document.createElement('input');
     input.type = 'file';
 
@@ -432,7 +433,7 @@ export const EditorToolbar = ({ editor }: EditorToolbarProps) => {
       });
 
       try {
-        const result = await uploadMedia(file, (progress) => {
+        const result = await uploadMedia(file, blogId, (progress) => {
           setUploadModal((prev) =>
             prev ? { ...prev, progress: progress.percent } : null
           );
@@ -724,15 +725,15 @@ export const EditorToolbar = ({ editor }: EditorToolbarProps) => {
         </ToolbarButton>
 
         {/* Local upload buttons */}
-        <ToolbarButton onClick={() => handleFileUpload('image')} title="上传图片">
+        <ToolbarButton onClick={() => handleFileUpload('image', blogId)} title="上传图片">
           <Image className="w-4 h-4" />
           <span>图片</span>
         </ToolbarButton>
-        <ToolbarButton onClick={() => handleFileUpload('audio')} title="上传音频">
+        <ToolbarButton onClick={() => handleFileUpload('audio', blogId)} title="上传音频">
           <Mic className="w-4 h-4" />
           <span>音频</span>
         </ToolbarButton>
-        <ToolbarButton onClick={() => handleFileUpload('video')} title="上传视频">
+        <ToolbarButton onClick={() => handleFileUpload('video', blogId)} title="上传视频">
           <Youtube className="w-4 h-4" />
           <span>视频</span>
         </ToolbarButton>
