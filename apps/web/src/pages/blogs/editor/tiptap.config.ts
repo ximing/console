@@ -84,5 +84,11 @@ export const editableExtensions = [
 export const inlineEditableExtensions = [
   ...baseContentExtensions,
   Underline,
+  TextStyle,
+  FontSize,
+  Color,
+  Highlight.configure({ multicolor: true }),
+  TextAlign.configure({ types: ['heading', 'paragraph'] }),
+  FontFamily.configure({ types: ['textStyle'] }),
   createLinkExtension({ openOnClick: false }),
 ];

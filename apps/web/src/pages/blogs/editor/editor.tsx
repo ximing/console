@@ -11,6 +11,7 @@ import { ToastService } from '../../../services/toast.service';
 import { EditorToolbar } from '../components/editor-toolbar';
 import { Select } from '../../../components/select';
 import { editableExtensions, MAX_EXCERPT_LENGTH } from './tiptap.config';
+import { uploadMedia, validateMediaFile } from '../../../api/blog-media';
 
 interface BlogEditorProps {
   id?: string;
@@ -62,6 +63,117 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
       }
     },
   });
+
+  // Handle paste - upload clipboard images
+  useEffect(() => {
+    if (!editor || !blogId) return;
+
+    const handlePaste = async (event: ClipboardEvent) => {
+      const dataTransfer = event.clipboardData;
+      if (!dataTransfer) return;
+
+      // First try DataTransfer.files (works in Safari and some Chrome versions)
+      const files = Array.from(dataTransfer.files);
+      const imageFile = files.find((f) => f.type.startsWith('image/'));
+
+      if (imageFile) {
+        event.preventDefault();
+        handleImageUpload(imageFile);
+        return;
+      }
+
+      // Fallback: try clipboardData.items
+      const items = Array.from(dataTransfer.items);
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          event.preventDefault();
+
+          // getAsFile() often returns null for clipboard images in some browsers
+          let file = item.getAsFile();
+          if (!file) {
+            // Try using the async clipboard API if available
+            if (navigator.clipboard && navigator.clipboard.read) {
+              try {
+                const clipboardItems = await navigator.clipboard.read();
+                for (const clipItem of clipboardItems) {
+                  for (const mimeType of clipItem.types) {
+                    if (mimeType.startsWith('image/')) {
+                      const blob = await clipItem.getType(mimeType);
+                      const filename = `clipboard-image-${Date.now()}.${mimeType.split('/')[1] || 'png'}`;
+                      file = new File([blob], filename, { type: mimeType });
+                      break;
+                    }
+                  }
+                  if (file) break;
+                }
+              } catch {
+                // Clipboard API not permitted or failed
+              }
+            }
+          }
+
+          if (!file) {
+            toastService.error('无法读取剪贴板图片');
+            continue;
+          }
+
+          handleImageUpload(file);
+          break;
+        }
+      }
+    };
+
+    const handleImageUpload = (file: File) => {
+      const validation = validateMediaFile(file);
+      if (!validation.valid) {
+        toastService.error(validation.error || '图片格式不支持');
+        return;
+      }
+
+      const tempId = `temp:${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      editor.chain().focus().setCustomImage({
+        path: tempId,
+        alt: file.name,
+        uploadStatus: 'uploading',
+      }).run();
+
+      uploadMedia(file, blogId).then((result) => {
+        editor.chain().focus().command(({ tr, state }) => {
+          let found = false;
+          state.doc.descendants((node, pos) => {
+            if (node.type.name === 'customImage' && node.attrs.path === tempId) {
+              tr.setNodeMarkup(pos, undefined, {
+                path: result.path,
+                alt: result.filename,
+                width: result.width,
+                height: result.height,
+                uploadStatus: 'uploaded',
+              });
+              found = true;
+            }
+          });
+          return found;
+        }).run();
+      }).catch(() => {
+        toastService.error('图片上传失败');
+        editor.chain().focus().command(({ tr, state }) => {
+          let found = false;
+          state.doc.descendants((node, pos) => {
+            if (node.type.name === 'customImage' && node.attrs.path === tempId) {
+              tr.delete(pos, pos + node.nodeSize);
+              found = true;
+            }
+          });
+          return found;
+        }).run();
+      });
+    };
+
+    document.addEventListener('paste', handlePaste);
+    return () => {
+      document.removeEventListener('paste', handlePaste);
+    };
+  }, [editor, blogId, toastService]);
 
   // Load directories and tags
   useEffect(() => {

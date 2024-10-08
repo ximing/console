@@ -9,7 +9,7 @@ export interface CustomImageOptions {
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     customImage: {
-      setCustomImage: (options: { path: string; alt?: string; title?: string; width?: number; height?: number }) => ReturnType;
+      setCustomImage: (options: { path: string; alt?: string; title?: string; width?: number; height?: number; uploadStatus?: string }) => ReturnType;
     };
   }
 }
@@ -44,6 +44,9 @@ export const CustomImage = Node.create<CustomImageOptions>({
       height: {
         default: null,
       },
+      uploadStatus: {
+        default: null,
+      },
     };
   },
 
@@ -76,7 +79,7 @@ export const CustomImage = Node.create<CustomImageOptions>({
   addCommands() {
     return {
       setCustomImage:
-        (options: { path: string; alt?: string; title?: string; width?: number; height?: number }) =>
+        (options: { path: string; alt?: string; title?: string; width?: number; height?: number; uploadStatus?: string }) =>
         ({ commands }) => {
           return commands.insertContent({
             type: this.name,
