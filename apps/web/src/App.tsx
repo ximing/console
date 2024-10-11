@@ -108,7 +108,15 @@ function App() {
           }
         />
         <Route
-          path="/blogs/*"
+          path="/blogs/:id"
+          element={
+            <ProtectedRoute>
+              <BlogPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/blogs"
           element={
             <ProtectedRoute>
               <BlogPage />
