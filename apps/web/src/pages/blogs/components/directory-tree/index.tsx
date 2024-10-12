@@ -245,7 +245,7 @@ export const DirectoryTree = view(
     if (directoryService.loading) {
       return (
         <div className="flex items-center justify-center py-4">
-          <Loader2 className="w-5 h-5 animate-spin text-gray-500 dark:text-gray-400" />
+          <Loader2 className="w-5 h-5 animate-spin text-gray-500 dark:text-zinc-500" />
         </div>
       );
     }
@@ -261,13 +261,14 @@ export const DirectoryTree = view(
         {/* All Blogs option */}
         <div
           className={`
-            flex items-center gap-1 px-2 py-1.5 cursor-pointer rounded mx-2 mb-1
-            ${selectedDirectoryId === null ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' : 'hover:bg-gray-100 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300'}
+            flex items-center gap-1 px-2 py-1.5 cursor-pointer rounded-md mx-1 mb-1
+            transition-all duration-100 text-xs font-medium
+            ${selectedDirectoryId === null ? 'bg-primary-50/80 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400' : 'hover:bg-gray-100/70 dark:hover:bg-zinc-800/50 text-gray-700 dark:text-zinc-300'}
           `}
           onClick={() => onSelectDirectory(null)}
         >
-          <Folder className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
-          <span className="text-sm">全部博客</span>
+          <Folder className="w-4 h-4 text-gray-500/80 dark:text-zinc-500/80 flex-shrink-0" />
+          <span>全部博客</span>
         </div>
 
         {/* Root-level Blogs */}
@@ -315,7 +316,7 @@ export const DirectoryTree = view(
             ))}
           </div>
         ) : rootBlogs.length === 0 ? (
-          <div className="text-center py-4 text-sm text-gray-500 dark:text-gray-400">
+          <div className="text-center py-4 text-sm text-gray-500 dark:text-zinc-500">
             暂无目录
           </div>
         ) : null}

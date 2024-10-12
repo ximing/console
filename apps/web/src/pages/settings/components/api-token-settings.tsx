@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { ApiTokenService } from '../../../services/api-token.service';
 import { ToastService } from '../../../services/toast.service';
 import { Loader2, Plus, Trash2, Copy, Check, Key, AlertTriangle } from 'lucide-react';
+import { formatDate } from '../../../utils/date';
 
 export const ApiTokenSettings = view(() => {
   const apiTokenService = useService(ApiTokenService);
@@ -66,16 +67,6 @@ export const ApiTokenSettings = view(() => {
     setIsModalOpen(false);
     setTokenName('');
     setNewToken(null);
-  };
-
-  const formatDate = (date: Date | string | undefined) => {
-    if (!date) return '-';
-    const d = new Date(date);
-    return d.toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    });
   };
 
   return (

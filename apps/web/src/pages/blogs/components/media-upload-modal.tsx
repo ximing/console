@@ -17,17 +17,17 @@ export function MediaUploadModal({
 }: MediaUploadModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white dark:bg-dark-800 rounded-lg shadow-xl w-[400px] max-w-[90vw] overflow-hidden">
+      <div className="bg-white dark:bg-zinc-800 rounded-lg shadow-xl w-[400px] max-w-[90vw] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-dark-700">
-          <h3 className="font-medium text-gray-900 dark:text-white">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-zinc-700">
+          <h3 className="font-medium text-gray-900 dark:text-zinc-50">
             {status === 'uploading' && '上传中'}
             {status === 'success' && '上传成功'}
             {status === 'error' && '上传失败'}
           </h3>
           <button
             onClick={onClose}
-            className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            className="p-1 text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200"
           >
             <X className="w-5 h-5" />
           </button>
@@ -37,8 +37,8 @@ export function MediaUploadModal({
         <div className="p-4">
           {/* Filename */}
           <div className="flex items-center gap-2 mb-3">
-            <Upload className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-            <span className="text-sm text-gray-700 dark:text-gray-300 truncate">
+            <Upload className="w-4 h-4 text-gray-500 dark:text-zinc-400" />
+            <span className="text-sm text-gray-700 dark:text-zinc-300 truncate">
               {filename}
             </span>
           </div>
@@ -46,13 +46,13 @@ export function MediaUploadModal({
           {/* Progress bar */}
           {status === 'uploading' && (
             <>
-              <div className="h-2 bg-gray-200 dark:bg-dark-700 rounded-full overflow-hidden">
+              <div className="h-2 bg-gray-200 dark:bg-zinc-700 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-primary-500 transition-all duration-300"
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <div className="mt-2 text-sm text-gray-500 dark:text-gray-400 text-right">
+              <div className="mt-2 text-sm text-gray-500 dark:text-zinc-400 text-right">
                 {progress}%
               </div>
             </>

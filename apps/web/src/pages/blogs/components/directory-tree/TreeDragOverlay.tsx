@@ -11,7 +11,7 @@ export function TreeDragOverlay({ node }: TreeDragOverlayProps) {
   const isDirectory = node.type === 'directory';
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-dark-800 border border-primary-300 dark:border-primary-700 rounded-lg shadow-lg opacity-80">
+    <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-zinc-800 border border-primary-300 dark:border-primary-700 rounded-lg shadow-lg opacity-80">
       {isDirectory ? (
         <Folder className="w-4 h-4 text-yellow-500" />
       ) : (

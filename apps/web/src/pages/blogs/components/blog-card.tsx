@@ -1,6 +1,7 @@
 import { view } from '@rabjs/react';
 import { Clock, FileText, Edit2 } from 'lucide-react';
 import type { BlogDto } from '@x-console/dto';
+import { formatRelativeTime } from '../../../utils/date';
 
 interface BlogCardProps {
   blog: BlogDto;
@@ -8,30 +9,6 @@ interface BlogCardProps {
   onClick?: () => void;
   onEdit?: (blog: BlogDto) => void;
 }
-
-/**
- * Format relative time (e.g., "2小时前", "3天前")
- */
-const formatRelativeTime = (dateStr: string): string => {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffSecs = Math.floor(diffMs / 1000);
-  const diffMins = Math.floor(diffSecs / 60);
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
-
-  if (diffSecs < 60) return '刚刚';
-  if (diffMins < 60) return `${diffMins}分钟前`;
-  if (diffHours < 24) return `${diffHours}小时前`;
-  if (diffDays < 30) return `${diffDays}天前`;
-
-  return date.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-};
 
 /**
  * Blog Card Component
@@ -60,29 +37,34 @@ export const BlogCard = view(({ blog, directoryName, onClick, onEdit }: BlogCard
   return (
     <div
       onClick={handleClick}
-      className="bg-white dark:bg-dark-800 rounded-xl border border-gray-200 dark:border-dark-700 p-4 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-md transition-all cursor-pointer group"
+      className="group relative bg-white dark:bg-zinc-900 rounded-xl border border-gray-200/80 dark:border-zinc-800/80 p-5 hover:border-primary-300/60 dark:hover:border-primary-700/50 hover:shadow-md dark:hover:shadow-md-dark transition-all duration-200 ease-out cursor-pointer"
     >
+      {/* Subtle gradient overlay on hover */}
+      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
       {/* Title Row */}
-      <div className="flex items-start gap-2 mb-2">
-        <FileText className="w-5 h-5 text-gray-400 dark:text-gray-500 flex-shrink-0 mt-0.5" />
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors line-clamp-1 flex-1">
+      <div className="flex items-start gap-3 mb-3">
+        <div className="p-1.5 rounded-lg bg-gray-100 dark:bg-zinc-800/60">
+          <FileText className="w-4 h-4 text-gray-500 dark:text-zinc-400" />
+        </div>
+        <h3 className="text-base font-semibold text-gray-900 dark:text-zinc-50 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200 line-clamp-1 flex-1 leading-snug">
           {blog.title}
         </h3>
         {/* Edit Button - visible on hover */}
         {onEdit && (
           <button
             onClick={handleEditClick}
-            className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-all"
+            className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded-lg transition-all duration-150 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-primary-500/50"
             title="编辑"
           >
-            <Edit2 className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            <Edit2 className="w-3.5 h-3.5 text-gray-500 dark:text-zinc-400" />
           </button>
         )}
       </div>
 
       {/* Excerpt */}
       {blog.excerpt && (
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
+        <p className="text-sm text-gray-600 dark:text-zinc-400/80 mb-4 line-clamp-2 leading-relaxed">
           {blog.excerpt}
         </p>
       )}
@@ -91,7 +73,7 @@ export const BlogCard = view(({ blog, directoryName, onClick, onEdit }: BlogCard
       <div className="flex flex-wrap items-center gap-2">
         {/* Directory Badge */}
         {directoryName && (
-          <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded bg-gray-100 dark:bg-dark-700 text-gray-600 dark:text-gray-400">
+          <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-md bg-gray-100 dark:bg-zinc-800/60 text-gray-600 dark:text-zinc-400/80">
             {directoryName}
           </span>
         )}
@@ -100,8 +82,8 @@ export const BlogCard = view(({ blog, directoryName, onClick, onEdit }: BlogCard
         <span
           className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full ${
             blog.status === 'published'
-              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-              : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
+              ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+              : 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400'
           }`}
         >
           {blog.status === 'published' ? '已发布' : '草稿'}
@@ -111,9 +93,9 @@ export const BlogCard = view(({ blog, directoryName, onClick, onEdit }: BlogCard
         {displayTags.map((tag) => (
           <span
             key={tag.id}
-            className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded"
+            className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-md"
             style={{
-              backgroundColor: `${tag.color}20`,
+              backgroundColor: `${tag.color}15`,
               color: tag.color,
             }}
           >
@@ -121,11 +103,11 @@ export const BlogCard = view(({ blog, directoryName, onClick, onEdit }: BlogCard
           </span>
         ))}
         {remainingTagCount > 0 && (
-          <span className="text-xs text-gray-500 dark:text-gray-400">+{remainingTagCount}</span>
+          <span className="text-xs text-gray-400 dark:text-zinc-500">+{remainingTagCount}</span>
         )}
 
         {/* Updated Time */}
-        <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 ml-auto">
+        <span className="flex items-center gap-1 text-xs text-gray-400 dark:text-zinc-500 ml-auto">
           <Clock className="w-3 h-3" />
           {formatRelativeTime(blog.updatedAt)}
         </span>

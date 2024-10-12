@@ -2,45 +2,55 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { view, useService, raw } from '@rabjs/react';
 import { useParams, useNavigate } from 'react-router';
 import { useEditor, EditorContent } from '@tiptap/react';
-import { Loader2, Save, Send, ArrowLeft, Eye, Edit2, Trash2 } from 'lucide-react';
+import { Loader2, Save, Send, Eye, Edit2, Trash2 } from 'lucide-react';
 import slugify from 'slugify';
 import { BlogService } from '../../../services/blog.service';
 import { DirectoryService } from '../../../services/directory.service';
 import { TagService } from '../../../services/tag.service';
 import { ToastService } from '../../../services/toast.service';
 import { EditorToolbar } from './editor-toolbar';
-import { previewExtensions, inlineEditableExtensions, MAX_EXCERPT_LENGTH } from '../editor/tiptap.config';
+import {
+  previewExtensions,
+  inlineEditableExtensions,
+  MAX_EXCERPT_LENGTH,
+} from '../editor/tiptap.config';
 import type { BlogDto } from '@x-console/dto';
 
 interface BlogEditorPageProps {
   pageId?: string;
-  onBack?: () => void;
 }
 
 // Helper functions moved outside component
 const formatDate = (date: Date | string | null | undefined): string => {
   if (!date) return '-';
   const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 };
 
-const getDirectoryPath = (blog: BlogDto | undefined, directories: { id: string; name: string }[]): string => {
+const getDirectoryPath = (
+  blog: BlogDto | undefined,
+  directories: { id: string; name: string }[]
+): string => {
   if (!blog?.directoryId) return '';
   const dir = directories.find((d) => d.id === blog.directoryId);
   return dir?.name || '';
 };
 
-export const BlogEditorPage = view(({ pageId: pageIdProp, onBack: onBackProp }: BlogEditorPageProps) => {
+export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps) => {
   const params = useParams();
-  const navigate = useNavigate();
   const blogService = useService(BlogService);
   const directoryService = useService(DirectoryService);
   const tagService = useService(TagService);
   const toastService = useService(ToastService);
-
+  const navigate = useNavigate();
   // Use props if provided, otherwise fall back to URL params / navigate
   const pageId = pageIdProp || params.id;
-  const onBack = onBackProp || (() => navigate('/blogs'));
 
   const blog = blogService.currentBlog;
 
@@ -72,7 +82,8 @@ export const BlogEditorPage = view(({ pageId: pageIdProp, onBack: onBackProp }: 
     content: blog?.content ? raw(blog.content) : '',
     editorProps: {
       attributes: {
-        class: 'prose prose-sm sm:prose-base dark:prose-invert max-w-none focus:outline-none min-h-[300px] px-0 py-3',
+        class:
+          'prose prose-sm sm:prose-base dark:prose-invert max-w-none focus:outline-none min-h-[300px] px-0 py-3',
       },
     },
     immediatelyRender: false,
@@ -236,12 +247,11 @@ export const BlogEditorPage = view(({ pageId: pageIdProp, onBack: onBackProp }: 
       const publishedBlog = await blogService.publishBlog(blog.id);
       if (publishedBlog) {
         toastService.success('博客发布成功');
-        onBack();
       }
     } finally {
       setIsPublishing(false);
     }
-  }, [blog, title, editEditor, blogService, toastService, onBack]);
+  }, [blog, title, editEditor, blogService, toastService]);
 
   // Get current editor based on mode
   const currentEditor = isPreview ? previewEditor : editEditor;
@@ -253,20 +263,23 @@ export const BlogEditorPage = view(({ pageId: pageIdProp, onBack: onBackProp }: 
   const handleDelete = useCallback(() => {
     if (!blog) return;
     if (window.confirm(`确定要删除博客 "${blog.title}" 吗？此操作不可撤销。`)) {
-      blogService.deleteBlog(blog.id).then(() => {
-        toastService.success('博客已删除');
-        onBack();
-      }).catch(() => {
-        toastService.error('删除失败');
-      });
+      blogService
+        .deleteBlog(blog.id)
+        .then(() => {
+          toastService.success('博客已删除');
+          navigate('/blogs');
+        })
+        .catch(() => {
+          toastService.error('删除失败');
+        });
     }
-  }, [blog, blogService, toastService, onBack]);
+  }, [blog, blogService, toastService]);
 
   // Loading state
   if (blogLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Loader2 className="w-6 h-6 animate-spin text-gray-500 dark:text-gray-400" />
+        <Loader2 className="w-6 h-6 animate-spin text-gray-500 dark:text-zinc-400" />
       </div>
     );
   }
@@ -274,29 +287,22 @@ export const BlogEditorPage = view(({ pageId: pageIdProp, onBack: onBackProp }: 
   if (!blog) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-gray-500 dark:text-gray-400">博客不存在</p>
+        <p className="text-gray-500 dark:text-zinc-400">博客不存在</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-dark-900">
+    <div className="flex flex-col h-full bg-white dark:bg-zinc-900">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-dark-700 shrink-0">
+      <div className="flex items-center justify-between px-3 py-3 border-b border-gray-200 dark:border-zinc-700 shrink-0">
         <div className="flex items-center gap-2">
-          <button
-            onClick={onBack}
-            className="p-1 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700 rounded transition-colors"
-            title="返回"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
           {getDirectoryPath(blog, directoryService.directories) && (
-            <span className="text-xs text-gray-500 dark:text-gray-400">
+            <span className="text-xs text-gray-500 dark:text-zinc-400">
               {getDirectoryPath(blog, directoryService.directories)} / {blog.title}
             </span>
           )}
-          <div className="flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
+          <div className="flex items-center gap-3 text-xs text-gray-400 dark:text-zinc-500">
             <span>创建于 {formatDate(blog.createdAt)}</span>
             <span>修改于 {formatDate(blog.updatedAt)}</span>
           </div>
@@ -306,20 +312,21 @@ export const BlogEditorPage = view(({ pageId: pageIdProp, onBack: onBackProp }: 
           {/* Delete button */}
           <button
             onClick={handleDelete}
-            className="p-1 text-gray-400 dark:text-gray-500 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 rounded transition-colors"
+            className="p-1 text-gray-400 dark:text-zinc-500 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 rounded transition-colors"
             title="删除"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
 
           {/* Button Group: Preview/Edit toggle */}
-          <div className="flex items-center rounded overflow-hidden border border-gray-200 dark:border-dark-600">
+          <div className="flex items-center rounded overflow-hidden border border-gray-200 dark:border-zinc-600">
             <button
               onClick={() => setIsPreview(true)}
               className={`px-2 py-1 text-xs font-medium transition-colors
-                ${isPreview
-                  ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
-                  : 'bg-gray-50 dark:bg-dark-700 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-600'
+                ${
+                  isPreview
+                    ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
+                    : 'bg-gray-50 dark:bg-zinc-700 text-gray-500 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-600'
                 }`}
             >
               <Eye className="w-3.5 h-3.5 inline mr-0.5" />
@@ -327,10 +334,11 @@ export const BlogEditorPage = view(({ pageId: pageIdProp, onBack: onBackProp }: 
             </button>
             <button
               onClick={() => setIsPreview(false)}
-              className={`px-2 py-1 text-xs font-medium transition-colors border-l border-gray-200 dark:border-dark-600
-                ${!isPreview
-                  ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
-                  : 'bg-gray-50 dark:bg-dark-700 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-600'
+              className={`px-2 py-1 text-xs font-medium transition-colors border-l border-gray-200 dark:border-zinc-600
+                ${
+                  !isPreview
+                    ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
+                    : 'bg-gray-50 dark:bg-zinc-700 text-gray-500 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-600'
                 }`}
             >
               <Edit2 className="w-3.5 h-3.5 inline mr-0.5" />
@@ -343,7 +351,7 @@ export const BlogEditorPage = view(({ pageId: pageIdProp, onBack: onBackProp }: 
             <button
               onClick={handleSaveDraft}
               disabled={localSaving || isPublishing}
-              className="p-1 text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-dark-700 rounded transition-colors disabled:opacity-50"
+              className="p-1 text-gray-400 dark:text-zinc-500 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded transition-colors disabled:opacity-50"
               title="保存草稿"
             >
               {localSaving ? (
@@ -382,37 +390,34 @@ export const BlogEditorPage = view(({ pageId: pageIdProp, onBack: onBackProp }: 
         <div className="max-w-6xl mx-auto px-4 py-6 space-y-6 mt-6">
           {/* Title - edit mode uses input, preview mode uses h1 */}
           {isPreview ? (
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              {title}
-            </h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-zinc-50">{title}</h1>
           ) : (
             <input
               type="text"
               value={title}
               onChange={(e) => handleTitleChange(e.target.value)}
               placeholder="博客标题"
-              className="w-full text-3xl font-bold bg-transparent border-none focus:outline-none placeholder:text-gray-400 dark:placeholder:text-gray-600 text-gray-900 dark:text-white"
+              className="w-full text-3xl font-bold bg-transparent border-none focus:outline-none placeholder:text-gray-400 dark:placeholder:text-zinc-600 text-gray-900 dark:text-zinc-50"
             />
           )}
 
           {/* Meta info row - shown in both modes */}
           <div className="flex flex-wrap items-center gap-4">
-            <span className="text-sm text-gray-500 dark:text-gray-400">
-              {wordCount} 字
-            </span>
+            <span className="text-sm text-gray-500 dark:text-zinc-400">{wordCount} 字</span>
 
             {/* Tags - edit mode supports toggle, preview mode is readonly */}
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm text-gray-500 dark:text-gray-400">标签:</span>
-              {tagService.tags.map((tag) => (
+              <span className="text-sm text-gray-500 dark:text-zinc-400">标签:</span>
+              {tagService.tags.map((tag) =>
                 isPreview ? (
                   <span
                     key={tag.id}
                     className={`
                       px-2 py-1 text-xs font-medium rounded-full
-                      ${selectedTagIds.includes(tag.id)
-                        ? 'text-white'
-                        : 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-dark-700'
+                      ${
+                        selectedTagIds.includes(tag.id)
+                          ? 'text-white'
+                          : 'text-gray-600 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-700'
                       }
                     `}
                     style={selectedTagIds.includes(tag.id) ? { backgroundColor: tag.color } : {}}
@@ -425,9 +430,10 @@ export const BlogEditorPage = view(({ pageId: pageIdProp, onBack: onBackProp }: 
                     onClick={() => toggleTag(tag.id)}
                     className={`
                       px-2 py-1 text-xs font-medium rounded-full transition-colors
-                      ${selectedTagIds.includes(tag.id)
-                        ? 'text-white'
-                        : 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-dark-700 hover:bg-gray-200 dark:hover:bg-dark-600'
+                      ${
+                        selectedTagIds.includes(tag.id)
+                          ? 'text-white'
+                          : 'text-gray-600 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-700 hover:bg-gray-200 dark:hover:bg-zinc-600'
                       }
                     `}
                     style={selectedTagIds.includes(tag.id) ? { backgroundColor: tag.color } : {}}
@@ -435,17 +441,19 @@ export const BlogEditorPage = view(({ pageId: pageIdProp, onBack: onBackProp }: 
                     {tag.name}
                   </button>
                 )
-              ))}
+              )}
               {!isPreview && tagService.tags.length > 0 && (
                 <button
-                  onClick={() => { /* TODO: Add tag creation */ }}
-                  className="px-2 py-1 text-xs font-medium rounded-full border border-dashed border-gray-300 dark:border-dark-600 text-gray-500 hover:border-primary-500 hover:text-primary-500 transition-colors"
+                  onClick={() => {
+                    /* TODO: Add tag creation */
+                  }}
+                  className="px-2 py-1 text-xs font-medium rounded-full border border-dashed border-gray-300 dark:border-zinc-600 text-gray-500 hover:border-primary-500 hover:text-primary-500 transition-colors"
                 >
                   + 添加
                 </button>
               )}
               {tagService.tags.length === 0 && (
-                <span className="text-sm text-gray-400 dark:text-gray-600">暂无标签</span>
+                <span className="text-sm text-gray-400 dark:text-zinc-600">暂无标签</span>
               )}
             </div>
           </div>
@@ -458,7 +466,7 @@ export const BlogEditorPage = view(({ pageId: pageIdProp, onBack: onBackProp }: 
 
           {/* Placeholder if editor is empty (only in edit mode) */}
           {!isPreview && !editEditor?.getText() && contentLoaded && (
-            <div className="text-center py-12 text-gray-400 dark:text-gray-600 pointer-events-none">
+            <div className="text-center py-12 text-gray-400 dark:text-zinc-600 pointer-events-none">
               开始写作...
             </div>
           )}

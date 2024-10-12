@@ -58,8 +58,8 @@ export const SearchModal = view((props: SearchModalProps) => {
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
       try {
-        await blogService.loadBlogs({ search: query, pageSize: 20 });
-        const searchResults: SearchResult[] = blogService.blogs.map((blog) => {
+        const blogs = await blogService.searchBlogs(query, 20);
+        const searchResults: SearchResult[] = blogs.map((blog) => {
           const dir = directoryService.directories.find((d) => d.id === blog.directoryId);
           return {
             ...blog,
@@ -78,7 +78,7 @@ export const SearchModal = view((props: SearchModalProps) => {
         clearTimeout(debounceRef.current);
       }
     };
-  }, [query]);
+  }, [query, blogService, directoryService]);
 
   // Keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -116,9 +116,9 @@ export const SearchModal = view((props: SearchModalProps) => {
       />
 
       {/* Modal */}
-      <div className="relative bg-white dark:bg-dark-800 rounded-xl shadow-2xl w-[560px] max-h-[80vh] flex flex-col overflow-hidden">
+      <div className="relative bg-white dark:bg-zinc-800 rounded-xl shadow-2xl w-[560px] max-h-[80vh] flex flex-col overflow-hidden">
         {/* Search Input */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-dark-700">
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-zinc-700">
           <Search className="w-5 h-5 text-gray-400" />
           <input
             ref={inputRef}
@@ -127,11 +127,11 @@ export const SearchModal = view((props: SearchModalProps) => {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="搜索博客..."
-            className="flex-1 bg-transparent text-lg outline-none text-gray-900 dark:text-white placeholder:text-gray-400"
+            className="flex-1 bg-transparent text-lg outline-none text-gray-900 dark:text-zinc-50 placeholder:text-gray-400"
           />
           <button
             onClick={props.onClose}
-            className="p-1 hover:bg-gray-100 dark:hover:bg-dark-700 rounded"
+            className="p-1 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded"
           >
             <X className="w-5 h-5 text-gray-400" />
           </button>
@@ -156,16 +156,16 @@ export const SearchModal = view((props: SearchModalProps) => {
                   className={`flex items-start gap-3 w-full px-3 py-2 rounded-lg text-left ${
                     index === selectedIndex
                       ? 'bg-primary-50 dark:bg-primary-900/30'
-                      : 'hover:bg-gray-100 dark:hover:bg-dark-700'
+                      : 'hover:bg-gray-100 dark:hover:bg-zinc-700'
                   }`}
                 >
                   <FileText className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 dark:text-white truncate">
+                    <p className="font-medium text-gray-900 dark:text-zinc-50 truncate">
                       {blog.title}
                     </p>
                     {blog.directoryName && (
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm text-gray-500 dark:text-zinc-400">
                         {blog.directoryName}
                       </p>
                     )}

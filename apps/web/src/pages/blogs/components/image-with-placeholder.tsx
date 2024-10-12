@@ -52,7 +52,7 @@ export function ImageWithPlaceholder({
   if (loading || !url) {
     return (
       <div
-        className={`bg-gray-200 dark:bg-dark-700 animate-pulse flex items-center justify-center ${className}`}
+        className={`bg-gray-200 dark:bg-zinc-700 animate-pulse flex items-center justify-center ${className}`}
         style={
           aspectRatio
             ? { aspectRatio: `${width}/${height}` }
