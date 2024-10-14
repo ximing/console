@@ -91,7 +91,7 @@ export const Layout = view(({ children }: LayoutProps) => {
   const needsTopPadding = isElectronApp && isMac;
 
   return (
-    <div className="h-screen flex bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-gray-50 transition-colors">
+    <div className="h-screen flex bg-gray-50 dark:bg-zinc-900 text-gray-900 dark:text-zinc-50 transition-colors">
       {/* Electron macOS Drag Area - For traffic light buttons */}
       {needsTopPadding && (
         <div
@@ -102,7 +102,7 @@ export const Layout = view(({ children }: LayoutProps) => {
       )}
 
       {/* Left Sidebar - Fixed 70px */}
-      <aside className="w-[70px] flex-shrink-0 border-r border-gray-100 dark:border-dark-800 flex flex-col items-center py-4 gap-4">
+      <aside className="w-[70px] flex-shrink-0 border-r border-gray-100 dark:border-zinc-800 flex flex-col items-center py-4 gap-4">
         {/* Logo Area - Top with padding for macOS Electron */}
         <div
           className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden ${needsTopPadding ? 'mt-4' : ''}`}
@@ -127,7 +127,7 @@ export const Layout = view(({ children }: LayoutProps) => {
             className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors ${
               isHomePage
                 ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-800'
+                : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-dark-800'
             }`}
             title="备忘录"
             aria-label="备忘录"
@@ -143,7 +143,7 @@ export const Layout = view(({ children }: LayoutProps) => {
             className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors ${
               isTasksPage
                 ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-800'
+                : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-dark-800'
             }`}
             title="任务编排"
             aria-label="任务编排"
@@ -160,7 +160,7 @@ export const Layout = view(({ children }: LayoutProps) => {
             className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors relative ${
               isNotificationsPage
                 ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-800'
+                : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-dark-800'
             }`}
             title="通知中心"
             aria-label="通知中心"
@@ -182,7 +182,7 @@ export const Layout = view(({ children }: LayoutProps) => {
             className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors ${
               isGithubPage
                 ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-800'
+                : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-dark-800'
             }`}
             title="GitHub"
             aria-label="GitHub"
@@ -199,7 +199,7 @@ export const Layout = view(({ children }: LayoutProps) => {
             className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors ${
               isBlogPage
                 ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-800'
+                : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-dark-800'
             }`}
             title="博客"
             aria-label="博客"
@@ -222,7 +222,7 @@ export const Layout = view(({ children }: LayoutProps) => {
             className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors ${
               isSettingsPage
                 ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-800'
+                : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-dark-800'
             }`}
             title="设置"
             aria-label="设置"
@@ -233,7 +233,7 @@ export const Layout = view(({ children }: LayoutProps) => {
           {/* Theme Toggle Button */}
           <button
             onClick={handleThemeToggle}
-            className="w-12 h-12 rounded-lg flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-800 transition-colors"
+            className="w-12 h-12 rounded-lg flex items-center justify-center text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-dark-800 transition-colors"
             title={themeService.isDark() ? '切换到亮色模式' : '切换到暗色模式'}
             aria-label="切换主题"
           >
@@ -244,7 +244,7 @@ export const Layout = view(({ children }: LayoutProps) => {
           <div className="relative w-full" ref={menuRef}>
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="w-12 h-12 mx-auto flex items-center justify-center bg-gray-100 dark:bg-dark-800 rounded-lg hover:bg-gray-200 dark:hover:bg-dark-700 transition-colors"
+              className="w-12 h-12 mx-auto flex items-center justify-center bg-gray-100 dark:bg-zinc-800 rounded-lg hover:bg-gray-200 dark:hover:bg-dark-700 transition-colors"
               title={userName}
               aria-label="用户菜单"
               aria-expanded={isMenuOpen}
@@ -264,11 +264,11 @@ export const Layout = view(({ children }: LayoutProps) => {
 
             {/* Dropdown Menu - Positioned to the right of sidebar */}
             {isMenuOpen && (
-              <div className="absolute left-full ml-2 bottom-0 w-56 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg shadow-lg z-50">
+              <div className="absolute left-full ml-2 bottom-0 w-56 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg shadow-lg z-50">
                 {/* User Info Section */}
-                <div className="px-4 py-3 border-b border-gray-200 dark:border-dark-700">
+                <div className="px-4 py-3 border-b border-gray-200 dark:border-zinc-700">
                   <p className="font-medium text-gray-900 dark:text-white text-sm">{userName}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-500 truncate mt-1">
+                  <p className="text-xs text-gray-500 dark:text-zinc-500 truncate mt-1">
                     {userEmail}
                   </p>
                 </div>
