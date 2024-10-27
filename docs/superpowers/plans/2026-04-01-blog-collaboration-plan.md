@@ -490,21 +490,17 @@ Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
 Add after existing imports:
 
 ```ts
+import { useMemo, useRef, useEffect } from 'react';
 import * as Y from 'yjs';
+import { WebsocketProvider } from 'y-websocket';
 import Collaboration from '@tiptap/extension-collaboration';
-import { CollaborationCursor } from '@tiptap/y-tiptap';
-import { createCollaborationProvider } from './collaboration-provider';
+import { CollaborationCursor } from '@tiptap/extension-collaboration-cursor';
 import { CollabPresence } from './components/collab-presence';
 ```
 
-- [ ] **Step 2: Add state for collaboration**
+- [ ] **Step 2: Remove or ignore dead collabProvider state**
 
-Find the `// Local state (UI-only, not duplicated in service)` section and add:
-
-```ts
-// Collaboration state
-const [collabProvider, setCollabProvider] = useState<ReturnType<typeof createCollaborationProvider> | null>(null);
-```
+The plan originally included `const [collabProvider, setCollabProvider] = useState(...)` — this is unused and should be removed or simply not added. The JSX reference to `collabProvider?.awareness` will be replaced with direct `awareness` variable from Step 3.
 
 - [ ] **Step 3: Rewrite editor.tsx integration**
 
@@ -522,26 +518,36 @@ const [collabProvider, setCollabProvider] = useState<ReturnType<typeof createCol
 // Determine blogId (available synchronously from params)
 const blogId = id || params.id;
 
-// Get JWT token — assumes token is available (non-httpOnly cookie or passed via server)
-// If token is httpOnly, this feature requires a separate collab token endpoint
-const token = localStorage.getItem('collab_token') || '';
+// Get JWT token from localStorage — use same key as collab_token
+// NOTE: If aimo_token is httpOnly, a separate non-httpOnly collab token endpoint
+// is needed. Use 'aimo_token' here once that endpoint exists.
+const token = localStorage.getItem('aimo_token') || localStorage.getItem('collab_token') || '';
 
-// Create Y.Doc + WebsocketProvider synchronously (blogId is known at this point)
-const ydoc = new Y.Doc();
-const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-const wsUrl = `${wsProtocol}//${window.location.host}`;
-const roomName = `blog:${blogId}`;
-const provider = new WebsocketProvider(wsUrl, roomName, ydoc, {
-  params: { token },
-});
-const awareness = provider.awareness;
+// Create Y.Doc + WebsocketProvider wrapped in useMemo to avoid recreation on every render
+const ydoc = useMemo(() => new Y.Doc(), []);
+const provider = useMemo(() => {
+  if (!blogId) return null;
+  const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl = `${wsProtocol}//${window.location.host}`;
+  const roomName = `blog:${blogId}`;
+  return new WebsocketProvider(wsUrl, roomName, ydoc, { params: { token } });
+}, [ydoc, blogId, token]);
 
-// Set local user awareness
-awareness.setLocalStateField('user', {
-  name: blogService.currentBlog?.userId || 'User',
-  color: '#f87171',
-  id: blogService.currentBlog?.userId || '',
-});
+const awareness = provider?.awareness;
+
+// Set local user awareness (deferred until blogService.currentUser is available)
+const userId = blogService.currentBlog?.userId || '';
+const userName = blogService.currentBlog?.userId || 'User'; // TODO: use actual username
+const userColor = USER_COLORS[Math.abs(userId.split('').reduce((h, c) => ((h << 5) - h) + c.charCodeAt(0), 0)) % USER_COLORS.length];
+
+useEffect(() => {
+  if (!awareness || !userId) return;
+  awareness.setLocalStateField('user', {
+    name: userName,
+    color: userColor,
+    id: userId,
+  });
+}, [awareness, userId, userName, userColor]);
 ```
 
 3. **Build extensions with useMemo** (includes Collaboration from the start):
@@ -557,15 +563,12 @@ const extensions = useMemo(() => {
     CollaborationCursor.configure({
       provider: provider,
       user: {
-        name: blogService.currentBlog?.userId || 'User',
-        color: '#f87171',
+        name: userName,
+        color: userColor,
       },
     }),
   ];
-}, [ydoc, provider]); // Only rebuild if ydoc/provider changes
-
-// Keep a ref to the provider for cleanup
-const providerRef = useRef(provider);
+}, [ydoc, provider, userName, userColor]); // rebuild when user info changes
 ```
 
 4. **Replace the useEditor call** — pass the extensions from useMemo:
@@ -643,8 +646,8 @@ Change it to:
 ```tsx
 <EditorToolbar editor={editor} blogId={blogId || ''} />
 <CollabPresence
-  awareness={collabProvider?.awareness || null}
-  currentUserId={blogService.currentBlog?.userId || ''}
+  awareness={awareness}
+  currentUserId={userId}
 />
 ```
 
@@ -747,17 +750,19 @@ Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
 Add this `useEffect` after the collab setup effect:
 
 ```ts
+// Keep editor in a ref for use in interval
+const editorRef = useRef(editor);
+useEffect(() => { editorRef.current = editor; }, [editor]);
+
 // 30-second snapshot timer
 useEffect(() => {
-  if (!collabProvider || !blogId) return;
+  if (!provider || !ydoc || !blogId) return;
 
   const SNAPSHOT_INTERVAL = 30000; // 30 seconds
 
   const timer = setInterval(() => {
-    if (!collabProvider.ydoc) return;
-
     // Get current editor content as JSON
-    const content = editor?.getJSON();
+    const content = editorRef.current?.getJSON();
     if (content) {
       const snapshot = JSON.stringify(content);
       blogService.saveSnapshot(blogId, snapshot);
@@ -765,7 +770,7 @@ useEffect(() => {
   }, SNAPSHOT_INTERVAL);
 
   return () => clearInterval(timer);
-}, [collabProvider, blogId, editor, blogService]);
+}, [provider, ydoc, blogId, blogService]);
 ```
 
 - [ ] **Step 2: Fix JWT token retrieval**
