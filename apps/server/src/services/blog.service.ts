@@ -308,4 +308,38 @@ export class BlogService {
 
     return results.length > 0 ? results[0] : null;
   }
+
+  /**
+   * Save a collaboration snapshot of the blog content
+   */
+  async saveSnapshot(id: string, userId: string, contentSnapshot: string): Promise<void> {
+    const db = getDatabase();
+    await db
+      .update(blogs)
+      .set({
+        contentSnapshot,
+        lastSnapshotAt: new Date(),
+      })
+      .where(and(eq(blogs.id, id), eq(blogs.userId, userId)));
+  }
+
+  /**
+   * Get the collaboration snapshot for a blog
+   */
+  async getSnapshot(id: string, userId: string): Promise<{ contentSnapshot: string | null; lastSnapshotAt: Date | null }> {
+    const db = getDatabase();
+    const results = await db
+      .select({ contentSnapshot: blogs.contentSnapshot, lastSnapshotAt: blogs.lastSnapshotAt })
+      .from(blogs)
+      .where(and(eq(blogs.id, id), eq(blogs.userId, userId)))
+      .limit(1);
+
+    if (results.length === 0) {
+      return { contentSnapshot: null, lastSnapshotAt: null };
+    }
+    return {
+      contentSnapshot: results[0].contentSnapshot ?? null,
+      lastSnapshotAt: results[0].lastSnapshotAt ?? null,
+    };
+  }
 }
