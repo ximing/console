@@ -17,6 +17,7 @@ import { initializeDatabase, checkConnectionHealth, closeDatabase } from './db/c
 import { runMigrations } from './db/migrate.js';
 import { initIOC } from './ioc.js';
 import { authHandler } from './middlewares/auth-handler.js';
+import { collabAuthMiddleware } from './middlewares/collab-auth.js';
 import { errorHandler } from './middlewares/error-handler.js';
 import { SchedulerService } from './services/scheduler.service.js';
 import { SocketIOService } from './services/socket-io.service.js';
@@ -115,6 +116,18 @@ export async function createApp() {
 
   const server = app.listen(config.port, () => {
     logger.info(`Server is running on port ${config.port}`);
+  });
+
+  // y-websocket collaboration server at /collab-ws route
+  app.use('/collab-ws', collabAuthMiddleware, async (req: any, socket: any, head: any) => {
+    const room = req.collabRoom;
+    const docName = room; // e.g. "blog:{id}"
+
+    logger.info(`Collab WebSocket connecting`, { room, userId: req.collabUser.id });
+
+    // Dynamic import because y-websocket/bin/utils is CommonJS and this project is ESM
+    const { setupWSConnection } = await import('y-websocket/bin/utils');
+    setupWSConnection(req, socket, { docName });
   });
 
   // Initialize Socket.IO
