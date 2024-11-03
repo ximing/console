@@ -17,7 +17,7 @@ import { initializeDatabase, checkConnectionHealth, closeDatabase } from './db/c
 import { runMigrations } from './db/migrate.js';
 import { initIOC } from './ioc.js';
 import { authHandler } from './middlewares/auth-handler.js';
-import { collabAuthMiddleware } from './middlewares/collab-auth.js';
+import { verifyCollabToken } from './middlewares/collab-auth.js';
 import { errorHandler } from './middlewares/error-handler.js';
 import { SchedulerService } from './services/scheduler.service.js';
 import { SocketIOService } from './services/socket-io.service.js';
@@ -118,16 +118,42 @@ export async function createApp() {
     logger.info(`Server is running on port ${config.port}`);
   });
 
-  // y-websocket collaboration server at /collab-ws route
-  app.use('/collab-ws', collabAuthMiddleware, async (req: any, socket: any, head: any) => {
-    const room = req.collabRoom;
-    const docName = room; // e.g. "blog:{id}"
+  // y-websocket collaboration — use server.on('upgrade') for WebSocket handling
+  // Cache the dynamic import at module level to avoid repeated imports
+  let setupWSConnection: any = null;
 
-    logger.info(`Collab WebSocket connecting`, { room, userId: req.collabUser.id });
+  server.on('upgrade', async (req: any, socket: any, head: any) => {
+    const url = new URL(req.url, `http://${req.headers.host}`);
 
-    // Dynamic import because y-websocket/bin/utils is CommonJS and this project is ESM
-    const { setupWSConnection } = await import('y-websocket/bin/utils');
-    setupWSConnection(req, socket, { docName });
+    // Only handle /collab-ws path
+    if (!url.pathname.startsWith('/collab-ws')) return;
+
+    const token = url.searchParams.get('token');
+    const room = url.searchParams.get('room');
+
+    if (!token || !room) {
+      socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+      socket.destroy();
+      return;
+    }
+
+    const user = verifyCollabToken(token);
+    if (!user) {
+      socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+      socket.destroy();
+      return;
+    }
+
+    logger.info(`Collab WebSocket connecting`, { room, userId: user.id });
+
+    // Load setupWSConnection once (CommonJS module, cached after first load)
+    if (!setupWSConnection) {
+      const mod = await import('y-websocket/bin/utils');
+      setupWSConnection = mod.setupWSConnection;
+    }
+
+    // Set docName from room, e.g. "blog:{id}"
+    setupWSConnection(req, socket, head, { docName: room });
   });
 
   // Initialize Socket.IO
