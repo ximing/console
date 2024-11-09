@@ -1,8 +1,12 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { view, useService } from '@rabjs/react';
 import { useParams, useNavigate } from 'react-router';
 import { useEditor, EditorContent } from '@tiptap/react';
 import { Loader2, Save, Send, ArrowLeft } from 'lucide-react';
+import * as Y from 'yjs';
+import { WebsocketProvider } from 'y-websocket';
+import Collaboration from '@tiptap/extension-collaboration';
+import { CollaborationCursor } from '@tiptap/extension-collaboration-cursor';
 import { BlogService } from '../../../services/blog.service';
 import { DirectoryService } from '../../../services/directory.service';
 import { TagService } from '../../../services/tag.service';
@@ -11,6 +15,8 @@ import { EditorToolbar } from '../components/editor-toolbar';
 import { Select } from '../../../components/select';
 import { editableExtensions } from './tiptap.config';
 import { uploadImagePlaceholder } from '../../../utils/editor';
+import { getUserColor } from './collaboration-provider';
+import { CollabPresence } from './components/collab-presence';
 
 interface BlogEditorProps {
   id?: string;
@@ -38,9 +44,59 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
   // Check if we're editing an existing blog
   const isEditing = !!blogId;
 
+  // Get JWT token for collaboration
+  const token = useMemo(() => {
+    return localStorage.getItem('aimo_token') || localStorage.getItem('collab_token') || '';
+  }, []);
+
+  // Create Y.Doc with useMemo (stable across renders)
+  const ydoc = useMemo(() => new Y.Doc(), []);
+
+  // Create WebsocketProvider with useMemo (null if no blogId)
+  const provider = useMemo(() => {
+    if (!blogId) return null;
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${wsProtocol}//${window.location.host}`;
+    const roomName = `blog:${blogId}`;
+    return new WebsocketProvider(wsUrl, roomName, ydoc, { params: { token } });
+  }, [blogId, ydoc, token]);
+
+  // Get awareness from provider
+  const awareness = provider?.awareness ?? null;
+
+  // Compute user info
+  const userId = blogService.currentBlog?.userId || '';
+  const userName = userId ? `User ${userId.slice(0, 6)}` : 'Guest';
+  const userColor = getUserColor(userId);
+
+  // Set awareness user info
+  useEffect(() => {
+    if (!awareness || !userId) return;
+    awareness.setLocalStateField('user', {
+      name: userName,
+      color: userColor,
+      id: userId,
+    });
+  }, [awareness, userId, userName, userColor]);
+
+  // Build extensions with useMemo (Collaboration added when provider exists)
+  const extensions = useMemo(() => {
+    const baseExtensions = [...editableExtensions];
+    baseExtensions.push(Collaboration.configure({ document: ydoc }));
+    if (provider) {
+      baseExtensions.push(
+        CollaborationCursor.configure({
+          provider: provider,
+          user: { name: userName, color: userColor },
+        })
+      );
+    }
+    return baseExtensions;
+  }, [ydoc, provider, userName, userColor]);
+
   // Initialize editor
   const editor = useEditor({
-    extensions: editableExtensions,
+    extensions,
     content: '',
     editorProps: {
       attributes: {
@@ -149,6 +205,32 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
         });
     }
   }, [isEditing, blogId, editor, blogService, toastService]);
+
+  // Keep editor ref for interval use
+  const editorRef = useRef(editor);
+  useEffect(() => { editorRef.current = editor; }, [editor]);
+
+  // Set initial content after Y.Doc syncs
+  useEffect(() => {
+    if (!editor || !contentLoaded || !provider) return;
+    const handleSync = () => {
+      const ytext = ydoc.getText('prosemirror');
+      if (ytext.length === 0 && blogService.currentBlog?.content) {
+        editor.commands.setContent(blogService.currentBlog.content);
+      }
+    };
+    provider.on('synced', handleSync);
+    handleSync();
+    return () => { provider.off('synced', handleSync); };
+  }, [editor, contentLoaded, ydoc, provider, blogService.currentBlog]);
+
+  // Add cleanup useEffect
+  useEffect(() => {
+    return () => {
+      provider?.destroy();
+      ydoc.destroy();
+    };
+  }, [provider, ydoc]);
 
   // Handle title change with auto-save
   const handleTitleChange = useCallback(
@@ -397,6 +479,7 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
 
           {/* Editor Toolbar */}
           <EditorToolbar editor={editor} blogId={blogId || ''} />
+          <CollabPresence awareness={awareness} currentUserId={userId} />
 
           {/* Editor Content */}
           <EditorContent editor={editor} className="min-h-[400px]" />
