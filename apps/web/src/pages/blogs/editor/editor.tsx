@@ -222,15 +222,21 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
     provider.on('synced', handleSync);
     handleSync();
     return () => { provider.off('synced', handleSync); };
-  }, [editor, contentLoaded, ydoc, provider, blogService.currentBlog]);
+  }, [editor, contentLoaded, ydoc, provider]);
 
-  // Add cleanup useEffect
+  // Cleanup: destroy provider when it changes (blogId changes)
   useEffect(() => {
     return () => {
       provider?.destroy();
+    };
+  }, [provider]);
+
+  // Cleanup: destroy ydoc only on unmount (ydoc is shared across provider changes)
+  useEffect(() => {
+    return () => {
       ydoc.destroy();
     };
-  }, [provider, ydoc]);
+  }, [ydoc]);
 
   // Handle title change with auto-save
   const handleTitleChange = useCallback(
