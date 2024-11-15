@@ -1,13 +1,19 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { view, useService, raw } from '@rabjs/react';
 import { useParams, useNavigate } from 'react-router';
 import { useEditor, EditorContent } from '@tiptap/react';
 import { Loader2, Save, Send, Eye, Edit2, Trash2 } from 'lucide-react';
 import slugify from 'slugify';
+import * as Y from 'yjs';
+import { HocuspocusProvider } from '@hocuspocus/provider';
+import { IndexeddbPersistence } from 'y-indexeddb';
+import Collaboration from '@tiptap/extension-collaboration';
+import { CollaborationCursor } from '@tiptap/extension-collaboration-cursor';
 import { BlogService } from '../../../services/blog.service';
 import { DirectoryService } from '../../../services/directory.service';
 import { TagService } from '../../../services/tag.service';
 import { ToastService } from '../../../services/toast.service';
+import { authService } from '../../../services/auth.service';
 import { EditorToolbar } from './editor-toolbar';
 import {
   previewExtensions,
@@ -15,6 +21,8 @@ import {
   MAX_EXCERPT_LENGTH,
 } from '../editor/tiptap.config';
 import type { BlogDto } from '@x-console/dto';
+import { getUserColor } from '../editor/collaboration-provider';
+import { CollabPresence } from '../editor/components/collab-presence';
 
 interface BlogEditorPageProps {
   pageId?: string;
@@ -62,6 +70,116 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
   const [contentLoaded, setContentLoaded] = useState(false);
   const [localSaving, setLocalSaving] = useState(false);
   const [blogLoading, setBlogLoading] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'connecting'>('disconnected');
+
+  // Get JWT token for collaboration
+  const token = authService.token || localStorage.getItem('aimo_token') || '';
+
+  // Create Y.Doc with useMemo (stable across renders)
+  const ydoc = useMemo(() => new Y.Doc(), []);
+
+  // Create HocuspocusProvider with useMemo (null if no pageId)
+  const provider = useMemo(() => {
+    if (!pageId) return null;
+    // In dev (http), use direct WebSocket to server port
+    // In prod (https), use same origin with wss
+    const isHttp = location.origin.includes('http://');
+    const wsUrl = isHttp
+      ? `ws://localhost:3100/collaboration`
+      : `${location.origin.replace(/^http/, 'ws')}/collaboration`;
+    const docName = `blog:${pageId}`;
+    console.log('[Collab] Creating HocuspocusProvider:', { wsUrl, docName, hasToken: !!token });
+    return new HocuspocusProvider({
+      url: wsUrl,
+      name: docName,
+      document: ydoc,
+      token: token,
+      onSynced: () => {
+        console.log('[Collab] Synced:', docName);
+        setConnectionStatus('connected');
+      },
+      onDisconnect: () => {
+        console.log('[Collab] Disconnected:', docName);
+        setConnectionStatus('disconnected');
+      },
+      onConnect: () => {
+        console.log('[Collab] Connecting:', docName);
+        setConnectionStatus('connecting');
+      },
+    });
+  }, [pageId, ydoc, token]);
+
+  // IndexedDB persistence - offline support
+  const indexeddbProvider = useMemo(() => {
+    if (!pageId) return null;
+    return new IndexeddbPersistence(`blog-${pageId}`, ydoc);
+  }, [pageId, ydoc]);
+
+  // Get awareness from provider
+  const awareness = provider?.awareness ?? null;
+
+  // Compute user info
+  const userId = blog?.userId || '';
+  const userName = userId ? `User ${userId.slice(0, 6)}` : 'Guest';
+  const userColor = getUserColor(userId);
+
+  // Set awareness user info
+  useEffect(() => {
+    if (!awareness || !userId) return;
+    awareness.setLocalStateField('user', {
+      name: userName,
+      color: userColor,
+      id: userId,
+    });
+  }, [awareness, userId, userName, userColor]);
+
+  // Track WebSocket connection status
+  useEffect(() => {
+    if (!provider) return;
+
+    const handleStatus = ({ status }: { status: string }) => {
+      console.log('[Collab] Connection status:', status);
+      setConnectionStatus(status as 'connected' | 'disconnected' | 'connecting');
+    };
+
+    const handleError = (error: Error) => {
+      console.error('[Collab] Connection error:', error);
+      setConnectionStatus('disconnected');
+    };
+
+    provider.on('status', handleStatus);
+    provider.on('error', handleError);
+    return () => {
+      provider.off('status', handleStatus);
+      provider.off('error', handleError);
+    };
+  }, [provider]);
+
+  // Cleanup: destroy providers on unmount
+  useEffect(() => {
+    return () => {
+      provider?.destroy();
+      indexeddbProvider?.destroy();
+      ydoc.destroy();
+    };
+  }, []);
+
+  // 30-second snapshot timer
+  useEffect(() => {
+    if (!provider || !ydoc || !pageId) return;
+
+    const SNAPSHOT_INTERVAL = 30000;
+
+    const timer = setInterval(() => {
+      const content = editEditor?.getJSON();
+      if (content) {
+        const snapshot = JSON.stringify(content);
+        blogService.saveSnapshot(pageId, snapshot);
+      }
+    }, SNAPSHOT_INTERVAL);
+
+    return () => clearInterval(timer);
+  }, [provider, ydoc, pageId, blogService]);
 
   // Refs for debounce
   const titleRef = useRef(blog?.title || '');
@@ -76,9 +194,23 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
     immediatelyRender: false,
   });
 
-  // Edit editor (editable)
+  // Edit editor (editable) - build extensions with collaboration
+  const editExtensions = useMemo(() => {
+    const baseExtensions = [...(inlineEditableExtensions as any)];
+    baseExtensions.push(Collaboration.configure({ document: ydoc }));
+    if (provider) {
+      baseExtensions.push(
+        CollaborationCursor.configure({
+          provider: provider,
+          user: { name: userName, color: userColor },
+        })
+      );
+    }
+    return baseExtensions;
+  }, [ydoc, provider, userName, userColor]);
+
   const editEditor = useEditor({
-    extensions: inlineEditableExtensions,
+    extensions: editExtensions,
     content: blog?.content ? raw(blog.content) : '',
     editorProps: {
       attributes: {
@@ -309,6 +441,20 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
         </div>
 
         <div className="flex items-center gap-1">
+          {/* Collaboration status */}
+          {provider && (
+            <span
+              className={`text-xs px-2 py-0.5 rounded-full ${
+                connectionStatus === 'connected'
+                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                  : connectionStatus === 'connecting'
+                  ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                  : 'bg-gray-100 text-gray-500 dark:bg-zinc-700 dark:text-zinc-400'
+              }`}
+            >
+              {connectionStatus === 'connected' ? '在线' : connectionStatus === 'connecting' ? '连接中...' : '离线'}
+            </span>
+          )}
           {/* Delete button */}
           <button
             onClick={handleDelete}
@@ -382,6 +528,7 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
       {!isPreview && (
         <div className="shrink-0">
           <EditorToolbar editor={editEditor} blogId={blog.id} />
+          <CollabPresence awareness={awareness} currentUserId={userId} />
         </div>
       )}
 

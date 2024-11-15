@@ -17,10 +17,10 @@ import { initializeDatabase, checkConnectionHealth, closeDatabase } from './db/c
 import { runMigrations } from './db/migrate.js';
 import { initIOC } from './ioc.js';
 import { authHandler } from './middlewares/auth-handler.js';
-import { verifyCollabToken } from './middlewares/collab-auth.js';
 import { errorHandler } from './middlewares/error-handler.js';
 import { SchedulerService } from './services/scheduler.service.js';
 import { SocketIOService } from './services/socket-io.service.js';
+import { initCollab } from './collaboration.js';
 import { logger } from './utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -118,43 +118,9 @@ export async function createApp() {
     logger.info(`Server is running on port ${config.port}`);
   });
 
-  // y-websocket collaboration — use server.on('upgrade') for WebSocket handling
-  // Cache the dynamic import at module level to avoid repeated imports
-  let setupWSConnection: any = null;
-
-  server.on('upgrade', async (req: any, socket: any, head: any) => {
-    const url = new URL(req.url, `http://${req.headers.host}`);
-
-    // Only handle /collab-ws path
-    if (!url.pathname.startsWith('/collab-ws')) return;
-
-    const token = url.searchParams.get('token');
-    const room = url.searchParams.get('room');
-
-    if (!token || !room) {
-      socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
-      socket.destroy();
-      return;
-    }
-
-    const user = verifyCollabToken(token);
-    if (!user) {
-      socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
-      socket.destroy();
-      return;
-    }
-
-    logger.info(`Collab WebSocket connecting`, { room, userId: user.id });
-
-    // Load setupWSConnection once (CommonJS module, cached after first load)
-    if (!setupWSConnection) {
-      const mod = await import('y-websocket/bin/utils');
-      setupWSConnection = mod.setupWSConnection;
-    }
-
-    // Set docName from room, e.g. "blog:{id}"
-    setupWSConnection(req, socket, head, { docName: room });
-  });
+  // Initialize Hocuspocus collaboration server
+  // This sets up WebSocket handling at /collaboration endpoint
+  initCollab(server);
 
   // Initialize Socket.IO
   const socketService = Container.get(SocketIOService);

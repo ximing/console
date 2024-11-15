@@ -112,6 +112,16 @@ export const blogApi = {
   saveSnapshot: async (blogId: string, contentSnapshot: string): Promise<void> => {
     await request.patch(`/api/v1/blogs/${blogId}/snapshot`, { contentSnapshot });
   },
+
+  /**
+   * Get collaboration snapshot for a blog
+   */
+  getSnapshot: async (blogId: string): Promise<{ contentSnapshot: string | null; lastSnapshotAt: string | null }> => {
+    const response = await request.get<unknown, ApiResponse<{ contentSnapshot: string | null; lastSnapshotAt: string | null }>>(
+      `/api/v1/blogs/${blogId}/snapshot`
+    );
+    return response.data;
+  },
 };
 
 /**
