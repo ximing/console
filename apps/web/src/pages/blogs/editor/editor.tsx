@@ -81,7 +81,7 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
 
   // Build extensions with useMemo (Collaboration added when provider exists)
   const extensions = useMemo(() => {
-    const baseExtensions = [...editableExtensions];
+    const baseExtensions = [...(editableExtensions as any)];
     baseExtensions.push(Collaboration.configure({ document: ydoc }));
     if (provider) {
       baseExtensions.push(
@@ -91,7 +91,7 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
         })
       );
     }
-    return baseExtensions;
+    return baseExtensions as any;
   }, [ydoc, provider, userName, userColor]);
 
   // Initialize editor
@@ -219,9 +219,9 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
         editor.commands.setContent(blogService.currentBlog.content);
       }
     };
-    provider.on('synced', handleSync);
+    provider.on('sync', handleSync);
     handleSync();
-    return () => { provider.off('synced', handleSync); };
+    return () => { provider.off('sync', handleSync); };
   }, [editor, contentLoaded, ydoc, provider]);
 
   // Cleanup: destroy provider when it changes (blogId changes)
