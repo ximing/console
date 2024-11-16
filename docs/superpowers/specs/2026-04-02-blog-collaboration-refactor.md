@@ -39,13 +39,11 @@
 
 ### 核心组件
 
-#### 1. TiptapEditor 组件
+#### 1. TiptapEditor 组件（重构要点）
 
 **职责**：单一 editor 实例，承载协作内容
 
-**Props**：
-- `editor`: TiptapEditor 实例（从 useEditor 创建）
-- `isPreview`: boolean
+**迁移说明**：当前代码有两个 editor 实例（previewEditor/editEditor），本次重构合并为单一实例。
 
 **实现**：
 ```tsx
@@ -56,11 +54,29 @@ editor.setEditable(true);
 editor.setEditable(false);
 ```
 
-#### 2. CollabPresence 组件（Header 中）
+**Extensions 配置**：
+```tsx
+const editor = useEditor({
+  extensions: [
+    ...inlineEditableExtensions,  // 复用现有配置
+    Collaboration.configure({
+      document: ydoc,
+      provider: hocuspocusProvider,
+    }),
+  ],
+  immediatelyRender: false,
+});
+```
+
+#### 2. CollabAvatars 组件（替换现有 CollabPresence）
 
 **职责**：显示在线用户头像列表
 
 **位置**：Header 右侧，连接状态后面
+
+**文件位置**：`apps/web/src/pages/blogs/components/collab-avatars.tsx`
+
+**替换说明**：现有 `apps/web/src/pages/blogs/editor/components/collab-presence.tsx` 重命名为 `collab-avatars.tsx` 并移动到 `blogs/components/` 目录。
 
 **UI 布局**：
 ```
@@ -71,7 +87,6 @@ editor.setEditable(false);
 - 最多显示 5 个头像，超出显示 "+N"
 - 当前用户头像有边框高亮
 - Hover 显示用户昵称 tooltip
-- 显示当前用户名和连接状态
 
 #### 3. EditorToolbar 组件
 
@@ -148,31 +163,58 @@ const editor = useEditor({
 
 ### 2. CollaborationCursor 配置
 
-解决 awareness 初始化时序问题：
+**状态**：当前代码中已禁用（因 awareness 初始化时序问题），本次重构一并修复。
+
+**解决方案**：
+1. 使用 `provider.awareness` 而非 `provider` 作为 useEffect 依赖项
+2. 确保在 `onSynced` 回调之后才设置 awareness 状态
 
 ```tsx
-// 确保 awareness 在 provider 之后初始化
+// HocuspocusProvider 初始化后设置 awareness
 useEffect(() => {
   if (!provider?.awareness) return;
 
+  // 设置本地用户信息到 awareness
   provider.awareness.setLocalStateField('user', {
     name: userName,
     color: userColor,
     id: userId,
   });
-}, [provider?.awareness]);
+
+  // 监听 awareness 变化
+  const handleAwarenessChange = () => {
+    console.log('[Collab] Awareness changed');
+  };
+  provider.awareness.on('change', handleAwarenessChange);
+
+  return () => {
+    provider.awareness?.off('change', handleAwarenessChange);
+  };
+}, [provider?.awareness, userId, userName, userColor]);
 ```
 
 ### 3. 内容初始化守卫
 
+使用 Y.Doc 的 `config` map 标记是否已加载初始内容：
+
 ```tsx
-onSynced() {
-  // 只在首次同步且 Y.Doc 为空时写入初始内容
-  if (!doc.getMap('config').get('initialContentLoaded') && editor) {
-    doc.getMap('config').set('initialContentLoaded', true);
-    editor.commands.setContent(blogContent);
-  }
-}
+// Provider 配置
+const provider = new HocuspocusProvider({
+  url: wsUrl,
+  name: docName,
+  document: ydoc,
+  token: token,
+  onSynced() {
+    // 只在首次同步且 Y.Doc 为空时写入初始内容
+    if (!ydoc.getMap('config').get('initialContentLoaded') && editor) {
+      ydoc.getMap('config').set('initialContentLoaded', true);
+      editor.commands.setContent(blogContent);
+    }
+  },
+});
+```
+
+**注意**：不再使用 React state (`contentLoaded`) 来控制初始化，改为使用 Y.Doc 内部状态。
 ```
 
 ---
@@ -180,14 +222,17 @@ onSynced() {
 ## 文件变更
 
 ### 新增文件
-- `apps/web/src/pages/blogs/components/collab-avatars.tsx` - 在线用户头像组件
+- `apps/web/src/pages/blogs/components/collab-avatars.tsx` - 在线用户头像组件（从 `editor/components/collab-presence.tsx` 重命名并移动）
 
 ### 修改文件
 - `apps/web/src/pages/blogs/components/blog-editor-page.tsx` - 主编辑器页面
-- `apps/web/src/pages/blogs/editor/tiptap.config.ts` - 简化扩展配置
+  - 移除 previewEditor，只保留 editEditor（重命名为 editor）
+  - 使用 `editor.setEditable()` 切换预览/编辑
+  - 内容初始化改用 Y.Doc config map
+- `apps/web/src/pages/blogs/editor/tiptap.config.ts` - 无需修改（继续使用 inlineEditableExtensions）
 
 ### 删除文件
-- 无
+- `apps/web/src/pages/blogs/editor/components/collab-presence.tsx` - 已移动并重命名为 collab-avatars.tsx
 
 ---
 
@@ -202,13 +247,11 @@ interface CollabAvatarsProps {
 }
 ```
 
-### TiptapEditor Props
+### Editor Props
 
 ```typescript
-interface TiptapEditorProps {
-  editor: Editor | null;
-  isPreview: boolean;
-}
+// 直接使用 Tiptap useEditor 返回的 Editor 实例
+// isPreview 通过 editor.setEditable() 控制
 ```
 
 ---
