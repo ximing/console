@@ -8,7 +8,8 @@ import * as Y from 'yjs';
 import { HocuspocusProvider } from '@hocuspocus/provider';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import Collaboration from '@tiptap/extension-collaboration';
-import { CollaborationCursor } from '@tiptap/extension-collaboration-cursor';
+// CollaborationCursor is temporarily disabled due to awareness initialization timing issues
+// import { CollaborationCursor } from '@tiptap/extension-collaboration-cursor';
 import { BlogService } from '../../../services/blog.service';
 import { DirectoryService } from '../../../services/directory.service';
 import { TagService } from '../../../services/tag.service';
@@ -22,7 +23,7 @@ import {
 } from '../editor/tiptap.config';
 import type { BlogDto } from '@x-console/dto';
 import { getUserColor } from '../editor/collaboration-provider';
-import { CollabPresence } from '../editor/components/collab-presence';
+import { CollabAvatars } from './collab-avatars';
 
 interface BlogEditorPageProps {
   pageId?: string;
@@ -71,17 +72,27 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
   const [localSaving, setLocalSaving] = useState(false);
   const [blogLoading, setBlogLoading] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'connecting'>('disconnected');
+  // Force editor remount when provider becomes available
+  const [editorKey, setEditorKey] = useState(0);
 
   // Get JWT token for collaboration
   const token = authService.token || localStorage.getItem('aimo_token') || '';
 
   // Create Y.Doc with useMemo (stable across renders)
-  const ydoc = useMemo(() => new Y.Doc(), []);
+  const ydoc = useMemo(() => {
+    const doc = new Y.Doc();
+    console.log('[Collab] Y.Doc created');
+    // Debug: observe all changes to the Y.Doc
+    doc.on('update', (update: Uint8Array, origin: any) => {
+      console.log('[Collab] Y.Doc update received, origin:', origin, 'update length:', update.length);
+    });
+    return doc;
+  }, []);
 
   // Create HocuspocusProvider with useMemo (null if no pageId)
   const provider = useMemo(() => {
     if (!pageId) return null;
-    // In dev (http), use direct WebSocket to server port
+    // In dev (http), use direct WebSocket to server port 3100
     // In prod (https), use same origin with wss
     const isHttp = location.origin.includes('http://');
     const wsUrl = isHttp
@@ -94,6 +105,13 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
       name: docName,
       document: ydoc,
       token: token,
+      onAuthenticated: () => {
+        console.log('[Collab] Authenticated:', docName);
+      },
+      onAuthenticationFailed: ({ reason }) => {
+        console.error('[Collab] Auth failed:', reason);
+        setConnectionStatus('disconnected');
+      },
       onSynced: () => {
         console.log('[Collab] Synced:', docName);
         setConnectionStatus('connected');
@@ -105,6 +123,12 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
       onConnect: () => {
         console.log('[Collab] Connecting:', docName);
         setConnectionStatus('connecting');
+      },
+      onOutgoingMessage: ({ message }) => {
+        console.log('[Collab] Outgoing message:', message);
+      },
+      onMessage: () => {
+        // Debug: log incoming messages
       },
     });
   }, [pageId, ydoc, token]);
@@ -123,17 +147,7 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
   const userName = userId ? `User ${userId.slice(0, 6)}` : 'Guest';
   const userColor = getUserColor(userId);
 
-  // Set awareness user info
-  useEffect(() => {
-    if (!awareness || !userId) return;
-    awareness.setLocalStateField('user', {
-      name: userName,
-      color: userColor,
-      id: userId,
-    });
-  }, [awareness, userId, userName, userColor]);
-
-  // Track WebSocket connection status
+  // Track WebSocket connection status and awareness state
   useEffect(() => {
     if (!provider) return;
 
@@ -153,6 +167,39 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
       provider.off('status', handleStatus);
       provider.off('error', handleError);
     };
+  }, [provider]);
+
+  // Set awareness user info when awareness becomes available
+  useEffect(() => {
+    if (!provider || !provider.awareness || !userId) return;
+
+    const awareness = provider.awareness;
+    awareness.setLocalStateField('user', {
+      name: userName,
+      color: userColor,
+      id: userId,
+    });
+
+    // Also set up listener for awareness changes
+    const handleAwarenessChange = () => {
+      console.log('[Collab] Awareness changed');
+    };
+    awareness.on('change', handleAwarenessChange);
+
+    return () => {
+      awareness.off('change', handleAwarenessChange);
+    };
+  }, [provider, provider?.awareness, userId, userName, userColor]);
+
+  // Force editor remount when provider becomes available (ensures Collaboration extension gets the provider)
+  // Only trigger when provider transitions from null to not-null
+  const prevProviderRef = useRef<any>(null);
+  useEffect(() => {
+    if (provider && !prevProviderRef.current) {
+      console.log('[Collab] Provider became available, remounting editor');
+      setEditorKey(k => k + 1);
+    }
+    prevProviderRef.current = provider;
   }, [provider]);
 
   // Cleanup: destroy providers on unmount
@@ -195,23 +242,29 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
   });
 
   // Edit editor (editable) - build extensions with collaboration
+  // CollaborationCursor is temporarily disabled until we fix the awareness initialization issue
   const editExtensions = useMemo(() => {
-    const baseExtensions = [...(inlineEditableExtensions as any)];
-    baseExtensions.push(Collaboration.configure({ document: ydoc }));
-    if (provider) {
-      baseExtensions.push(
-        CollaborationCursor.configure({
-          provider: provider,
-          user: { name: userName, color: userColor },
-        })
-      );
+    console.log('[Collab] editExtensions recomputing, provider:', !!provider, 'ydoc:', !!ydoc);
+    if (!provider) {
+      console.log('[Collab] editExtensions: no provider, returning base extensions');
+      return [...(inlineEditableExtensions as any)];
     }
+    console.log('[Collab] editExtensions: configuring with provider, ydoc:', ydoc, 'provider:', provider);
+    const baseExtensions = [...(inlineEditableExtensions as any)];
+    const collabExtension = Collaboration.configure({
+      document: ydoc,
+      provider: provider,
+    });
+    console.log('[Collab] editExtensions: Collaboration extension created:', collabExtension);
+    baseExtensions.push(collabExtension);
+    // CollaborationCursor requires provider.awareness.doc to exist at creation time
+    // For now, we skip it and rely on basic Yjs sync for collaboration
     return baseExtensions;
-  }, [ydoc, provider, userName, userColor]);
+  }, [ydoc, provider]);
 
   const editEditor = useEditor({
     extensions: editExtensions,
-    content: blog?.content ? raw(blog.content) : '',
+    content: '',  // Temporarily disabled to test collaboration
     editorProps: {
       attributes: {
         class:
@@ -244,10 +297,10 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
       if (previewEditor && blog.content) {
         previewEditor.commands.setContent(raw(blog.content));
       }
-      // Update edit editor content
-      if (editEditor && blog.content) {
-        editEditor.commands.setContent(raw(blog.content));
-      }
+      // Temporarily disabled - let Y.Doc handle content
+      // if (editEditor && blog.content) {
+      //   editEditor.commands.setContent(raw(blog.content));
+      // }
       setContentLoaded(true);
     }
   }, [blog, previewEditor, editEditor]);
@@ -528,7 +581,7 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
       {!isPreview && (
         <div className="shrink-0">
           <EditorToolbar editor={editEditor} blogId={blog.id} />
-          <CollabPresence awareness={awareness} currentUserId={userId} />
+          <CollabAvatars awareness={awareness} currentUserId={userId} />
         </div>
       )}
 
@@ -605,11 +658,22 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
             </div>
           </div>
 
-          {/* Editor Content */}
-          <EditorContent
-            editor={currentEditor}
-            className={isPreview ? 'prose dark:prose-invert max-w-none' : 'min-h-[400px]'}
-          />
+          {/* Editor Content - always keep both editors mounted, just show one */}
+          {/* Preview mode */}
+          <div style={{ display: isPreview ? 'block' : 'none' }}>
+            <EditorContent
+              editor={previewEditor}
+              className="prose dark:prose-invert max-w-none"
+            />
+          </div>
+
+          {/* Edit mode */}
+          <div style={{ display: isPreview ? 'none' : 'block' }}>
+            <EditorContent
+              editor={editEditor}
+              className="min-h-[400px]"
+            />
+          </div>
 
           {/* Placeholder if editor is empty (only in edit mode) */}
           {!isPreview && !editEditor?.getText() && contentLoaded && (
