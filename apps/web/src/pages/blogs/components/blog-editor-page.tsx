@@ -70,8 +70,6 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
   const [localSaving, setLocalSaving] = useState(false);
   const [blogLoading, setBlogLoading] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'connecting'>('disconnected');
-  // Force editor remount when provider becomes available
-  const [editorKey, setEditorKey] = useState(0);
 
   // Get JWT token for collaboration
   const token = authService.token || localStorage.getItem('aimo_token') || '';
@@ -169,16 +167,16 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
 
   // Set awareness user info when awareness becomes available
   useEffect(() => {
-    if (!provider || !provider.awareness || !userId) return;
+    if (!awareness || !userId) return;
 
-    const awareness = provider.awareness;
+    // 设置本地用户信息到 awareness
     awareness.setLocalStateField('user', {
       name: userName,
       color: userColor,
       id: userId,
     });
 
-    // Also set up listener for awareness changes
+    // 监听 awareness 变化
     const handleAwarenessChange = () => {
       console.log('[Collab] Awareness changed');
     };
@@ -187,18 +185,7 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
     return () => {
       awareness.off('change', handleAwarenessChange);
     };
-  }, [provider, provider?.awareness, userId, userName, userColor]);
-
-  // Force editor remount when provider becomes available (ensures Collaboration extension gets the provider)
-  // Only trigger when provider transitions from null to not-null
-  const prevProviderRef = useRef<any>(null);
-  useEffect(() => {
-    if (provider && !prevProviderRef.current) {
-      console.log('[Collab] Provider became available, remounting editor');
-      setEditorKey(k => k + 1);
-    }
-    prevProviderRef.current = provider;
-  }, [provider]);
+  }, [awareness, userId, userName, userColor]);
 
   // Cleanup: destroy providers on unmount
   useEffect(() => {
