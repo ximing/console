@@ -17,7 +17,6 @@ import { ToastService } from '../../../services/toast.service';
 import { authService } from '../../../services/auth.service';
 import { EditorToolbar } from './editor-toolbar';
 import {
-  previewExtensions,
   inlineEditableExtensions,
   MAX_EXCERPT_LENGTH,
 } from '../editor/tiptap.config';
@@ -68,7 +67,6 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
   const [title, setTitle] = useState('');
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [isPublishing, setIsPublishing] = useState(false);
-  const [contentLoaded, setContentLoaded] = useState(false);
   const [localSaving, setLocalSaving] = useState(false);
   const [blogLoading, setBlogLoading] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'connecting'>('disconnected');
@@ -218,7 +216,7 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
     const SNAPSHOT_INTERVAL = 30000;
 
     const timer = setInterval(() => {
-      const content = editEditor?.getJSON();
+      const content = editor?.getJSON();
       if (content) {
         const snapshot = JSON.stringify(content);
         blogService.saveSnapshot(pageId, snapshot);
@@ -233,37 +231,29 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
   const contentJsonRef = useRef(blog?.content);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Preview editor (read-only)
-  const previewEditor = useEditor({
-    extensions: previewExtensions,
-    content: blog?.content ? raw(blog.content) : '',
-    editable: false,
-    immediatelyRender: false,
-  });
-
-  // Edit editor (editable) - build extensions with collaboration
+  // Editor extensions - build with collaboration
   // CollaborationCursor is temporarily disabled until we fix the awareness initialization issue
-  const editExtensions = useMemo(() => {
-    console.log('[Collab] editExtensions recomputing, provider:', !!provider, 'ydoc:', !!ydoc);
+  const editorExtensions = useMemo(() => {
+    console.log('[Collab] editorExtensions recomputing, provider:', !!provider, 'ydoc:', !!ydoc);
     if (!provider) {
-      console.log('[Collab] editExtensions: no provider, returning base extensions');
+      console.log('[Collab] editorExtensions: no provider, returning base extensions');
       return [...(inlineEditableExtensions as any)];
     }
-    console.log('[Collab] editExtensions: configuring with provider, ydoc:', ydoc, 'provider:', provider);
+    console.log('[Collab] editorExtensions: configuring with provider, ydoc:', ydoc, 'provider:', provider);
     const baseExtensions = [...(inlineEditableExtensions as any)];
     const collabExtension = Collaboration.configure({
       document: ydoc,
       provider: provider,
     });
-    console.log('[Collab] editExtensions: Collaboration extension created:', collabExtension);
+    console.log('[Collab] editorExtensions: Collaboration extension created:', collabExtension);
     baseExtensions.push(collabExtension);
     // CollaborationCursor requires provider.awareness.doc to exist at creation time
     // For now, we skip it and rely on basic Yjs sync for collaboration
     return baseExtensions;
   }, [ydoc, provider]);
 
-  const editEditor = useEditor({
-    extensions: editExtensions,
+  const editor = useEditor({
+    extensions: editorExtensions,
     content: '',  // Temporarily disabled to test collaboration
     editorProps: {
       attributes: {
@@ -273,6 +263,12 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
     },
     immediatelyRender: false,
   });
+
+  // Preview/Edit mode toggle - update editor editable state
+  useEffect(() => {
+    if (!editor) return;
+    editor.setEditable(!isPreview);
+  }, [editor, isPreview]);
 
   // Load blog and tags on mount
   useEffect(() => {
@@ -293,17 +289,9 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
       setSelectedTagIds(blog.tags.map((t) => t.id));
       contentJsonRef.current = blog.content;
 
-      // Update preview editor content
-      if (previewEditor && blog.content) {
-        previewEditor.commands.setContent(raw(blog.content));
-      }
-      // Temporarily disabled - let Y.Doc handle content
-      // if (editEditor && blog.content) {
-      //   editEditor.commands.setContent(raw(blog.content));
-      // }
-      setContentLoaded(true);
+      // Let Y.Doc handle content via collaboration
     }
-  }, [blog, previewEditor, editEditor]);
+  }, [blog]);
 
   // Also update when pageId changes (blog might not be loaded yet)
   useEffect(() => {
@@ -328,7 +316,7 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
         await blogService.saveBlog(blog!.id, {
           title: titleRef.current,
           content: contentJsonRef.current,
-          excerpt: editEditor?.getText().slice(0, MAX_EXCERPT_LENGTH) || '',
+          excerpt: editor?.getText().slice(0, MAX_EXCERPT_LENGTH) || '',
           slug: slugify(titleRef.current, { lower: true, locale: 'zh', strict: false }),
         });
       } catch (error) {
@@ -337,7 +325,7 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
         setLocalSaving(false);
       }
     }, 1000);
-  }, [blog?.id, blogService, editEditor, toastService]);
+  }, [blog?.id, blogService, editor, toastService]);
 
   // Handle title change
   const handleTitleChange = useCallback(
@@ -351,18 +339,18 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
 
   // Handle content change in edit mode
   useEffect(() => {
-    if (!editEditor) return;
+    if (!editor) return;
 
     const handleUpdate = () => {
-      contentJsonRef.current = editEditor.getJSON();
+      contentJsonRef.current = editor.getJSON();
       debouncedSave();
     };
 
-    editEditor.on('update', handleUpdate);
+    editor.on('update', handleUpdate);
     return () => {
-      editEditor.off('update', handleUpdate);
+      editor.off('update', handleUpdate);
     };
-  }, [editEditor, debouncedSave]);
+  }, [editor, debouncedSave]);
 
   // Cleanup timer on unmount
   useEffect(() => {
@@ -389,7 +377,7 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
 
   // Save as draft
   const handleSaveDraft = useCallback(async () => {
-    if (!editEditor || !blog) return;
+    if (!editor || !blog) return;
 
     if (saveTimerRef.current) {
       clearTimeout(saveTimerRef.current);
@@ -398,22 +386,22 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
 
     setLocalSaving(true);
     try {
-      const content = editEditor.getJSON();
+      const content = editor.getJSON();
       await blogService.saveBlog(blog.id, {
         title,
         content,
-        excerpt: editEditor?.getText().slice(0, MAX_EXCERPT_LENGTH) || '',
+        excerpt: editor?.getText().slice(0, MAX_EXCERPT_LENGTH) || '',
         status: 'draft',
       });
       toastService.success('草稿保存成功');
     } finally {
       setLocalSaving(false);
     }
-  }, [blog, title, editEditor, blogService, toastService]);
+  }, [blog, title, editor, blogService, toastService]);
 
   // Publish blog
   const handlePublish = useCallback(async () => {
-    if (!editEditor || !blog) return;
+    if (!editor || !blog) return;
 
     if (saveTimerRef.current) {
       clearTimeout(saveTimerRef.current);
@@ -422,11 +410,11 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
 
     setIsPublishing(true);
     try {
-      const content = editEditor.getJSON();
+      const content = editor.getJSON();
       await blogService.saveBlog(blog.id, {
         title,
         content,
-        excerpt: editEditor?.getText().slice(0, MAX_EXCERPT_LENGTH) || '',
+        excerpt: editor?.getText().slice(0, MAX_EXCERPT_LENGTH) || '',
         status: 'published',
       });
       const publishedBlog = await blogService.publishBlog(blog.id);
@@ -436,13 +424,10 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
     } finally {
       setIsPublishing(false);
     }
-  }, [blog, title, editEditor, blogService, toastService]);
-
-  // Get current editor based on mode
-  const currentEditor = isPreview ? previewEditor : editEditor;
+  }, [blog, title, editor, blogService, toastService]);
 
   // Word count
-  const wordCount = currentEditor?.getText().length || 0;
+  const wordCount = editor?.getText().length || 0;
 
   // Handle delete
   const handleDelete = useCallback(() => {
@@ -580,7 +565,7 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
       {/* Editor Toolbar (only in edit mode) */}
       {!isPreview && (
         <div className="shrink-0">
-          <EditorToolbar editor={editEditor} blogId={blog.id} />
+          <EditorToolbar editor={editor} blogId={blog.id} />
           <CollabAvatars awareness={awareness} currentUserId={userId} />
         </div>
       )}
@@ -658,25 +643,13 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
             </div>
           </div>
 
-          {/* Editor Content - always keep both editors mounted, just show one */}
-          {/* Preview mode */}
-          <div style={{ display: isPreview ? 'block' : 'none' }}>
-            <EditorContent
-              editor={previewEditor}
-              className="prose dark:prose-invert max-w-none"
-            />
-          </div>
-
-          {/* Edit mode */}
-          <div style={{ display: isPreview ? 'none' : 'block' }}>
-            <EditorContent
-              editor={editEditor}
-              className="min-h-[400px]"
-            />
+          {/* Editor Content - single editor with editable controlled by isPreview */}
+          <div className={isPreview ? 'prose dark:prose-invert max-w-none' : ''}>
+            <EditorContent editor={editor} className={isPreview ? '' : 'min-h-[400px]'} />
           </div>
 
           {/* Placeholder if editor is empty (only in edit mode) */}
-          {!isPreview && !editEditor?.getText() && contentLoaded && (
+          {!isPreview && !editor?.getText() && (
             <div className="text-center py-12 text-gray-400 dark:text-zinc-600 pointer-events-none">
               开始写作...
             </div>
