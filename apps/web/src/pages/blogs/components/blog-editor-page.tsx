@@ -108,9 +108,18 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
         console.error('[Collab] Auth failed:', reason);
         setConnectionStatus('disconnected');
       },
-      onSynced: () => {
+      onSynced() {
         console.log('[Collab] Synced:', docName);
         setConnectionStatus('connected');
+
+        // 内容初始化：如果 Y.Doc 为空且有 blog 内容，写入 Y.Doc
+        if (ydoc && editor && blog?.content) {
+          // 检查是否已有初始内容（通过 Y.Doc 的 config map）
+          if (!ydoc.getMap('config').get('initialContentLoaded')) {
+            ydoc.getMap('config').set('initialContentLoaded', true);
+            editor.commands.setContent(raw(blog.content));
+          }
+        }
       },
       onDisconnect: () => {
         console.log('[Collab] Disconnected:', docName);
