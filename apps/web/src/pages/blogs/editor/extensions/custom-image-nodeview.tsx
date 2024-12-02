@@ -157,6 +157,7 @@ export function CustomImageNodeView({ node, selected, updateAttributes }: Custom
     setLocalDimensions(null);
 
     document.removeEventListener('mousemove', handleMouseMove);
+    // eslint-disable-next-line react-hooks/immutability
     document.removeEventListener('mouseup', handleMouseUp);
   }, [handleMouseMove, updateAttributes]);
 

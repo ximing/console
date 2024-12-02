@@ -1,5 +1,6 @@
 import { Editor } from '@tiptap/react';
 import type { EditorState } from '@tiptap/pm/state';
+import type { Node } from '@tiptap/pm/model';
 import { uploadMedia, validateMediaFile } from '../api/blog-media';
 import type { MediaUploadResponse } from '../api/blog-media';
 
@@ -22,12 +23,11 @@ export function isTempPath(path: string | null | undefined): boolean {
 /**
  * Find a customImage node by its path in the editor state
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function findCustomImageNode<S extends EditorState>(
   state: S,
   path: string
-): { pos: number; node: any } | null {
-  let result: { pos: number; node: any } | null = null;
+): { pos: number; node: Node } | null {
+  let result: { pos: number; node: Node } | null = null;
   state.doc.descendants((node, pos) => {
     if (node.type.name === 'customImage' && node.attrs.path === path) {
       result = { pos, node };
