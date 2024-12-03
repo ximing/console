@@ -140,8 +140,6 @@ export const BlogListPage = view(() => {
             onSearchClick={() => setSearchModalVisible(true)}
             onNewBlog={(dirId) => handleCreateBlog(dirId ?? selectedDirectoryId)}
             onNewDirectory={(parentId) => handleCreateDirectory(parentId)}
-            onContextMenuDirectory={() => {}}
-            onContextMenuPage={() => {}}
           />
         </ResizableSidebar>
 

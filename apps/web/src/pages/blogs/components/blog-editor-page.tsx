@@ -335,7 +335,7 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
         blogService.updateBlog(blog.id, { tagIds: newTags });
       }
     },
-    [selectedTagIds, blog, blogService, toastService]
+    [selectedTagIds, blog, blogService]
   );
 
   // Save as draft

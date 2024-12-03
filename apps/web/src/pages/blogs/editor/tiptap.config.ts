@@ -15,8 +15,8 @@ import FontFamily from '@tiptap/extension-font-family';
 import { ExternalVideo } from './extensions/external-video';
 import { CustomImage } from './extensions/custom-image';
 
-export const DEFAULT_YOUTUBE_WIDTH = 640;
-export const DEFAULT_YOUTUBE_HEIGHT = 360;
+const DEFAULT_YOUTUBE_WIDTH = 640;
+const DEFAULT_YOUTUBE_HEIGHT = 360;
 export const MAX_EXCERPT_LENGTH = 200;
 
 // Replace the imageExtensions with custom image
@@ -38,7 +38,7 @@ const youtubeExtensions = Youtube.configure({
   autoplay: false,
 });
 
-export const createLinkExtension = (config: { openOnClick?: boolean }) =>
+const createLinkExtension = (config: { openOnClick?: boolean }) =>
   Link.configure({
     openOnClick: config.openOnClick ?? false,
     HTMLAttributes: {
