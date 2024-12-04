@@ -93,8 +93,7 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
       name: docName,
       document: ydoc,
       token: token,
-      onAuthenticationFailed: ({ reason }) => {
-        console.error('[Collab] Auth failed:', reason);
+      onAuthenticationFailed: () => {
         setConnectionStatus('disconnected');
       },
       onSynced() {
@@ -140,8 +139,7 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
       setConnectionStatus(status as 'connected' | 'disconnected' | 'connecting');
     };
 
-    const handleError = (error: Error) => {
-      console.error('[Collab] Connection error:', error);
+    const handleError = () => {
       setConnectionStatus('disconnected');
     };
 
