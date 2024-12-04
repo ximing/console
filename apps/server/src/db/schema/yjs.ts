@@ -1,4 +1,4 @@
-import { varchar, datetime, text, mysqlTable } from 'drizzle-orm/mysql-core';
+import { mysqlTable, varchar, text, timestamp } from 'drizzle-orm/mysql-core';
 
 /**
  * Yjs Document State Table
@@ -7,8 +7,11 @@ import { varchar, datetime, text, mysqlTable } from 'drizzle-orm/mysql-core';
 export const yjsDocuments = mysqlTable('yjs_documents', {
   docName: varchar('doc_name', { length: 255 }).primaryKey(),
   data: text('data').notNull(), // Base64 encoded Yjs state
-  createdAt: datetime('created_at', { mode: 'date', fsp: 3 }).notNull().default('CURRENT_TIMESTAMP(3)'),
-  updatedAt: datetime('updated_at', { mode: 'date', fsp: 3 }).notNull().default('CURRENT_TIMESTAMP(3)'),
+  createdAt: timestamp('created_at', { mode: 'date', fsp: 3 }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { mode: 'date', fsp: 3 })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
 });
 
 export type YjsDocument = typeof yjsDocuments.$inferSelect;
