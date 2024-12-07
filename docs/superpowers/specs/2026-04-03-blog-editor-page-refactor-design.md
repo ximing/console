@@ -32,8 +32,9 @@ apps/web/src/pages/blogs/
 - IndexedDB persistence 初始化（useMemo）
 - Awareness 设置（useEffect）
 - 连接状态管理
-- 30 秒快照定时器（useEffect）
 - Provider cleanup（useEffect return destroy）
+
+**注意**：30 秒快照定时器不在此 hook 内，因为需要访问 `editor`。快照逻辑保留在主组件或 `useBlogEditor` 中。
 
 **返回**：
 ```ts
@@ -50,7 +51,7 @@ apps/web/src/pages/blogs/
 }
 ```
 
-**依赖**：pageId, token, blog?.userId, blog?.content, editor（editorExtensions 计算）
+**依赖**：pageId, token（blog?.userId 用于 awareness userInfo，但 awareness 初始化在 useEffect 内）
 
 ### useBlogEditor.ts
 
@@ -60,9 +61,8 @@ apps/web/src/pages/blogs/
 - title / selectedTagIds state
 - isPreview / isPublishing / localSaving state
 - debounced save（1s）
-- content 同步到 ref
+- content 同步到 ref（内部 handleUpdate 监听 editor update）
 - handleTitleChange
-- handleContentUpdate（监听 editor update）
 - toggleTag
 - handleSaveDraft
 - handlePublish
@@ -88,7 +88,7 @@ apps/web/src/pages/blogs/
 }
 ```
 
-**依赖**：pageId, blogService, tagService, toastService, navigate, editor
+**依赖**：pageId, blogService, tagService, toastService, navigate, editor（editor 仅为监听 update 事件用）
 
 ### BlogEditorHeader.tsx
 
@@ -140,7 +140,7 @@ apps/web/src/pages/blogs/
   tags: TagDto[];
   selectedTagIds: string[];
   onTitleChange: (title: string) => void;
-  onToggleTag: (tagId: string) => void;
+  toggleTag: (tagId: string) => void;
   editor: Editor | null;
 }
 ```
