@@ -44,16 +44,17 @@ export function BlogEditorContent({
         {/* Tags */}
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm text-gray-500 dark:text-zinc-400">标签:</span>
-          {tags.map((tag) =>
-            isPreview ? (
+          {tags.map((tag) => {
+            const isSelected = selectedTagIds.includes(tag.id);
+            return isPreview ? (
               <span
                 key={tag.id}
                 className={`px-2 py-1 text-xs font-medium rounded-full ${
-                  selectedTagIds.includes(tag.id)
+                  isSelected
                     ? 'text-white'
                     : 'text-gray-600 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-700'
                 }`}
-                style={selectedTagIds.includes(tag.id) ? { backgroundColor: tag.color } : {}}
+                style={isSelected ? { backgroundColor: tag.color } : {}}
               >
                 {tag.name}
               </span>
@@ -62,16 +63,16 @@ export function BlogEditorContent({
                 key={tag.id}
                 onClick={() => toggleTag(tag.id)}
                 className={`px-2 py-1 text-xs font-medium rounded-full transition-colors ${
-                  selectedTagIds.includes(tag.id)
+                  isSelected
                     ? 'text-white'
                     : 'text-gray-600 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-700 hover:bg-gray-200 dark:hover:bg-zinc-600'
                 }`}
-                style={selectedTagIds.includes(tag.id) ? { backgroundColor: tag.color } : {}}
+                style={isSelected ? { backgroundColor: tag.color } : {}}
               >
                 {tag.name}
               </button>
-            )
-          )}
+            );
+          })}
           {tags.length === 0 && (
             <span className="text-sm text-gray-400 dark:text-zinc-600">暂无标签</span>
           )}
