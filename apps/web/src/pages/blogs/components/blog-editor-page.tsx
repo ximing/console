@@ -46,7 +46,7 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
   const wordCount = editor?.getText().length || 0;
 
   // Collaboration hook - needs pageId and blogUserId
-  const { ydoc, provider, indexeddbProvider, awareness, connectionStatus, editorExtensions, userId } =
+  const { ydoc, provider, awareness, connectionStatus, editorExtensions, userId } =
     useCollaboration({ pageId, blogUserId: blog?.userId });
 
   // Create the editor with collaboration extensions
