@@ -1,6 +1,8 @@
+import { observer, useService } from '@rabjs/react';
 import { Eye, Edit2, Trash2, Save, Send, Loader2 } from 'lucide-react';
 import { Awareness } from 'y-protocols/awareness';
 import { CollabAvatars } from './collab-avatars';
+import { BlogEditorService } from '../blog-editor.service';
 import type { BlogDto } from '@x-console/dto';
 
 // Helper functions
@@ -25,35 +27,23 @@ const getDirectoryPath = (
   return dir?.name || '';
 };
 
-export interface BlogEditorHeaderProps {
+interface BlogEditorHeaderProps {
   blog: BlogDto;
   directories: { id: string; name: string }[];
   connectionStatus: 'connected' | 'disconnected' | 'connecting';
   awareness: Awareness | null;
   currentUserId: string;
-  isPreview: boolean;
-  localSaving: boolean;
-  isPublishing: boolean;
-  onTogglePreview: () => void;
-  onSaveDraft: () => void;
-  onPublish: () => void;
-  onDelete: () => void;
 }
 
-export const BlogEditorHeader = ({
+export const BlogEditorHeader = observer(({
   blog,
   directories,
   connectionStatus,
   awareness,
   currentUserId,
-  isPreview,
-  localSaving,
-  isPublishing,
-  onTogglePreview,
-  onSaveDraft,
-  onPublish,
-  onDelete,
 }: BlogEditorHeaderProps) => {
+  const blogEditor = useService(BlogEditorService);
+
   const directoryPath = getDirectoryPath(blog, directories);
 
   return (
@@ -85,7 +75,7 @@ export const BlogEditorHeader = ({
             {connectionStatus === 'connected' ? '在线' : connectionStatus === 'connecting' ? '连接中...' : '离线'}
           </span>
         )}
-        {/* Collaboration avatars - in Header, after connection status */}
+        {/* Collaboration avatars */}
         {awareness && (
           <div className="mr-2">
             <CollabAvatars awareness={awareness} currentUserId={currentUserId} />
@@ -93,7 +83,7 @@ export const BlogEditorHeader = ({
         )}
         {/* Delete button */}
         <button
-          onClick={onDelete}
+          onClick={() => blogEditor.deleteBlog()}
           className="p-1 text-gray-400 dark:text-zinc-500 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 rounded transition-colors"
           title="删除"
         >
@@ -103,10 +93,10 @@ export const BlogEditorHeader = ({
         {/* Button Group: Preview/Edit toggle */}
         <div className="flex items-center rounded overflow-hidden border border-gray-200 dark:border-zinc-600">
           <button
-            onClick={onTogglePreview}
+            onClick={() => blogEditor.togglePreview()}
             className={`px-2 py-1 text-xs font-medium transition-colors
               ${
-                isPreview
+                blogEditor.isPreview
                   ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
                   : 'bg-gray-50 dark:bg-zinc-700 text-gray-500 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-600'
               }`}
@@ -115,10 +105,10 @@ export const BlogEditorHeader = ({
             预览
           </button>
           <button
-            onClick={onTogglePreview}
+            onClick={() => blogEditor.togglePreview()}
             className={`px-2 py-1 text-xs font-medium transition-colors border-l border-gray-200 dark:border-zinc-600
               ${
-                !isPreview
+                !blogEditor.isPreview
                   ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
                   : 'bg-gray-50 dark:bg-zinc-700 text-gray-500 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-600'
               }`}
@@ -129,14 +119,14 @@ export const BlogEditorHeader = ({
         </div>
 
         {/* Save draft button - only visible in edit mode */}
-        {!isPreview && (
+        {!blogEditor.isPreview && (
           <button
-            onClick={onSaveDraft}
-            disabled={localSaving || isPublishing}
+            onClick={() => blogEditor.saveDraft()}
+            disabled={blogEditor.localSaving || blogEditor.isPublishing}
             className="p-1 text-gray-400 dark:text-zinc-500 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded transition-colors disabled:opacity-50"
             title="保存草稿"
           >
-            {localSaving ? (
+            {blogEditor.localSaving ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
             ) : (
               <Save className="w-3.5 h-3.5" />
@@ -146,11 +136,11 @@ export const BlogEditorHeader = ({
 
         {/* Publish button */}
         <button
-          onClick={onPublish}
-          disabled={localSaving || isPublishing}
+          onClick={() => blogEditor.publish()}
+          disabled={blogEditor.localSaving || blogEditor.isPublishing}
           className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-white bg-primary-600 hover:bg-primary-700 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isPublishing ? (
+          {blogEditor.isPublishing ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
           ) : (
             <Send className="w-3.5 h-3.5" />
@@ -160,4 +150,4 @@ export const BlogEditorHeader = ({
       </div>
     </div>
   );
-};
+});
