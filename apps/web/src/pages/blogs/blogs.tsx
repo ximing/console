@@ -8,7 +8,7 @@ import { ToastService } from '../../services/toast.service';
 import { Sidebar } from './components/sidebar';
 import { ResizableSidebar } from './components/sidebar/resizable-sidebar';
 import { PageList } from './components/content/page-list';
-import { BlogEditorPage } from './components/blog-editor-page';
+import { BlogEditorPage } from './components/blog-editor';
 import { SearchModal } from './components/search-modal';
 import type { BlogDto } from '@x-console/dto';
 import type { ViewMode } from './components/view-toggle';

@@ -2,9 +2,9 @@ import { Service } from '@rabjs/react';
 import slugify from 'slugify';
 import type { Editor } from '@tiptap/react';
 import type { BlogDto } from '@x-console/dto';
-import { BlogService } from '../../services/blog.service';
-import { TagService } from '../../services/tag.service';
-import { ToastService } from '../../services/toast.service';
+import { BlogService } from '../../../../services/blog.service';
+import { TagService } from '../../../../services/tag.service';
+import { ToastService } from '../../../../services/toast.service';
 import { MAX_EXCERPT_LENGTH } from './editor/tiptap.config';
 
 /**
@@ -23,8 +23,6 @@ import { MAX_EXCERPT_LENGTH } from './editor/tiptap.config';
  *   3. Child components use `useService(BlogEditorService)` to access state/methods directly
  */
 export class BlogEditorService extends Service {
-  // ── Observable state ───────────────────────────────────────────────────
-
   blog: BlogDto | null = null;
   title = '';
   selectedTagIds: string[] = [];
@@ -33,18 +31,13 @@ export class BlogEditorService extends Service {
   localSaving = false;
   loading = false;
 
-  // ── Container values (set via setup() by page) ─────────────────────────
-
   pageId: string | undefined;
   navigate: (path: string) => void = () => {};
-
-  // ── Private refs ───────────────────────────────────────────────────────
 
   private contentJsonRef: Record<string, unknown> | undefined = undefined;
   private saveTimerRef: ReturnType<typeof setTimeout> | null = null;
   private editorRef: Editor | null = null;
-
-  // ── Service dependencies (resolve globally registered services) ─────────
+  private editorCleanupRef: (() => void) | null = null;
 
   get blogService(): BlogService {
     return this.resolve(BlogService) as BlogService;
@@ -62,17 +55,16 @@ export class BlogEditorService extends Service {
     return this.editorRef?.getText().length ?? 0;
   }
 
-  // ── Setup (called by page after service is instantiated) ───────────────
-
   setup(pageId: string | undefined, navigate: (path: string) => void) {
     this.pageId = pageId;
     this.navigate = navigate;
   }
 
-  // ── Lifecycle ─────────────────────────────────────────────────────────
-
   setEditor(editor: Editor | null) {
+    this.editorCleanupRef?.();
+    this.editorCleanupRef = null;
     this.editorRef = editor;
+
     if (editor) {
       this.setupEditorListener(editor);
     }
@@ -88,7 +80,7 @@ export class BlogEditorService extends Service {
         if (blog) {
           this.blog = blog;
           this.title = blog.title;
-          this.selectedTagIds = blog.tags.map((t) => t.id);
+          this.selectedTagIds = blog.tags.map((t) => t.id as string);
           this.contentJsonRef = blog.content as Record<string, unknown> | undefined;
         }
       } finally {
@@ -98,19 +90,15 @@ export class BlogEditorService extends Service {
     this.tagService.loadTags();
   }
 
-  // ── Private helpers ───────────────────────────────────────────────────
-
   private setupEditorListener(editor: Editor) {
     const handleUpdate = () => {
       this.contentJsonRef = editor.getJSON();
       this.debouncedSave();
     };
-    editor.on('update', handleUpdate);
-    // Return cleanup from the service's onDestroy instead
-    this._editorCleanup = () => editor.off('update', handleUpdate);
-  }
 
-  private _editorCleanup?: () => void;
+    editor.on('update', handleUpdate);
+    this.editorCleanupRef = () => editor.off('update', handleUpdate);
+  }
 
   private debouncedSave() {
     if (this.saveTimerRef) {
@@ -134,8 +122,6 @@ export class BlogEditorService extends Service {
       }
     }, 1000);
   }
-
-  // ── Public actions ────────────────────────────────────────────────────
 
   handleTitleChange(newTitle: string) {
     this.title = newTitle;
@@ -223,6 +209,8 @@ export class BlogEditorService extends Service {
     if (this.saveTimerRef) {
       clearTimeout(this.saveTimerRef);
     }
-    this._editorCleanup?.();
+
+    this.editorCleanupRef?.();
+    this.editorCleanupRef = null;
   }
 }

@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { view, useService } from '@rabjs/react';
 import { Search, X, FileText } from 'lucide-react';
-import { BlogService } from '../../../services/blog.service';
-import { DirectoryService } from '../../../services/directory.service';
+import { BlogService } from '../../../../services/blog.service';
+import { DirectoryService } from '../../../../services/directory.service';
 import type { BlogDto } from '@x-console/dto';
 
 interface SearchModalProps {

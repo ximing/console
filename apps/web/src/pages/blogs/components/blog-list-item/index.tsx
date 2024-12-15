@@ -1,7 +1,7 @@
 import { view } from '@rabjs/react';
 import { Clock, FileText, Edit2 } from 'lucide-react';
 import type { BlogDto } from '@x-console/dto';
-import { formatRelativeTime } from '../../../utils/date';
+import { formatRelativeTime } from '../../../../utils/date';
 
 interface BlogListItemProps {
   blog: BlogDto;

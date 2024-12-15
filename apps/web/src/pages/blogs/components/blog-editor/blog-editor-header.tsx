@@ -2,7 +2,7 @@ import { observer, useService } from '@rabjs/react';
 import { Eye, Edit2, Trash2, Save, Send, Loader2 } from 'lucide-react';
 import { Awareness } from 'y-protocols/awareness';
 import { CollabAvatars } from './collab-avatars';
-import { BlogEditorService } from '../blog-editor.service';
+import { BlogEditorService } from './blog-editor.service';
 import type { BlogDto } from '@x-console/dto';
 
 // Helper functions

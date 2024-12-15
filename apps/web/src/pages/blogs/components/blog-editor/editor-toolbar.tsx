@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Editor } from '@tiptap/react';
 import { Sketch } from '@uiw/react-color';
 import { useService } from '@rabjs/react';
-import { ToastService } from '../../../services/toast.service';
-import { uploadImagePlaceholder } from '../../../utils/editor';
+import { ToastService } from '../../../../services/toast.service';
+import { uploadImagePlaceholder } from '../../../../utils/editor';
 import {
   Bold,
   Italic,
@@ -38,7 +38,7 @@ import {
 } from 'lucide-react';
 
 import { MediaUploadModal } from './media-upload-modal';
-import { uploadMedia, validateMediaFile } from '../../../api/blog-media';
+import { uploadMedia, validateMediaFile } from '../../../../api/blog-media';
 
 type InsertType = 'image' | 'audio' | 'youtube' | 'link';
 
