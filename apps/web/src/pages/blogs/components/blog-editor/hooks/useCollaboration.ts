@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import * as Y from 'yjs';
 import { HocuspocusProvider } from '@hocuspocus/provider';
 import { IndexeddbPersistence } from 'y-indexeddb';
@@ -39,20 +39,37 @@ export function useCollaboration({ pageId }: UseCollaborationOptions): UseCollab
     'connected' | 'disconnected' | 'connecting'
   >('disconnected');
   const [isSynced, setIsSynced] = useState(false);
+  const [providerReady, setProviderReady] = useState(false);
 
   const token = authService.token || localStorage.getItem('aimo_token') || '';
 
-  // Each page needs an isolated Y.Doc. Reusing the same doc across pages leaks state.
-  const ydoc = useMemo(() => new Y.Doc(), [pageId]);
+  // Stable Y.Doc instance - never recreate during hook lifetime
+  const ydocRef = useRef<Y.Doc | null>(null);
+  if (ydocRef.current === null) {
+    ydocRef.current = new Y.Doc();
+  }
+  const ydoc = ydocRef.current;
 
-  const provider = useMemo(() => {
+  const providerRef = useRef<HocuspocusProvider | null>(null);
+  const indexeddbProviderRef = useRef<IndexeddbPersistence | null>(null);
+
+  useEffect(() => {
     if (!pageId) {
-      return null;
+      providerRef.current?.destroy();
+      providerRef.current = null;
+      indexeddbProviderRef.current?.destroy();
+      indexeddbProviderRef.current = null;
+      setIsSynced(false);
+      setConnectionStatus('disconnected');
+      return;
     }
 
-    return new HocuspocusProvider({
-      url: getCollaborationWsUrl(),
-      name: `blog:${pageId}`,
+    const wsUrl = getCollaborationWsUrl();
+    const docName = `blog:${pageId}`;
+
+    const provider = new HocuspocusProvider({
+      url: wsUrl,
+      name: docName,
       document: ydoc,
       token,
       onAuthenticationFailed: () => {
@@ -75,30 +92,12 @@ export function useCollaboration({ pageId }: UseCollaborationOptions): UseCollab
         console.log('[Collab] Synced');
       },
     });
-  }, [pageId, token, ydoc]);
 
-  const indexeddbProvider = useMemo(() => {
-    if (!pageId) {
-      return null;
-    }
+    const indexeddbProvider = new IndexeddbPersistence(`blog-${pageId}`, ydoc);
 
-    return new IndexeddbPersistence(`blog-${pageId}`, ydoc);
-  }, [pageId, ydoc]);
-
-  const awareness = provider?.awareness ?? null;
-  const userId = authService.user?.id || '';
-  const userName = userId ? `User ${userId.slice(0, 6)}` : 'Guest';
-  const userColor = getUserColor(userId);
-
-  useEffect(() => {
-    setIsSynced(false);
-    setConnectionStatus(provider ? 'connecting' : 'disconnected');
-  }, [provider]);
-
-  useEffect(() => {
-    if (!provider) {
-      return;
-    }
+    providerRef.current = provider;
+    indexeddbProviderRef.current = indexeddbProvider;
+    setProviderReady(true);
 
     const handleStatus = ({ status }: { status: 'connected' | 'disconnected' | 'connecting' }) => {
       console.log('[Collab] Status event:', status);
@@ -121,12 +120,25 @@ export function useCollaboration({ pageId }: UseCollaborationOptions): UseCollab
     provider.on('error', handleError);
     provider.on('synced', handleSynced);
 
+    setIsSynced(false);
+    setConnectionStatus('connecting');
+
     return () => {
       provider.off('status', handleStatus);
       provider.off('error', handleError);
       provider.off('synced', handleSynced);
+      provider.destroy();
+      indexeddbProvider.destroy();
+      providerRef.current = null;
+      indexeddbProviderRef.current = null;
+      setProviderReady(false);
     };
-  }, [provider]);
+  }, [pageId, token, ydoc]);
+
+  const awareness = providerRef.current?.awareness ?? null;
+  const userId = authService.user?.id || '';
+  const userName = userId ? `User ${userId.slice(0, 6)}` : 'Guest';
+  const userColor = getUserColor(userId);
 
   useEffect(() => {
     if (!awareness || !userId) {
@@ -142,34 +154,33 @@ export function useCollaboration({ pageId }: UseCollaborationOptions): UseCollab
 
   useEffect(() => {
     return () => {
-      provider?.destroy();
-      indexeddbProvider?.destroy();
       ydoc.destroy();
     };
-  }, [indexeddbProvider, provider, ydoc]);
+  }, [ydoc]);
 
   const editorExtensions = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const baseExtensions = [...(inlineEditableExtensions as any)];
 
-    if (!provider) {
+    // Don't add Collaboration extension if provider is not ready
+    if (!providerRef.current || !providerReady) {
       return baseExtensions;
     }
 
     baseExtensions.push(
       Collaboration.configure({
         document: ydoc,
-        provider,
+        provider: providerRef.current,
       })
     );
 
     return baseExtensions;
-  }, [provider, ydoc]);
+  }, [ydoc, providerReady]);
 
   return {
     ydoc,
-    provider,
-    indexeddbProvider,
+    provider: providerRef.current,
+    indexeddbProvider: indexeddbProviderRef.current,
     awareness,
     connectionStatus,
     isSynced,
