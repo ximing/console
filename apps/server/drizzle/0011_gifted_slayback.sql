@@ -1,0 +1,1 @@
+ALTER TABLE `yjs_documents` MODIFY COLUMN `data` varbinary NOT NULL;

@@ -34,6 +34,9 @@ export class BlogEditorService extends Service {
   pageId: string | undefined;
   navigate: (path: string) => void = () => {};
 
+  // Collaboration mode: when true, skip HTTP auto-save (server syncs via WebSocket)
+  isCollaborationMode = false;
+
   private contentJsonRef: Record<string, unknown> | undefined = undefined;
   private saveTimerRef: ReturnType<typeof setTimeout> | null = null;
   private editorRef: Editor | null = null;
@@ -93,11 +96,24 @@ export class BlogEditorService extends Service {
   private setupEditorListener(editor: Editor) {
     const handleUpdate = () => {
       this.contentJsonRef = editor.getJSON();
-      this.debouncedSave();
+      // Skip debounced save when in collaboration mode (server handles persistence)
+      if (!this.isCollaborationMode) {
+        this.debouncedSave();
+      }
     };
 
     editor.on('update', handleUpdate);
     this.editorCleanupRef = () => editor.off('update', handleUpdate);
+  }
+
+  /**
+   * Set collaboration mode.
+   * When enabled, editor updates won't trigger HTTP auto-save
+   * as the server handles persistence via WebSocket.
+   */
+  setCollaborationMode(enabled: boolean) {
+    this.isCollaborationMode = enabled;
+    console.log('[BlogEditorService] Collaboration mode:', enabled);
   }
 
   private debouncedSave() {
@@ -126,6 +142,32 @@ export class BlogEditorService extends Service {
   handleTitleChange(newTitle: string) {
     this.title = newTitle;
     this.debouncedSave();
+  }
+
+  /**
+   * Save title immediately on blur (no debounce)
+   * Also refreshes sidebar to show updated title
+   */
+  async saveTitleImmediately() {
+    if (!this.blog || this.saveTimerRef) return;
+
+    // Clear any pending debounced save
+    if (this.saveTimerRef) {
+      clearTimeout(this.saveTimerRef);
+      this.saveTimerRef = null;
+    }
+
+    this.localSaving = true;
+    try {
+      await this.blogService.saveBlog(this.blog.id, {
+        title: this.title,
+        slug: slugify(this.title, { lower: true, locale: 'zh', strict: false }),
+      });
+    } catch {
+      this.toastService.error('标题保存失败');
+    } finally {
+      this.localSaving = false;
+    }
   }
 
   toggleTag(tagId: string) {

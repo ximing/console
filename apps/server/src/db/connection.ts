@@ -64,6 +64,16 @@ export function initializeDatabase() {
 }
 
 /**
+ * Get MySQL connection pool (for raw queries)
+ */
+export function getPool(): mysql.Pool {
+  if (!pool) {
+    throw new Error('Database pool not initialized. Call initializeDatabase() first.');
+  }
+  return pool;
+}
+
+/**
  * Get Drizzle database instance (singleton)
  * Throws error if not initialized
  */
