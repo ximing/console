@@ -233,16 +233,18 @@ export const PageList = view((props: PageListProps) => {
           ))}
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredBlogs.map((blog) => (
-            <BlogCard
-              key={blog.id}
-              blog={blog}
-              directoryName={props.directoryName}
-              onClick={() => props.onSelectPage(blog.id)}
-              onEdit={props.onEditPage}
-            />
-          ))}
+        <div className="flex-1 overflow-auto -mx-6 -mb-4 px-6 pb-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 auto-rows-max">
+            {filteredBlogs.map((blog) => (
+              <BlogCard
+                key={blog.id}
+                blog={blog}
+                directoryName={props.directoryName}
+                onClick={() => props.onSelectPage(blog.id)}
+                onEdit={props.onEditPage}
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>

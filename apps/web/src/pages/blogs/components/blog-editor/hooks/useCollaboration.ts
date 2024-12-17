@@ -3,6 +3,7 @@ import * as Y from 'yjs';
 import { HocuspocusProvider } from '@hocuspocus/provider';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import Collaboration from '@tiptap/extension-collaboration';
+import CollaborationCaret from '@tiptap/extension-collaboration-caret';
 import { Awareness } from 'y-protocols/awareness';
 import type { Extension } from '@tiptap/react';
 import { inlineEditableExtensions } from '../editor/tiptap.config';
@@ -43,10 +44,15 @@ export function useCollaboration({ pageId }: UseCollaborationOptions): UseCollab
 
   const token = authService.token || localStorage.getItem('aimo_token') || '';
 
-  // Stable Y.Doc instance - never recreate during hook lifetime
-  const ydocRef = useRef<Y.Doc | null>(null);
-  if (ydocRef.current === null) {
+  // Y.Doc instance - recreate when pageId changes to avoid content mixing
+  const ydocRef = useRef<Y.Doc>(new Y.Doc());
+  const prevPageIdRef = useRef<string | undefined>(undefined);
+
+  // Recreate Y.Doc when pageId changes
+  if (prevPageIdRef.current !== pageId) {
+    ydocRef.current.destroy();
     ydocRef.current = new Y.Doc();
+    prevPageIdRef.current = pageId;
   }
   const ydoc = ydocRef.current;
 
@@ -137,8 +143,9 @@ export function useCollaboration({ pageId }: UseCollaborationOptions): UseCollab
 
   const awareness = providerRef.current?.awareness ?? null;
   const userId = authService.user?.id || '';
-  const userName = userId ? `User ${userId.slice(0, 6)}` : 'Guest';
+  const userName = authService.user?.username || authService.user?.email || 'Guest';
   const userColor = getUserColor(userId);
+  const userAvatar = authService.user?.avatar;
 
   useEffect(() => {
     if (!awareness || !userId) {
@@ -149,14 +156,9 @@ export function useCollaboration({ pageId }: UseCollaborationOptions): UseCollab
       id: userId,
       name: userName,
       color: userColor,
+      avatar: userAvatar,
     });
-  }, [awareness, userColor, userId, userName]);
-
-  useEffect(() => {
-    return () => {
-      ydoc.destroy();
-    };
-  }, [ydoc]);
+  }, [awareness, userColor, userId, userName, userAvatar]);
 
   const editorExtensions = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -174,8 +176,33 @@ export function useCollaboration({ pageId }: UseCollaborationOptions): UseCollab
       })
     );
 
+    // Add collaboration cursor to show other users' caret positions
+    baseExtensions.push(
+      CollaborationCaret.configure({
+        provider: providerRef.current,
+        user: {
+          name: userName,
+          color: userColor,
+          avatar: userAvatar,
+        },
+        render: (user) => {
+          const caret = document.createElement('span');
+          caret.classList.add('collaboration-carets__caret');
+          caret.setAttribute('style', `border-color: ${user.color}`);
+
+          const label = document.createElement('span');
+          label.classList.add('collaboration-carets__label');
+          label.setAttribute('style', `background-color: ${user.color}`);
+          label.textContent = user.name;
+
+          caret.appendChild(label);
+          return caret;
+        },
+      })
+    );
+
     return baseExtensions;
-  }, [ydoc, providerReady]);
+  }, [ydoc, providerReady, userName, userColor, userAvatar]);
 
   return {
     ydoc,
@@ -188,5 +215,6 @@ export function useCollaboration({ pageId }: UseCollaborationOptions): UseCollab
     userId,
     userName,
     userColor,
+    userAvatar,
   };
 }

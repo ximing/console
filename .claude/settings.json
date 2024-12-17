@@ -31,7 +31,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo 'notify --title \"Claude\" --message \"console 执行完毕\"' | nc -U /tmp/console.sock 2 > /dev/null"
+            "command": "echo 'notify --title \"Console 项目\" --message \"claude code 执行完毕\"' | nc -U /tmp/console.sock 2 > /dev/null"
           }
         ]
       }
