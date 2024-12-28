@@ -1,5 +1,3 @@
-import { Folder, Clock } from 'lucide-react';
-
 type SidebarTab = 'directory' | 'recent';
 
 interface SidebarTabsProps {
@@ -15,7 +13,7 @@ export const SidebarTabs = ({ activeTab, onTabChange }: SidebarTabsProps) => {
         type="button"
         aria-selected={activeTab === 'directory'}
         onClick={() => onTabChange('directory')}
-        className="flex items-center gap-2 transition-all duration-150"
+        className="flex items-center gap-2 transition-all duration-150 cursor-pointer"
       >
         <div
           className={`w-2 h-2 rounded-full ${
@@ -39,7 +37,7 @@ export const SidebarTabs = ({ activeTab, onTabChange }: SidebarTabsProps) => {
         type="button"
         aria-selected={activeTab === 'recent'}
         onClick={() => onTabChange('recent')}
-        className="flex items-center gap-2 transition-all duration-150"
+        className="flex items-center gap-2 transition-all duration-150 cursor-pointer"
       >
         <div
           className={`w-2 h-2 rounded-full ${
