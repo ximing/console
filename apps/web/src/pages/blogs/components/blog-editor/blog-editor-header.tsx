@@ -1,5 +1,5 @@
 import { observer, useService } from '@rabjs/react';
-import { Eye, Edit2, Trash2, Save, Send, Loader2 } from 'lucide-react';
+import { Eye, Edit2, Trash2, Send, Loader2 } from 'lucide-react';
 import { Awareness } from 'y-protocols/awareness';
 import { CollabAvatars } from './collab-avatars';
 import { BlogEditorService } from './blog-editor.service';
@@ -47,7 +47,7 @@ export const BlogEditorHeader = observer(({
   const directoryPath = getDirectoryPath(blog, directories);
 
   return (
-    <div className="flex items-center justify-between px-3 py-3 border-b border-gray-200 dark:border-zinc-700 shrink-0">
+    <div className="flex items-center justify-between px-4 py-3 shrink-0 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.2)]">
       <div className="flex items-center gap-2">
         {directoryPath && (
           <span className="text-xs text-gray-500 dark:text-zinc-400">
@@ -63,17 +63,18 @@ export const BlogEditorHeader = observer(({
       <div className="flex items-center gap-1">
         {/* Collaboration status */}
         {awareness && (
-          <span
-            className={`text-xs px-2 py-0.5 rounded-full ${
+          <div className="flex items-center gap-1.5">
+            <div className={`w-1.5 h-1.5 rounded-full ${
               connectionStatus === 'connected'
-                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                ? 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)]'
                 : connectionStatus === 'connecting'
-                ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                : 'bg-gray-100 text-gray-500 dark:bg-zinc-700 dark:text-zinc-400'
-            }`}
-          >
-            {connectionStatus === 'connected' ? '在线' : connectionStatus === 'connecting' ? '连接中...' : '离线'}
-          </span>
+                ? 'bg-amber-500 animate-pulse'
+                : 'bg-gray-400'
+            }`} />
+            <span className="text-xs text-gray-500 dark:text-zinc-400">
+              {connectionStatus === 'connected' ? '在线' : connectionStatus === 'connecting' ? '连接中...' : '离线'}
+            </span>
+          </div>
         )}
         {/* Collaboration avatars */}
         {awareness && (
@@ -97,8 +98,8 @@ export const BlogEditorHeader = observer(({
             className={`px-2 py-1 text-xs font-medium transition-colors
               ${
                 blogEditor.isPreview
-                  ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
-                  : 'bg-gray-50 dark:bg-zinc-700 text-gray-500 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-600'
+                  ? 'bg-white dark:bg-zinc-700 shadow-sm text-green-600 dark:text-green-400'
+                  : 'text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-300'
               }`}
           >
             <Eye className="w-3.5 h-3.5 inline mr-0.5" />
@@ -109,8 +110,8 @@ export const BlogEditorHeader = observer(({
             className={`px-2 py-1 text-xs font-medium transition-colors border-l border-gray-200 dark:border-zinc-600
               ${
                 !blogEditor.isPreview
-                  ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
-                  : 'bg-gray-50 dark:bg-zinc-700 text-gray-500 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-600'
+                  ? 'bg-white dark:bg-zinc-700 shadow-sm text-green-600 dark:text-green-400'
+                  : 'text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-300'
               }`}
           >
             <Edit2 className="w-3.5 h-3.5 inline mr-0.5" />
@@ -118,27 +119,11 @@ export const BlogEditorHeader = observer(({
           </button>
         </div>
 
-        {/* Save draft button - only visible in edit mode */}
-        {!blogEditor.isPreview && (
-          <button
-            onClick={() => blogEditor.saveDraft()}
-            disabled={blogEditor.localSaving || blogEditor.isPublishing}
-            className="p-1 text-gray-400 dark:text-zinc-500 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded transition-colors disabled:opacity-50"
-            title="保存草稿"
-          >
-            {blogEditor.localSaving ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Save className="w-3.5 h-3.5" />
-            )}
-          </button>
-        )}
-
         {/* Publish button */}
         <button
           onClick={() => blogEditor.publish()}
           disabled={blogEditor.localSaving || blogEditor.isPublishing}
-          className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-white bg-primary-600 hover:bg-primary-700 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white bg-gradient-to-br from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 rounded-lg shadow-[0_2px_8px_rgba(34,197,94,0.3)] hover:shadow-[0_4px_12px_rgba(34,197,94,0.4)] hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {blogEditor.isPublishing ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
