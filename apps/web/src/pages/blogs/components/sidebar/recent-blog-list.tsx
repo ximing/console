@@ -50,8 +50,8 @@ export const RecentBlogList = view(
               aria-label={blog.title}
               className={`group flex items-center gap-2 px-3 py-2 text-sm cursor-pointer transition-all duration-150 w-full text-left rounded-none ${
                 selectedBlogId === blog.id
-                  ? 'bg-primary-50/80 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
-                  : 'hover:bg-gray-100/70 dark:hover:bg-zinc-800/50 text-gray-700 dark:text-zinc-300'
+                  ? 'bg-green-50/60 dark:bg-green-900/20 text-green-600 dark:text-green-400'
+                  : 'hover:bg-green-50/80 dark:hover:bg-green-900/20 text-gray-700 dark:text-zinc-300'
               }`}
             >
               <FileText className="w-4 h-4 flex-shrink-0 opacity-60" />
