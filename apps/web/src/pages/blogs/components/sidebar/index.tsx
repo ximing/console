@@ -30,7 +30,7 @@ export const Sidebar = view((props: SidebarProps) => {
   return (
     <div className="flex flex-col h-full bg-white dark:bg-zinc-900 shadow-[4px_0_24px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.4)]">
       {/* Search Button */}
-      <div className="px-2 py-2 border-b border-gray-100/80 dark:border-zinc-800/50">
+      <div className="px-2 py-2">
         <SearchButton onClick={props.onSearchClick} />
       </div>
 
@@ -66,7 +66,7 @@ export const Sidebar = view((props: SidebarProps) => {
       )}
 
       {/* Action Buttons */}
-      <div className="flex flex-col gap-1 px-2 py-2 border-t border-gray-100/80 dark:border-zinc-800/50">
+      <div className="flex flex-col gap-1 px-2 py-2">
         <button
           onClick={() => props.onNewBlog()}
           disabled={isLoading}

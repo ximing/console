@@ -60,10 +60,10 @@ export const BlogEditorHeader = observer(({
         </div>
       </div>
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-3">
         {/* Collaboration status */}
         {awareness && (
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <div className={`w-1.5 h-1.5 rounded-full ${
               connectionStatus === 'connected'
                 ? 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)]'
@@ -78,14 +78,12 @@ export const BlogEditorHeader = observer(({
         )}
         {/* Collaboration avatars */}
         {awareness && (
-          <div className="mr-2">
-            <CollabAvatars awareness={awareness} currentUserId={currentUserId} />
-          </div>
+          <CollabAvatars awareness={awareness} currentUserId={currentUserId} />
         )}
         {/* Delete button */}
         <button
           onClick={() => blogEditor.deleteBlog()}
-          className="p-1 text-gray-400 dark:text-zinc-500 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 rounded transition-colors"
+          className="p-1.5 text-gray-400 dark:text-zinc-500 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 rounded-lg transition-colors"
           title="删除"
         >
           <Trash2 className="w-3.5 h-3.5" />
@@ -123,7 +121,7 @@ export const BlogEditorHeader = observer(({
         <button
           onClick={() => blogEditor.publish()}
           disabled={blogEditor.localSaving || blogEditor.isPublishing}
-          className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white bg-gradient-to-br from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 rounded-lg shadow-[0_2px_8px_rgba(34,197,94,0.3)] hover:shadow-[0_4px_12px_rgba(34,197,94,0.4)] hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-white bg-gradient-to-br from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 rounded-lg shadow-[0_2px_8px_rgba(34,197,94,0.3)] hover:shadow-[0_4px_12px_rgba(34,197,94,0.4)] hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {blogEditor.isPublishing ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
