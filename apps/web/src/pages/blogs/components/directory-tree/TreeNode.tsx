@@ -92,13 +92,13 @@ export const TreeNode = forwardRef<HTMLDivElement, Props>(
             group flex items-center gap-1 px-2 py-1.5 cursor-pointer rounded-md mx-1
             transition-all duration-100
             ${isSelected
-              ? 'border-l-2 border-green-500 bg-green-50/60 dark:bg-green-900/20 dark:border-green-400 text-green-600 dark:text-green-400'
-              : 'hover:bg-green-50/80 dark:hover:bg-green-900/20 hover:text-green-600 dark:hover:text-green-400 text-gray-700 dark:text-zinc-300'
+              ? 'text-green-600 dark:text-green-400 font-medium'
+              : 'hover:bg-green-50/60 dark:hover:bg-green-900/15 text-gray-700 dark:text-zinc-300'
             }
             ${isDragging ? 'opacity-50' : ''}
             ${isDropTarget ? 'ring-2 ring-green-500/50' : ''}
           `}
-          style={{ paddingLeft: `${depth * DEPTH_INDENT + 6}px` }}
+          style={{ paddingLeft: `${depth * DEPTH_INDENT + 8}px` }}
           onClick={handleClick}
           onContextMenu={handleContextMenu}
           onMouseEnter={() => setIsHovered(true)}
