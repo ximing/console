@@ -15,7 +15,7 @@ export const SidebarTabs = ({ activeTab, onTabChange }: SidebarTabsProps) => {
         type="button"
         aria-selected={activeTab === 'directory'}
         onClick={() => onTabChange('directory')}
-        className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 -mb-px transition-all duration-150 cursor-pointer ${
+        className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 -mb-px transition-all duration-150 cursor-pointer ${
           activeTab === 'directory'
             ? 'border-green-500 text-green-600 dark:text-green-400'
             : 'border-transparent text-gray-500 dark:text-zinc-500 hover:text-gray-700 dark:hover:text-zinc-300'
@@ -29,7 +29,7 @@ export const SidebarTabs = ({ activeTab, onTabChange }: SidebarTabsProps) => {
         type="button"
         aria-selected={activeTab === 'recent'}
         onClick={() => onTabChange('recent')}
-        className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 -mb-px transition-all duration-150 cursor-pointer ${
+        className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 -mb-px transition-all duration-150 cursor-pointer ${
           activeTab === 'recent'
             ? 'border-green-500 text-green-600 dark:text-green-400'
             : 'border-transparent text-gray-500 dark:text-zinc-500 hover:text-gray-700 dark:hover:text-zinc-300'
