@@ -55,29 +55,29 @@ export const HomePage = view(() => {
 
   return (
     <Layout>
-      <div className="flex-1 bg-gray-50 dark:bg-dark-900 p-6 overflow-auto">
+      <div className="flex-1 bg-gray-50/50 dark:bg-zinc-900/50 p-6 overflow-auto">
         <div className="max-w-6xl mx-auto space-y-6">
           {/* Header - Greeting */}
-          <div className="bg-gradient-to-r from-primary-500 to-primary-600 dark:from-primary-600 dark:to-primary-700 rounded-xl shadow-lg p-8 text-white">
+          <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-xl shadow-sm p-8 border-l-4 border-green-500">
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <GreetingIcon className="w-8 h-8" />
-                  <h1 className="text-3xl font-bold">
+                  <GreetingIcon className="w-8 h-8 text-green-600 dark:text-green-400" />
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                     {greeting}，{userName}！
                   </h1>
                 </div>
-                <p className="text-primary-100 text-lg">欢迎回来，开始您的工作吧</p>
+                <p className="text-gray-500 dark:text-gray-400 text-lg">欢迎回来，开始您的工作吧</p>
               </div>
               <div className="hidden md:flex items-center">
                 {userAvatar ? (
                   <img
                     src={userAvatar}
                     alt={`${userName} avatar`}
-                    className="w-20 h-20 rounded-full object-cover border-4 border-white/30"
+                    className="w-20 h-20 rounded-full object-cover border-4 border-green-500/30"
                   />
                 ) : (
-                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center text-white text-3xl font-semibold border-4 border-white/30">
+                  <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center text-green-600 dark:text-green-400 text-3xl font-semibold border-4 border-green-500/30">
                     {userName.charAt(0).toUpperCase()}
                   </div>
                 )}
@@ -88,15 +88,15 @@ export const HomePage = view(() => {
           {/* Main Dashboard Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Time Card */}
-            <div className="bg-white dark:bg-dark-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-dark-700">
+            <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-xl shadow-sm p-6 hover:shadow-md hover:-translate-y-0.5 hover:bg-green-50/50 dark:hover:bg-green-900/15 transition-all duration-150">
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-lg">
-                  <Clock className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+                <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                  <Clock className="w-6 h-6 text-green-600 dark:text-green-400" />
                 </div>
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">当前时间</h2>
               </div>
               <div className="space-y-2">
-                <div className="text-4xl font-bold text-gray-900 dark:text-white font-mono">
+                <div className="text-4xl font-bold text-green-600 dark:text-green-400 font-mono">
                   {timeString}
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">{dateString}</div>
@@ -104,7 +104,7 @@ export const HomePage = view(() => {
             </div>
 
             {/* Date Card */}
-            <div className="bg-white dark:bg-dark-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-dark-700">
+            <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-xl shadow-sm p-6 hover:shadow-md hover:-translate-y-0.5 hover:bg-green-50/50 dark:hover:bg-green-900/15 transition-all duration-150">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
                   <Calendar className="w-6 h-6 text-green-600 dark:text-green-400" />
@@ -112,7 +112,7 @@ export const HomePage = view(() => {
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">今日日期</h2>
               </div>
               <div className="space-y-2">
-                <div className="text-3xl font-bold text-gray-900 dark:text-white">
+                <div className="text-3xl font-bold text-green-600 dark:text-green-400">
                   {currentTime.getDate()}
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -128,10 +128,10 @@ export const HomePage = view(() => {
             </div>
 
             {/* User Info Card */}
-            <div className="bg-white dark:bg-dark-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-dark-700">
+            <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-xl shadow-sm p-6 hover:shadow-md hover:-translate-y-0.5 hover:bg-green-50/50 dark:hover:bg-green-900/15 transition-all duration-150">
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                  <User className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                  <User className="w-6 h-6 text-green-600 dark:text-green-400" />
                 </div>
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">用户信息</h2>
               </div>
@@ -158,20 +158,20 @@ export const HomePage = view(() => {
 
           {/* Quick Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white dark:bg-dark-800 rounded-lg shadow p-4 border border-gray-200 dark:border-dark-700">
-              <div className="text-2xl font-bold text-primary-600 dark:text-primary-400">
+            <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-lg shadow-sm p-4 hover:shadow-md hover:-translate-y-0.5 hover:bg-green-50/50 dark:hover:bg-green-900/15 transition-all duration-150">
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {currentTime.getHours()}
               </div>
               <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">当前小时</div>
             </div>
-            <div className="bg-white dark:bg-dark-800 rounded-lg shadow p-4 border border-gray-200 dark:border-dark-700">
+            <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-lg shadow-sm p-4 hover:shadow-md hover:-translate-y-0.5 hover:bg-green-50/50 dark:hover:bg-green-900/15 transition-all duration-150">
               <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {currentTime.getMinutes()}
               </div>
               <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">当前分钟</div>
             </div>
-            <div className="bg-white dark:bg-dark-800 rounded-lg shadow p-4 border border-gray-200 dark:border-dark-700">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+            <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-lg shadow-sm p-4 hover:shadow-md hover:-translate-y-0.5 hover:bg-green-50/50 dark:hover:bg-green-900/15 transition-all duration-150">
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {Math.ceil(
                   (Number(currentTime) - Number(new Date(currentTime.getFullYear(), 0, 1))) /
                     86400000
@@ -179,8 +179,8 @@ export const HomePage = view(() => {
               </div>
               <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">今年第几天</div>
             </div>
-            <div className="bg-white dark:bg-dark-800 rounded-lg shadow p-4 border border-gray-200 dark:border-dark-700">
-              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+            <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-lg shadow-sm p-4 hover:shadow-md hover:-translate-y-0.5 hover:bg-green-50/50 dark:hover:bg-green-900/15 transition-all duration-150">
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {Math.ceil(
                   (Number(currentTime) -
                     Number(new Date(currentTime.getFullYear(), currentTime.getMonth(), 1))) /
