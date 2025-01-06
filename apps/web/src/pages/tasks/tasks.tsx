@@ -220,7 +220,7 @@ const TaskFormModal = view(({ isOpen, onClose, onSuccess, editTask }: TaskFormMo
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="请输入任务名称"
-              className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-dark-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 ${
+              className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 ${
                 errors.name ? 'border-red-500' : 'border-gray-300 dark:border-dark-600'
               }`}
             />
@@ -272,7 +272,7 @@ const TaskFormModal = view(({ isOpen, onClose, onSuccess, editTask }: TaskFormMo
                   value={cronExpression}
                   onChange={(e) => setCronExpression(e.target.value)}
                   placeholder="0 * * * *"
-                  className={`w-full px-3 py-2 pr-20 border rounded-lg bg-white dark:bg-dark-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  className={`w-full px-3 py-2 pr-20 border rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 ${
                     errors.cronExpression
                       ? 'border-red-500'
                       : 'border-gray-300 dark:border-dark-600'
@@ -321,7 +321,7 @@ const TaskFormModal = view(({ isOpen, onClose, onSuccess, editTask }: TaskFormMo
               <button
                 type="button"
                 onClick={() => setShowActionDropdown(!showActionDropdown)}
-                className={`w-full flex items-center justify-between px-3 py-2 border rounded-lg bg-white dark:bg-dark-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                className={`w-full flex items-center justify-between px-3 py-2 border rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 ${
                   errors.actionId ? 'border-red-500' : 'border-gray-300 dark:border-dark-600'
                 }`}
               >
@@ -586,7 +586,7 @@ export const TasksPage = view(() => {
 
           {/* Loading State */}
           {taskService.isLoading && (
-            <div className="bg-white dark:bg-dark-800 rounded-xl shadow-md p-8 border border-gray-200 dark:border-dark-700">
+            <div className="bg-white dark:bg-dark-800 rounded-xl shadow-md p-8">
               <div className="animate-pulse space-y-4">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="h-16 bg-gray-200 dark:bg-dark-700 rounded-lg" />
@@ -597,7 +597,7 @@ export const TasksPage = view(() => {
 
           {/* Empty State */}
           {!taskService.isLoading && taskService.tasks.length === 0 && (
-            <div className="bg-white dark:bg-dark-800 rounded-xl shadow-md p-12 border border-gray-200 dark:border-dark-700 text-center">
+            <div className="bg-white dark:bg-dark-800 rounded-xl shadow-md p-12 text-center">
               <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-dark-700 rounded-full flex items-center justify-center">
                 <Zap className="w-8 h-8 text-gray-400" />
               </div>
@@ -658,7 +658,7 @@ export const TasksPage = view(() => {
                             className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${
                               task.triggerType === 'scheduled'
                                 ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                                : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                                : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
                             }`}
                           >
                             {task.triggerType === 'scheduled' ? (
@@ -734,7 +734,7 @@ export const TasksPage = view(() => {
                             </button>
                             <button
                               onClick={() => openDeleteModal(task.id)}
-                              className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
+                              className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                               title="删除任务"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -845,7 +845,7 @@ export const TasksPage = view(() => {
                   {taskService.executions.map((execution) => (
                     <div
                       key={execution.id}
-                      className="p-4 bg-gray-50 dark:bg-dark-700/50 rounded-lg border border-gray-200 dark:border-dark-600"
+                      className="p-4 bg-gray-50 dark:bg-dark-700/50 rounded-lg shadow-sm"
                     >
                       <div className="flex items-center justify-between mb-2">
                         <span
