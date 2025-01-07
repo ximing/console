@@ -24,7 +24,7 @@ export const GithubPage = view(() => {
     <Layout>
       <div className="flex flex-col h-full">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-dark-700 bg-white dark:bg-dark-800">
+        <div className="flex items-center justify-between px-4 py-2 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_1px_8px_rgba(0,0,0,0.2)]">
           <RepoSelector />
           <CommitButton />
         </div>

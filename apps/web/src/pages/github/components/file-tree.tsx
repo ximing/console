@@ -256,7 +256,7 @@ export const FileTree = view(() => {
   };
 
   return (
-    <div className="w-[240px] h-full overflow-auto bg-white dark:bg-dark-800 border-r border-gray-200 dark:border-dark-700">
+    <div className="w-64 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm shadow-[2px_0_12px_rgba(0,0,0,0.04)]">
       {/* Header */}
       <div className="sticky top-0 flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-dark-700 bg-white dark:bg-dark-800">
         <span className="text-sm font-medium">文件</span>
