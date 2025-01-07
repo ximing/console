@@ -125,7 +125,7 @@ export const NotificationsPage = view(() => {
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllAsRead}
-                className="flex items-center gap-2 px-4 py-2 text-sm text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 text-sm text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-md transition-all"
               >
                 <CheckCheck className="w-4 h-4" />
                 <span>全部已读</span>
@@ -134,15 +134,15 @@ export const NotificationsPage = view(() => {
           </div>
 
           {/* Filter Tabs */}
-          <div className="flex items-center gap-2 bg-white dark:bg-dark-800 p-1.5 rounded-lg border border-gray-200 dark:border-dark-700">
+          <div className="flex px-1 border-b border-gray-100 dark:border-zinc-800">
             {(['all', 'unread', 'read'] as StatusFilter[]).map((filter) => (
               <button
                 key={filter}
                 onClick={() => handleFilterChange(filter)}
-                className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-all ${
                   statusFilter === filter
-                    ? 'bg-primary-600 text-white'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700'
+                    ? 'border-green-500 text-green-600 dark:text-green-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
                 }`}
               >
                 {filter === 'all' ? '全部' : filter === 'unread' ? '未读' : '已读'}
@@ -242,10 +242,10 @@ const NotificationCard = view(
 
     return (
       <div
-        className={`bg-white dark:bg-dark-800 rounded-xl shadow-sm border transition-colors ${
+        className={`rounded-lg shadow-sm transition-all hover:-translate-y-0.5 ${
           isUnread
-            ? 'border-l-4 border-l-primary-500 border-gray-200 dark:border-dark-700'
-            : 'border-gray-200 dark:border-dark-700'
+            ? 'border-l-2 border-green-500 bg-white dark:bg-zinc-800/90'
+            : 'bg-gray-50/50 dark:bg-zinc-800/50'
         }`}
       >
         <div className="p-4">
