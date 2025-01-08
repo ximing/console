@@ -256,9 +256,9 @@ export const FileTree = view(() => {
   };
 
   return (
-    <div className="w-64 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm shadow-[2px_0_12px_rgba(0,0,0,0.04)]">
+    <div className="w-64 h-full overflow-auto bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm shadow-[2px_0_12px_rgba(0,0,0,0.04)]">
       {/* Header */}
-      <div className="sticky top-0 flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-dark-700 bg-white dark:bg-dark-800">
+      <div className="sticky top-0 flex items-center justify-between px-3 py-2 bg-white/90 dark:bg-zinc-900/90 shadow-[0_1px_0_rgba(0,0,0,0.04)] dark:shadow-[0_1px_0_rgba(0,0,0,0.1)]">
         <span className="text-sm font-medium">文件</span>
         <button
           onClick={() => {
