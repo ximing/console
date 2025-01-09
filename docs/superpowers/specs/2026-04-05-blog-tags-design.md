@@ -21,9 +21,9 @@ Sidebar (侧边栏)
 ├── RecentBlogList (最近 Tab 内容)
 └── TagPanel (新增：标签 Tab 内容)
     ├── TagSearchBar
-    ├── TagList (标签列表，支持点击筛选)
-    ├── TagItem (单个标签，含编辑/删除)
-    └── CreateTagButton → TagModal (创建/编辑弹窗)
+    ├── TagList
+    ├── TagItem
+    └── TagModal (创建/编辑弹窗)
 
 BlogEditorPage (编辑器页面)
 └── BlogEditorContent
@@ -79,6 +79,12 @@ BlogEditorPage (编辑器页面)
 │         [取消]  [保存]         │
 └───────────────────────────────┘
 ```
+
+#### 验证规则
+- **名称必填**：不能为空
+- **名称长度**：1-20 字符
+- **名称唯一性**：同一用户下不允许重名标签
+- **颜色默认**：选择预设颜色时自动填充自定义颜色输入框
 
 #### 预设颜色
 1. `#22c55e` - 绿色
@@ -159,13 +165,18 @@ BlogEditorPage (编辑器页面)
 - `apps/web/src/pages/blogs/components/blog-editor/blog-editor-content.tsx` - 添加 TagSelector
 - `apps/web/src/services/tag.service.ts` - 添加搜索/筛选方法
 
-## API 端点（已存在，需确认）
+## API 端点说明
 
+### 后端已支持
 - `GET /api/tags` - 获取所有标签
 - `POST /api/tags` - 创建标签
 - `PUT /api/tags/:id` - 更新标签
 - `DELETE /api/tags/:id` - 删除标签
-- `GET /api/blogs?tagId=xxx` - 按标签获取博客（需确认后端支持）
+
+### 按标签筛选博客
+- 优先使用 `BlogService.loadBlogs({ tagId })` 调用 `GET /api/blogs?tagId=xxx`
+- 若后端暂不支持：根据 `blog.tags` 在前端过滤博客列表（客户端筛选）
+- URL 参数 `?tagId=xxx` 支持直接链接访问
 
 ## 实现顺序
 
@@ -177,6 +188,10 @@ BlogEditorPage (编辑器页面)
 
 ## 注意事项
 
-- 标签删除时检查是否被博客使用，若有博客使用则提示用户
+- **标签删除行为**：
+  - 删除前检查标签是否被博客使用
+  - 若有关联博客，弹窗确认：「该标签被 X 篇博客使用，删除后将从这些博客中移除。确定删除吗？」
+  - 用户确认后删除，关联博客的 tagIds 数组中移除该标签 ID
 - 标签名称最大长度 20 字符
 - 颜色选择器使用 design system 的绿色作为主色调
+- 搜索标签时**不区分大小写**
