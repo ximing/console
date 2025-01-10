@@ -660,17 +660,40 @@ Add selectedTagId state and tag filtering logic to the main blogs page.
 
 - [ ] **Step 1: Add tag-related state and handlers**
 
+**Add to imports (around line 7):**
+```tsx
+import { TagService } from '../../services/tag.service';
+import { useSearchParams } from 'react-router';
+```
+
 **Add to state declarations (after line 31):**
 ```tsx
 const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
+const [searchParams, setSearchParams] = useSearchParams();
+```
+
+**Add initialization from URL params (after useState declarations ~line 37):**
+```tsx
+// Initialize selectedTagId from URL params (e.g., ?tagId=xxx)
+useEffect(() => {
+  const tagIdParam = searchParams.get('tagId');
+  if (tagIdParam) {
+    setSelectedTagId(tagIdParam);
+  }
+}, [searchParams]);
 ```
 
 **Add tag selection handler (after handleSelectDirectory ~line 96):**
 ```tsx
-// Select tag for filtering
+// Select tag for filtering (updates URL params)
 const handleSelectTag = useCallback((tagId: string | null) => {
   setSelectedTagId(tagId);
-}, []);
+  if (tagId) {
+    setSearchParams({ tagId }, { replace: true });
+  } else {
+    setSearchParams({}, { replace: true });
+  }
+}, [setSearchParams]);
 ```
 
 **Update the useEffect for blog loading to handle tag filtering (replace lines 46-57):**
