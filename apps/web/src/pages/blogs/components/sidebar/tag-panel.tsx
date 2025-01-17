@@ -81,15 +81,19 @@ export const TagPanel = view((props: TagPanelProps) => {
   };
 
   const handleDeleteTag = async (tagId: string) => {
-    // Confirm before deletion
     const tag = tagService.getTagById(tagId);
     if (!tag) return;
 
-    if (window.confirm(`确定要删除标签 "${tag.name}" 吗？`)) {
-      const success = await tagService.deleteTag(tagId);
-      if (success && props.selectedTagId === tagId) {
-        // If the deleted tag was selected, go back to "All"
-        props.onSelectTag(null);
+    const blogCount = tagBlogCounts[tagId] || 0;
+    const confirmed = window.confirm(
+      blogCount > 0
+        ? `该标签被 ${blogCount} 篇博客使用，删除后将从这些博客中移除。确定删除吗？`
+        : `确定要删除该标签吗？`
+    );
+    if (confirmed) {
+      await tagService.deleteTag(tagId);
+      if (props.selectedTagId === tagId) {
+        onSelectTag(null);
       }
     }
   };
