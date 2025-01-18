@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { view, useService } from '@rabjs/react';
 import type { TagDto } from '@x-console/dto';
-import { TagService } from '../../../../../services/tag.service';
+import { TagService } from '../../../../services/tag.service';
 
 interface TagModalProps {
   visible: boolean;
