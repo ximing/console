@@ -93,7 +93,7 @@ export const TagPanel = view((props: TagPanelProps) => {
     if (confirmed) {
       await tagService.deleteTag(tagId);
       if (props.selectedTagId === tagId) {
-        onSelectTag(null);
+        props.onSelectTag(null);
       }
     }
   };
