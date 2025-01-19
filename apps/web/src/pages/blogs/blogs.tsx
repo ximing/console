@@ -1,9 +1,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { view, useService } from '@rabjs/react';
-import { useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { Layout } from '../../components/layout';
 import { BlogService } from '../../services/blog.service';
 import { DirectoryService } from '../../services/directory.service';
+import { TagService } from '../../services/tag.service';
 import { ToastService } from '../../services/toast.service';
 import { Sidebar } from './components/sidebar';
 import { ResizableSidebar } from './components/sidebar/resizable-sidebar';
@@ -30,10 +31,20 @@ export const BlogListPage = view(() => {
   // UI State
   const [activeTab, setActiveTab] = useState<'directory' | 'recent'>('directory');
   const [selectedDirectoryId, setSelectedDirectoryId] = useState<string | null>(null);
+  const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const [searchModalVisible, setSearchModalVisible] = useState(false);
   const [directoryLoading, setDirectoryLoading] = useState(false);
   const [initialExpandedIds, setInitialExpandedIds] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('card');
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Initialize selectedTagId from URL params (e.g., ?tagId=xxx)
+  useEffect(() => {
+    const tagIdParam = searchParams.get('tagId');
+    if (tagIdParam) {
+      setSelectedTagId(tagIdParam);
+    }
+  }, [searchParams]);
 
   // Load directories on mount
   useEffect(() => {
@@ -42,9 +53,12 @@ export const BlogListPage = view(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Load blogs when directory selection changes
+  // Load blogs when directory or tag selection changes
   useEffect(() => {
-    if (selectedDirectoryId) {
+    if (selectedTagId) {
+      // Filter by tag
+      blogService.loadBlogs({ tagId: selectedTagId, pageSize: 1000 });
+    } else if (selectedDirectoryId) {
       setDirectoryLoading(true);
       blogService
         .loadBlogs({ directoryId: selectedDirectoryId, pageSize: 1000 })
@@ -54,7 +68,7 @@ export const BlogListPage = view(() => {
       blogService.loadBlogs({ pageSize: 1000 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDirectoryId]);
+  }, [selectedDirectoryId, selectedTagId]);
 
   // Create new blog
   const handleCreateBlog = async (directoryId: string | null) => {
@@ -94,6 +108,16 @@ export const BlogListPage = view(() => {
     }
     setSelectedDirectoryId(directoryId);
   };
+
+  // Select tag for filtering (updates URL params)
+  const handleSelectTag = useCallback((tagId: string | null) => {
+    setSelectedTagId(tagId);
+    if (tagId) {
+      setSearchParams({ tagId }, { replace: true });
+    } else {
+      setSearchParams({}, { replace: true });
+    }
+  }, [setSearchParams]);
 
   // Select page (blog) - navigate to editor page
   const handleSelectPage = (pageId: string) => {
@@ -146,10 +170,12 @@ export const BlogListPage = view(() => {
             activeTab={activeTab}
             onTabChange={setActiveTab}
             selectedBlogId={selectedBlogId || null}
+            selectedTagId={selectedTagId}
             onSelectBlog={handleSelectPage}
             initialExpandedIds={initialExpandedIds}
             selectedDirectoryId={selectedDirectoryId}
             onSelectDirectory={handleSelectDirectory}
+            onSelectTag={handleSelectTag}
             onSearchClick={() => setSearchModalVisible(true)}
             onNewBlog={(dirId) => handleCreateBlog(dirId ?? selectedDirectoryId)}
             onNewDirectory={(parentId) => handleCreateDirectory(parentId)}
