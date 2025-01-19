@@ -26,8 +26,8 @@ export const TagPanel = view((props: TagPanelProps) => {
 
     blogService.blogs.forEach((blog) => {
       if (blog.tags && Array.isArray(blog.tags)) {
-        blog.tags.forEach((tagId: string) => {
-          counts[tagId] = (counts[tagId] || 0) + 1;
+        blog.tags.forEach((tag) => {
+          counts[tag.id] = (counts[tag.id] || 0) + 1;
         });
       }
     });
