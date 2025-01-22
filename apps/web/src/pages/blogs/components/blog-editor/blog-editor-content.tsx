@@ -1,7 +1,7 @@
 import { observer, useService } from '@rabjs/react';
 import { EditorContent, Editor } from '@tiptap/react';
-import { TagService } from '../../../../services/tag.service';
 import { BlogEditorService } from './blog-editor.service';
+import { TagSelector } from './tag-selector';
 
 interface BlogEditorContentProps {
   editor: Editor | null;
@@ -9,7 +9,6 @@ interface BlogEditorContentProps {
 
 export const BlogEditorContent = observer(({ editor }: BlogEditorContentProps) => {
   const blogEditor = useService(BlogEditorService);
-  const tagService = useService(TagService);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 space-y-6 mt-6">
@@ -34,38 +33,7 @@ export const BlogEditorContent = observer(({ editor }: BlogEditorContentProps) =
         {/* Tags */}
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm text-gray-500 dark:text-zinc-400">标签:</span>
-          {tagService.tags.map((tag) => {
-            const isSelected = blogEditor.selectedTagIds.includes(tag.id);
-            return blogEditor.isPreview ? (
-              <span
-                key={tag.id}
-                className={`px-2 py-1 text-xs font-medium rounded-full ${
-                  isSelected
-                    ? 'text-white'
-                    : 'text-gray-600 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-700'
-                }`}
-                style={isSelected ? { backgroundColor: tag.color } : {}}
-              >
-                {tag.name}
-              </span>
-            ) : (
-              <button
-                key={tag.id}
-                onClick={() => blogEditor.toggleTag(tag.id)}
-                className={`px-2 py-1 text-xs font-medium rounded-full transition-colors ${
-                  isSelected
-                    ? 'text-white'
-                    : 'text-gray-600 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-700 hover:bg-gray-200 dark:hover:bg-zinc-600'
-                }`}
-                style={isSelected ? { backgroundColor: tag.color } : {}}
-              >
-                {tag.name}
-              </button>
-            );
-          })}
-          {tagService.tags.length === 0 && (
-            <span className="text-sm text-gray-400 dark:text-zinc-600">暂无标签</span>
-          )}
+          <TagSelector />
         </div>
       </div>
 
