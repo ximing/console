@@ -4,7 +4,6 @@ import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { Layout } from '../../components/layout';
 import { BlogService } from '../../services/blog.service';
 import { DirectoryService } from '../../services/directory.service';
-import { TagService } from '../../services/tag.service';
 import { ToastService } from '../../services/toast.service';
 import { Sidebar } from './components/sidebar';
 import { ResizableSidebar } from './components/sidebar/resizable-sidebar';
