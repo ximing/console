@@ -3,8 +3,6 @@ import { view, useService } from '@rabjs/react';
 import { Plus, X, Check } from 'lucide-react';
 import { TagService } from '../../../../services/tag.service';
 import { BlogEditorService } from './blog-editor.service';
-import type { TagDto, CreateTagDto } from '@x-console/dto';
-
 const PRESET_COLORS = [
   '#22c55e', '#3b82f6', '#ef4444', '#f59e0b',
   '#8b5cf6', '#ec4899', '#6b7280', '#14b8a6',
