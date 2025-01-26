@@ -16,3 +16,5 @@ export * from './directory.js';
 export * from './tag.js';
 export * from './blog-tag.js';
 export * from './yjs.js';
+export * from './app.js';
+export * from './app-version.js';
