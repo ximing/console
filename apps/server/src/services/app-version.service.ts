@@ -1,8 +1,9 @@
 import { Service } from 'typedi';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, count } from 'drizzle-orm';
 
 import { getDatabase } from '../db/connection.js';
 import { appVersions, type AppVersion, type NewAppVersion } from '../db/schema/app-version.js';
+import { apps } from '../db/schema/app.js';
 import { generateUid } from '../utils/id.js';
 import type { AppVersionDto, CreateVersionDto, UpdateVersionDto, VersionListDto } from '@x-console/dto';
 
@@ -28,30 +29,32 @@ export class AppVersionService {
       .limit(pageSize)
       .offset(offset);
 
-    const totalResult = await db
-      .select({ count: appVersions.id })
+    const countResult = await db
+      .select({ count: count() })
       .from(appVersions)
       .where(eq(appVersions.appId, appId));
+    const total = countResult[0]?.count ?? 0;
 
     return {
       versions: results.map((v) => this.toDto(v)),
-      total: totalResult.length,
+      total,
     };
   }
 
   /**
    * Get a single version by ID
    */
-  async getVersionById(id: string): Promise<AppVersionDto | null> {
+  async getVersionById(id: string, userId: string): Promise<AppVersionDto | null> {
     const db = getDatabase();
 
     const results = await db
       .select()
       .from(appVersions)
-      .where(eq(appVersions.id, id))
+      .innerJoin(apps, eq(appVersions.appId, apps.id))
+      .where(and(eq(appVersions.id, id), eq(apps.userId, userId)))
       .limit(1);
 
-    return results.length > 0 ? this.toDto(results[0]) : null;
+    return results.length > 0 ? this.toDto(results[0].app_versions) : null;
   }
 
   /**
@@ -91,18 +94,22 @@ export class AppVersionService {
    * Update an existing app version
    * If isLatest is set to true, unsets other latest versions for the same app
    */
-  async updateVersion(id: string, data: UpdateVersionDto): Promise<AppVersionDto | null> {
+  async updateVersion(id: string, userId: string, data: UpdateVersionDto): Promise<AppVersionDto | null> {
     const db = getDatabase();
 
-    const existing = await db
+    // Verify user owns the app containing this version
+    const existingWithOwner = await db
       .select()
       .from(appVersions)
-      .where(eq(appVersions.id, id))
+      .innerJoin(apps, eq(appVersions.appId, apps.id))
+      .where(and(eq(appVersions.id, id), eq(apps.userId, userId)))
       .limit(1);
 
-    if (existing.length === 0) {
+    if (existingWithOwner.length === 0) {
       return null;
     }
+
+    const existing = existingWithOwner.map((r) => r.app_versions);
 
     // If setting isLatest to true, unset other latest versions for this app
     if (data.isLatest === true) {
@@ -134,16 +141,18 @@ export class AppVersionService {
   /**
    * Delete an app version
    */
-  async deleteVersion(id: string): Promise<boolean> {
+  async deleteVersion(id: string, userId: string): Promise<boolean> {
     const db = getDatabase();
 
-    const existing = await db
+    // Verify user owns the app containing this version
+    const existingWithOwner = await db
       .select()
       .from(appVersions)
-      .where(eq(appVersions.id, id))
+      .innerJoin(apps, eq(appVersions.appId, apps.id))
+      .where(and(eq(appVersions.id, id), eq(apps.userId, userId)))
       .limit(1);
 
-    if (existing.length === 0) {
+    if (existingWithOwner.length === 0) {
       return false;
     }
 
