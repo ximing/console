@@ -56,7 +56,11 @@ export const QRModal = view((props: QRModalProps) => {
       link.click();
     };
 
-    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+    // Properly encode SVG for UTF-8 to handle Unicode characters in URLs
+      const encoder = new TextEncoder();
+      const data = encoder.encode(svgData);
+      const base64 = btoa(String.fromCharCode(...data));
+      img.src = 'data:image/svg+xml;base64,' + base64;
   };
 
   if (!props.visible || !props.version) return null;
