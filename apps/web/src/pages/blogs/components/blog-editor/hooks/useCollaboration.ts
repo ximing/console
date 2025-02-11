@@ -25,6 +25,7 @@ export interface UseCollaborationReturn {
   userId: string;
   userName: string;
   userColor: string;
+  userAvatar: string | null;
 }
 
 const getCollaborationWsUrl = () => {
@@ -145,7 +146,7 @@ export function useCollaboration({ pageId }: UseCollaborationOptions): UseCollab
   const userId = authService.user?.id || '';
   const userName = authService.user?.username || authService.user?.email || 'Guest';
   const userColor = getUserColor(userId);
-  const userAvatar = authService.user?.avatar;
+  const userAvatar = authService.user?.avatar ?? null;
 
   useEffect(() => {
     if (!awareness || !userId) {

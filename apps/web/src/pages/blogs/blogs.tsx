@@ -30,7 +30,7 @@ export const BlogListPage = view(() => {
   const selectedBlogId = params.id;
 
   // UI State
-  const [activeTab, setActiveTab] = useState<'directory' | 'recent'>('directory');
+  const [activeTab, setActiveTab] = useState<'directory' | 'recent' | 'tags'>('directory');
   const [selectedDirectoryId, setSelectedDirectoryId] = useState<string | null>(null);
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const [searchModalVisible, setSearchModalVisible] = useState(false);
