@@ -43,6 +43,16 @@ export const VersionModal = view((props: VersionModalProps) => {
     }
   }, [props.visible, props.version]);
 
+  const validateUrl = (url: string): boolean => {
+    if (!url) return true;
+    try {
+      const parsed = new URL(url);
+      return ['http:', 'https:'].includes(parsed.protocol);
+    } catch {
+      return false;
+    }
+  };
+
   const validateForm = (): string => {
     if (!version.trim()) {
       return 'Version number is required';
@@ -50,10 +60,17 @@ export const VersionModal = view((props: VersionModalProps) => {
     if (!buildNumber.trim()) {
       return 'Build number is required';
     }
-    // Basic semver validation
-    const semverRegex = /^\d+\.\d+\.\d+$/;
+    // Permissive semver validation - accepts 1.0, 1.0.0, 1.0.0-beta, 2.0.0-rc1, etc.
+    const semverRegex = /^\d+(\.\d+)*(-[a-zA-Z0-9]+)?$/;
     if (!semverRegex.test(version.trim())) {
-      return 'Version should be in semver format (e.g., 1.0.0)';
+      return 'Version should be in semver format (e.g., 1.0.0 or 1.0.0-beta)';
+    }
+    // Validate URL schemes
+    if (androidUrl && !validateUrl(androidUrl.trim())) {
+      return 'Android URL must use http:// or https://';
+    }
+    if (iosUrl && !validateUrl(iosUrl.trim())) {
+      return 'iOS URL must use http:// or https://';
     }
     return '';
   };
