@@ -1,7 +1,7 @@
 import { view } from '@rabjs/react';
-import { Edit2, Trash2, QrCode, Loader2, Android, Apple } from 'lucide-react';
+import { Edit2, Trash2, QrCode, Loader2, Smartphone, Apple } from 'lucide-react';
 import type { AppVersionDto } from '@x-console/dto';
-import { formatRelativeTime } from '../../../../../../../utils/date';
+import { formatRelativeTime } from '../../../../../../utils/date';
 
 interface VersionListContentProps {
   versions: AppVersionDto[];
@@ -81,7 +81,7 @@ export const VersionListContent = view((props: VersionListContentProps) => {
                 <div className="flex items-center gap-2">
                   {version.androidUrl && (
                     <div className="p-1.5 rounded bg-green-50 dark:bg-green-900/20" title="Android">
-                      <Android className="w-4 h-4 text-green-600 dark:text-green-400" />
+                      <Smartphone className="w-4 h-4 text-green-600 dark:text-green-400" />
                     </div>
                   )}
                   {version.iosUrl && (

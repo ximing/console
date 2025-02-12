@@ -1,6 +1,6 @@
 import { Service } from '@rabjs/react';
 import { appApi } from '../api/app';
-import { AppVersionDto, CreateVersionDto, UpdateVersionDto } from '@x-console/dto';
+import { type AppVersionDto, type CreateVersionDto, type UpdateVersionDto } from '@x-console/dto';
 import { toast } from './toast.service';
 
 /** AppVersion Service - Manages app version state and operations */
