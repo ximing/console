@@ -13,6 +13,12 @@ export default defineConfig(({ mode }) => {
     define: {},
     base: isElectron ? './' : '/',
     plugins: [react()],
+    resolve: {
+      extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.d.ts'],
+      alias: {
+        '@x-console/dto': path.resolve(__dirname, '../../packages/dto/dist/index.d.ts'),
+      },
+    },
     server: {
       port: 5273,
       proxy: {

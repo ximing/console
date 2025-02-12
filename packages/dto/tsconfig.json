@@ -11,8 +11,8 @@
     "experimentalDecorators": true,
     "sourceMap": true,
     "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "skipLibCheck": true,
     "noEmit": false
   },
