@@ -4,7 +4,7 @@ import { view, useService } from '@rabjs/react';
 import { AuthService } from '../services/auth.service';
 import { ThemeService } from '../services/theme.service';
 import { NotificationService } from '../services/notification.service';
-import { Zap, Sun, Moon, LogOut, Settings, ListTodo, Bell, Github, FileText } from 'lucide-react';
+import { Zap, Sun, Moon, LogOut, Settings, ListTodo, Bell, Github, FileText, Boxes } from 'lucide-react';
 import logoUrl from '../assets/logo.png';
 import logoDarkUrl from '../assets/logo-dark.png';
 import { isElectron, isMacOS } from '../electron/isElectron';
@@ -47,6 +47,7 @@ export const Layout = view(({ children }: LayoutProps) => {
   const isNotificationsPage = location.pathname.startsWith('/notifications');
   const isGithubPage = location.pathname.startsWith('/github');
   const isBlogPage = location.pathname.startsWith('/blogs');
+  const isAppsPage = location.pathname.startsWith('/apps');
 
   // Get unread count from service (updated via socket events)
   const unreadCount = notificationService.unreadCount;
@@ -205,6 +206,23 @@ export const Layout = view(({ children }: LayoutProps) => {
             aria-label="博客"
           >
             <FileText className="w-6 h-6" />
+          </button>
+
+          {/* Apps Navigation */}
+          <button
+            onClick={() => {
+              const search = location.search;
+              navigate(`/apps${search}`);
+            }}
+            className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors ${
+              isAppsPage
+                ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
+                : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-dark-800'
+            }`}
+            title="应用管理"
+            aria-label="应用管理"
+          >
+            <Boxes className="w-6 h-6" />
           </button>
         </nav>
 
