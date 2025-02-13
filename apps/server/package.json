@@ -16,6 +16,7 @@
     "lint:fix": "eslint src/ --fix --fix-type problem",
     "migrate": "node --loader ts-node/esm ./src/db/migrate.ts",
     "migrate:generate": "drizzle-kit generate",
+    "migrate:migrate": "drizzle-kit migrate",
     "migrate:studio": "drizzle-kit studio",
     "migrate:data": "tsx src/scripts/migrate-lancedb-to-mysql.ts",
     "verify:indexes": "tsx src/scripts/verify-indexes.ts"
