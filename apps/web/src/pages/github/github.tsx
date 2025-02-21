@@ -6,6 +6,7 @@ import { FileTree } from './components/file-tree';
 import { EditorArea } from './components/editor-area';
 import { CommitButton } from './components/commit-dialog';
 import { RepoManager } from './components/repo-manager';
+import { GithubTabs } from './components/github-tabs';
 import { Layout } from '../../components/layout';
 
 export const GithubPage = view(() => {
@@ -23,6 +24,7 @@ export const GithubPage = view(() => {
   return (
     <Layout>
       <div className="flex flex-col h-full">
+        <GithubTabs />
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-2 shrink-0 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_1px_8px_rgba(0,0,0,0.2)]">
           <RepoSelector />

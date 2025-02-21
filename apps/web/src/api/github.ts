@@ -4,6 +4,7 @@ import type {
   GithubRepoDto,
   GithubRepoListDto,
   GithubRepoTokenDto,
+  WorkflowRunsResponseDto,
 } from '@x-console/dto';
 import request from '../utils/request';
 
@@ -75,6 +76,17 @@ export const githubApi = {
   getToken: async (id: string): Promise<GithubRepoTokenDto> => {
     const response = await request.get<unknown, ApiResponse<GithubRepoTokenDto>>(
       `/api/v1/github/repos/${id}/token`
+    );
+    return response.data;
+  },
+
+  /**
+   * Get workflow runs for all repositories
+   */
+  getWorkflowRuns: async (params?: { status?: string }): Promise<WorkflowRunsResponseDto> => {
+    const response = await request.get<unknown, ApiResponse<WorkflowRunsResponseDto>>(
+      '/api/v1/github/actions/runs',
+      { params }
     );
     return response.data;
   },

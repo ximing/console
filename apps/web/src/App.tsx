@@ -9,6 +9,7 @@ import { NotificationsPage } from './pages/notifications';
 import NotFoundPage from './pages/not-found';
 import CommandPalettePage from './pages/command-palette';
 import GithubPage from './pages/github';
+import ActionsPage from './pages/github/actions';
 import BlogPage from './pages/blogs';
 import AppsPage from './pages/apps';
 import VersionsPage from './pages/apps/[appId]/versions';
@@ -106,6 +107,14 @@ function App() {
           element={
             <ProtectedRoute>
               <GithubPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/github/actions/*"
+          element={
+            <ProtectedRoute>
+              <ActionsPage />
             </ProtectedRoute>
           }
         />
