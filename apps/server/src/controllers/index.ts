@@ -12,6 +12,7 @@ import { ApiTokenController } from './v1/api-token.controller.js';
 import { CommandPaletteIntentController } from './v1/command-palette-intent.controller.js';
 import { GithubController } from './v1/github.controller.js';
 import { GithubActionsController } from './v1/github-actions.controller.js';
+import { GithubSettingsController } from './v1/github-settings.controller.js';
 import { BlogController } from './v1/blog.controller.js';
 import { BlogMediaController } from './v1/blog-media.controller.js';
 import { AppController } from './v1/app.controller.js';
@@ -31,6 +32,7 @@ export const controllers = [
   CommandPaletteIntentController,
   GithubController,
   GithubActionsController,
+  GithubSettingsController,
   BlogController,
   BlogMediaController,
   AppController,
