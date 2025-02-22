@@ -6,7 +6,7 @@ import type { WorkflowRunDto } from '@x-console/dto';
 export type ViewMode = 'list' | 'timeline';
 export type StatusFilter = 'all' | 'success' | 'failure' | 'running';
 
-export interface WorkflowRun extends WorkflowRunDto {}
+export type WorkflowRun = WorkflowRunDto;
 
 export class ActionsService extends Service {
   runs: WorkflowRun[] = [];
@@ -97,8 +97,8 @@ export class ActionsService extends Service {
 
       this.previousFailedIds = newFailedIds;
       this.runs = data.runs;
-    } catch (err: any) {
-      this.error = err.message || 'Failed to load workflow runs';
+    } catch (err: unknown) {
+      this.error = err instanceof Error ? err.message : 'Failed to load workflow runs';
     } finally {
       this.isLoading = false;
     }

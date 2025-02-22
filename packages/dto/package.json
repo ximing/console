@@ -7,7 +7,9 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.d.ts",
+      "default": "./dist/index.d.ts"
     }
   },
   "files": [
