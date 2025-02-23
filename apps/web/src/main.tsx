@@ -16,6 +16,7 @@ import { TaskService } from './services/task.service';
 import { NotificationService } from './services/notification.service';
 import { ApiTokenService } from './services/api-token.service';
 import { GithubService } from './pages/github/github.service';
+import { MiniMaxTokenService } from './services/minimax-token.service';
 
 /**
  * Register services globally
@@ -34,6 +35,7 @@ register(NotificationService);
 register(TagService);
 register(ApiTokenService);
 register(GithubService);
+register(MiniMaxTokenService)
 // Initialize theme before rendering
 resolve(ThemeService).loadTheme();
 

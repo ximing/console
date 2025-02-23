@@ -2,10 +2,12 @@ import { view, useService } from '@rabjs/react';
 import { useState, useEffect } from 'react';
 import { Layout } from '../../components/layout';
 import { AuthService } from '../../services/auth.service';
-import { Clock, Calendar, User, Mail, Sun, Moon, Sunrise, Sunset } from 'lucide-react';
+import { MiniMaxTokenService } from '../../services/minimax-token.service';
+import { Clock, Calendar, User, Mail, Sun, Moon, Sunrise, Sunset, RefreshCw, Zap, Activity } from 'lucide-react';
 
 export const HomePage = view(() => {
   const authService = useService(AuthService);
+  const tokenService = useService(MiniMaxTokenService);
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // Update time every second
@@ -15,6 +17,38 @@ export const HomePage = view(() => {
     }, 1000);
 
     return () => clearInterval(timer);
+  }, []);
+
+  // Initial load and auto-refresh for MiniMax token
+  useEffect(() => {
+    tokenService.refresh();
+    tokenService.startAutoRefresh();
+
+    return () => {
+      tokenService.stopAutoRefresh();
+    };
+  }, []);
+
+  // Refresh on visibility change (page comes to foreground)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        tokenService.refresh();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
+  // Refresh on route change (using popstate event for SPA navigation)
+  useEffect(() => {
+    const handlePopState = () => {
+      tokenService.refresh();
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   const userName = authService.user?.username || authService.user?.email?.split('@')[0] || 'User';
@@ -154,40 +188,109 @@ export const HomePage = view(() => {
                 )}
               </div>
             </div>
-          </div>
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-lg shadow-sm p-4 hover:shadow-md hover:-translate-y-0.5 hover:bg-green-50/50 dark:hover:bg-green-900/15 transition-all duration-150">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {currentTime.getHours()}
+            {/* MiniMax Token Card */}
+            <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-xl shadow-sm p-6 hover:shadow-md hover:-translate-y-0.5 hover:bg-green-50/50 dark:hover:bg-green-900/15 transition-all duration-150">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                    <Zap className="w-6 h-6 text-green-600 dark:text-green-400" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    MiniMax 配额
+                  </h2>
+                </div>
+                <button
+                  onClick={() => tokenService.refresh()}
+                  disabled={tokenService.refreshing}
+                  className="p-1.5 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-4 h-4 text-green-600 dark:text-green-400 ${tokenService.refreshing ? 'animate-spin' : ''}`} />
+                </button>
               </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">当前小时</div>
-            </div>
-            <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-lg shadow-sm p-4 hover:shadow-md hover:-translate-y-0.5 hover:bg-green-50/50 dark:hover:bg-green-900/15 transition-all duration-150">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {currentTime.getMinutes()}
+              <div className="space-y-3">
+                {/* Main Model - MiniMax-M* */}
+                {(() => {
+                  const mainModel = tokenService.getMainModelRemain();
+                  if (!mainModel && !tokenService.error) {
+                    return (
+                      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                        <Activity className="w-4 h-4" />
+                        <span>加载中...</span>
+                      </div>
+                    );
+                  }
+                  if (tokenService.error) {
+                    return (
+                      <div className="flex items-center gap-2 text-sm text-red-500">
+                        <span>加载失败</span>
+                      </div>
+                    );
+                  }
+                  if (mainModel) {
+                    const intervalUsed = mainModel.current_interval_usage_count;
+                    const intervalTotal = mainModel.current_interval_total_count;
+                    const intervalPercent = intervalTotal > 0
+                      ? Math.round((intervalUsed / intervalTotal) * 100)
+                      : 0;
+                    return (
+                      <>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            本小时额度
+                          </span>
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">
+                            {intervalUsed} / {intervalTotal}
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                          <div
+                            className="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${intervalPercent}%` }}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                          <span>剩余时间: {tokenService.formatRemainsTime(mainModel.remains_time)}</span>
+                          <span>{intervalPercent}% 已用</span>
+                        </div>
+                      </>
+                    );
+                  }
+                  return null;
+                })()}
+
+                {/* Weekly Stats */}
+                {(() => {
+                  const mainModel = tokenService.getMainModelRemain();
+                  if (!mainModel) return null;
+                  const weeklyUsed = mainModel.current_weekly_usage_count;
+                  const weeklyTotal = mainModel.current_weekly_total_count;
+                  const weeklyPercent = weeklyTotal > 0
+                    ? Math.round((weeklyUsed / weeklyTotal) * 100)
+                    : 0;
+                  return (
+                    <>
+                      <div className="border-t border-gray-100 dark:border-gray-700 pt-3 mt-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            本周额度
+                          </span>
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">
+                            {weeklyUsed} / {weeklyTotal}
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mt-2">
+                          <div
+                            className="bg-gradient-to-r from-green-400 to-green-500 h-1.5 rounded-full transition-all duration-300"
+                            style={{ width: `${weeklyPercent}%` }}
+                          />
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
+
               </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">当前分钟</div>
-            </div>
-            <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-lg shadow-sm p-4 hover:shadow-md hover:-translate-y-0.5 hover:bg-green-50/50 dark:hover:bg-green-900/15 transition-all duration-150">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {Math.ceil(
-                  (Number(currentTime) - Number(new Date(currentTime.getFullYear(), 0, 1))) /
-                    86400000
-                )}
-              </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">今年第几天</div>
-            </div>
-            <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-lg shadow-sm p-4 hover:shadow-md hover:-translate-y-0.5 hover:bg-green-50/50 dark:hover:bg-green-900/15 transition-all duration-150">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {Math.ceil(
-                  (Number(currentTime) -
-                    Number(new Date(currentTime.getFullYear(), currentTime.getMonth(), 1))) /
-                    86400000
-                )}
-              </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">本月第几天</div>
             </div>
           </div>
         </div>
