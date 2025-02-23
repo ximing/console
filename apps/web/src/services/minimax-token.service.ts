@@ -2,7 +2,7 @@ import { Service } from '@rabjs/react';
 import { minimaxApi } from '../api/minimax';
 import type { MiniMaxModelRemain } from '@x-console/dto';
 
-const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+const REFRESH_INTERVAL = 60 * 1000; // 1 minute
 
 export class MiniMaxTokenService extends Service {
   modelRemains: MiniMaxModelRemain[] = [];
