@@ -8,37 +8,19 @@ X-Console is a monorepo containing a web application, backend server, and Electr
 
 ## Commands
 
-### Development
-
 ```bash
 pnpm dev              # Run all apps in dev mode
 pnpm dev:web          # Run web frontend (React + Vite)
 pnpm dev:server       # Run backend server (Express + TypeScript)
 pnpm dev:client       # Run Electron desktop client
 pnpm dev:env          # Start Docker infrastructure (MySQL, MinIO)
-```
 
-### Building
-
-```bash
 pnpm build            # Build all packages
-pnpm build:web        # Build web app
-pnpm build:server     # Build server
-pnpm build:client     # Build Electron app
-```
-
-### Testing & Linting
-
-```bash
-pnpm lint             # Run ESLint on all packages
+pnpm lint             # Run ESLint on all packages (via Turbo)
 pnpm lint:fix         # Auto-fix ESLint issues
 pnpm format           # Format code with Prettier
-pnpm typecheck        # Run TypeScript type checking
-```
+pnpm --filter @x-console/server test   # Run server tests (Jest)
 
-### Database Migrations (Server)
-
-```bash
 pnpm --filter @x-console/server migrate           # Run migrations
 pnpm --filter @x-console/server migrate:generate  # Generate new migration
 pnpm --filter @x-console/server migrate:studio    # Open Drizzle Studio
@@ -46,36 +28,70 @@ pnpm --filter @x-console/server migrate:studio    # Open Drizzle Studio
 
 ## Architecture
 
-### Apps
-
-- **apps/web**: React 19 frontend with Vite, Tailwind CSS, React Router, @rabjs/react for reactive state management
-- **apps/server**: Express.js backend with TypeScript, Drizzle ORM (MySQL), Socket.io, LangChain for AI features
+- **apps/web**: React 19 + Vite + Tailwind CSS v4 + React Router + @rabjs/react + Tiptap v3
+- **apps/server**: Express.js + TypeScript + Drizzle ORM (MySQL) + Socket.io + LangChain
 - **apps/client**: Electron desktop client wrapping the web app
-- **apps/cli**: CLI tool for various console operations
+- **apps/cli**: CLI tool for operations and notifications
+- **packages/dto**: Type-only shared package (`.d.ts` only), DTOs with class-validator
+- **packages/logger**: Winston-based logging with daily file rotation
+- **config/**: Shared eslint-config, typescript-config, jest-presets, rollup-config
 
-### Packages
+## Server Architecture (apps/server/src)
 
-- **packages/dto**: Shared TypeScript DTOs with class-validator for validation
-- **packages/logger**: Winston-based logging library
+### Request Flow
 
-### Server Structure (apps/server/src)
+```
+HTTP Request → authHandler middleware → routing-controllers → Controller → Service → Drizzle ORM
+```
 
-- `actions/` - Business logic actions (called by controllers, handle core operations)
-- `controllers/` - HTTP controllers using routing-controllers
-- `services/` - Service layer with Dependency injection via typedi
-- `db/` - Database schema and migrations (Drizzle ORM)
-- `middlewares/` - Express middlewares
-- `config/` - Configuration files
-- `api/` - API client utilities (GitHub API, etc.)
+- **Controllers** (`controllers/v1/`): `@JsonController('/api/v1/...')` + `@Service()`. Receive `@Body()` DTOs, `@CurrentUser()`, delegate to injected services.
+- **Services** (`services/`): TypeDI singletons, access DB via `getDatabase()` singleton, cross-service via constructor injection.
+- **Actions** (`actions/`): Plugin system for task scheduler, implement `ActionHandler`, self-register into `ActionRegistry`.
 
-### Web Structure (apps/web/src)
+### Auto-Registration (IOC)
 
-- `pages/` - Route pages
-- `components/` - React components
-- `services/` - API services
-- `api/` - API client utilities (Axios-based)
+`initIOC()` dynamically imports all files in `actions/`, `cron/`, `modules/`, `sources/`, `controllers/`, `services/`. Adding a new service/controller file is sufficient — no manual registration needed.
 
-### Component Organization Convention
+### Response Envelope
+
+`ResponseUtil.success(data)` / `ResponseUtil.error(ErrorCode.XXX)` → `{ code, msg, data }`. Error codes: 0=success, 1-99=system, 1000-1999=user, 2000-2999=db, 3000-3999=business, 4000-4999=attachment.
+
+### Auth
+
+- **Cookie JWT (web UI)**: `aimo_token` httpOnly cookie, verified by `authHandler`, `@CurrentUser()` reads `req.user`
+- **BA Token (API)**: `/api/v1/ba/*` routes use `baAuthInterceptor`, validates user API tokens or global `BA_AUTH_TOKEN`
+- **WebSocket**: Socket.IO and Hocuspocus verify JWT from cookie or query param
+
+### Database Conventions
+
+- One file per table in `db/schema/`, re-exported from `schema/index.ts`
+- `varchar(191)` for keys, `timestamp(fsp: 3)` for millisecond precision, `.$type<T>()` for JSON columns
+- Migrations run automatically on startup
+- Use `withTransaction()` from `transaction.ts` for transactional ops
+- **See `apps/server/src/db/CLAUDE.md` for detailed schema and migration patterns**
+
+## Web Architecture (apps/web/src)
+
+### State Management (@rabjs/react)
+
+Services extend `Service`, declare state as class properties. Mutations trigger re-renders in observing components.
+- **Register**: all services `register()`-ed in `main.tsx`
+- **Consume**: `useService(AuthService)` hook or `view(() => ...)` / `observer(() => ...)` HOCs
+- **Cross-service**: `resolve(OtherService)` for singleton access
+
+### Auth
+
+Dual token: **cookie** (httpOnly, for REST APIs via `withCredentials: true`) + **Bearer token** (localStorage `aimo_token`, for Socket.IO and Hocuspocus WebSocket auth). `<AuthInitializer>` calls `authService.checkAuth()` on load. 401s clear localStorage and redirect to `/auth`.
+
+### Routing
+
+`HashRouter` for Electron, `BrowserRouter` for web. Content routes wrapped in `<ProtectedRoute>`. `utils/navigation.ts` stores `navigate` in a closure for imperative redirects from non-component code.
+
+### Collaboration (Hocuspocus/Yjs)
+
+`useCollaboration.ts` creates Y.Doc per blog page, connects HocuspocusProvider, uses IndexedDB for offline cache. Collaboration mode disables HTTP auto-save — server persists via WebSocket.
+
+## Component Organization Convention
 
 Components in `pages/*/components/` follow a consistent directory structure:
 
@@ -85,98 +101,40 @@ components/
 │   ├── index.ts                 # Barrel export for all public APIs
 │   ├── feature-name.ts          # Main component
 │   ├── feature-name.service.ts  # Service class (if using @rabjs/react)
-│   ├── feature-name-header.tsx  # Sub-components (header, footer, etc.)
-│   ├── feature-name-content.tsx
-│   ├── helper-component.tsx      # Helper components used only by this feature
-│   └── hooks/                   # Custom hooks
-│       └── useHook.ts
+│   ├── feature-name-header.tsx  # Sub-components
+│   ├── hooks/                   # Custom hooks
 ```
 
-**Rules:**
 1. All components related to a feature go into a subdirectory named after the feature
 2. Use `index.ts` barrel exports for clean public APIs
 3. Keep hooks in a `hooks/` subdirectory within the feature folder
 4. Sub-components that are only used by the parent feature stay in the same directory
-5. When moving files, always update relative import paths (count `../` carefully from new location)
-6. Shared utilities (like `editor/`) go under the feature that owns them, not at the component root
+5. When moving files, always update relative import paths (count `../` carefully)
+6. Shared utilities go under the feature that owns them, not at the component root
 
-## Key Technologies
+## Commit Convention
 
-- **State Management**: @rabjs/react (reactive state management with observer pattern)
-- **Database**: MySQL with Drizzle ORM
-- **AI**: LangChain + LangGraph integration
-- **Real-time**: Socket.io with Redis adapter
-- **API Validation**: Zod on server, class-validator in DTOs
-- **Dependency Injection**: typedi (server), @rabjs/react services (web)
+Conventional Commits enforced via commitlint. Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`. Subject max 100 chars, header max 500 chars.
 
 ## Environment Variables
 
-Copy `.env.example` to `.env` for each app before development. The server requires MySQL, Redis, and S3-compatible storage configuration.
-
-## Docker Infrastructure
-
-The dev infrastructure runs MySQL 8.0 and MinIO (S3-compatible storage) via docker-compose.dev.yml.
+Copy `apps/server/.env.example` to `.env`. Docker dev infrastructure (`pnpm dev:env`) provides MySQL and MinIO. Key vars: `PORT` (3100), `MYSQL_*`, `JWT_SECRET` (32+ chars), `CORS_ORIGIN`, `OPENAI_API_KEY/BASE_URL/MODEL`. Web: `VITE_SOCKET_IO_URL` (optional).
 
 ## Design System
 
-### Design Principles
+- **无边框约束** — 用背景色差和阴影代替边框分隔
+- **绿色主色** — 交互状态用绿色 (#22c55e 亮 / #4ade80 暗)
+- **克制点缀** — 点缀色仅在关键位置使用
+- **悬浮呼吸感** — 透明背景、模糊效果、hover 上浮
 
-- **无边框约束** — 用背景色差和阴影代替所有边框分隔
-- **绿色主色** — 所有交互状态（hover、active、selected）使用绿色 (#22c55e)
-- **克制点缀** — 点缀色仅在少数关键位置使用，不滥用
-- **悬浮呼吸感** — 透明背景、模糊效果、hover 上浮营造层次
+### Quick Reference
 
-### Color System
-
-#### 亮色模式
-
-| 用途 | 颜色 |
-|------|------|
-| 主色调 | `#22c55e` / `#16a34a` |
-| 选中态文字 | `text-green-600` |
-| Hover 背景 | `bg-green-50/60` |
-| 背景 | `#FFFFFF` / `#F9FAFB` |
-
-#### 暗色模式
-
-| 用途 | 颜色 |
-|------|------|
-| 主色调 | `#4ade80` / `#22c55e` |
-| 选中态文字 | `text-green-400` |
-| Hover 背景 | `bg-green-900/15` |
-| 背景 | `#09090b` / `#18181b` |
-
-### Components
-
-#### Sidebar / Header
-
-- **无边框分隔** — 靠 `box-shadow` 柔和阴影分隔
-- **Header 悬浮背景** — `bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl`
-- **Tab 指示器** — 底部绿色下划线 (`border-b-2 border-green-500`)
-- **操作区间距** — `gap-3` (12px) 保持通透
-
-#### TreeNode / List Items
-
-- **选中态** — 文字变绿色 + `font-medium`，无背景
-- **Hover** — 极淡绿色背景 `bg-green-50/60 dark:bg-green-900/15`
-- **图标** — 保持原有颜色，仅文字颜色变化
-
-#### Buttons
-
-- **主要按钮** — 绿色渐变 `bg-gradient-to-br from-green-500 to-green-600`
-- **Hover 效果** — `hover:-translate-y-0.5` 上浮 + 光晕加深
-- **Active 态** — 淡绿色背景 + 绿色文字
-
-### Shadows
-
-| 位置 | 亮色模式 | 暗色模式 |
-|------|---------|---------|
-| Sidebar 分隔 | `4px 0 24px rgba(0,0,0,0.06)` | `4px 0 24px rgba(0,0,0,0.4)` |
-| Header 底部 | `0 2px 12px rgba(0,0,0,0.04)` | `0 2px 12px rgba(0,0,0,0.2)` |
-| 主要按钮 | `0 2px 8px rgba(34,197,94,0.3)` | — |
-
-### Interactions
-
-- **过渡动画** — `transition-all duration-150` 统一使用 150ms
-- **Hover 上浮** — `hover:-translate-y-0.5` 用于按钮和卡片
-- **状态圆点发光** — `shadow-[0_0_6px_rgba(34,197,94,0.6)]`
+| Element | Light | Dark |
+|---------|-------|------|
+| 选中态文字 | `text-green-600` | `text-green-400` |
+| Hover 背景 | `bg-green-50/60` | `bg-green-900/15` |
+| 主按钮 | `bg-gradient-to-br from-green-500 to-green-600` | same |
+| Header 背景 | `bg-white/90 backdrop-blur-xl` | `bg-zinc-900/90 backdrop-blur-xl` |
+| Sidebar 阴影 | `4px 0 24px rgba(0,0,0,0.06)` | `4px 0 24px rgba(0,0,0,0.4)` |
+| 过渡动画 | `transition-all duration-150` | same |
+| Hover 上浮 | `hover:-translate-y-0.5` | same |
