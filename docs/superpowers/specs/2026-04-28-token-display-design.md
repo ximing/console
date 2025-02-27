@@ -83,11 +83,13 @@
 
 ### 进度条颜色
 
-| 剩余比例 | 颜色 | Tailwind class |
-|---------|------|---------------|
-| > 30% | 绿色 | `bg-green-500` |
-| 10% - 30% | 黄色 | `bg-yellow-500` |
-| < 10% | 红色 | `bg-red-500` |
+| 剩余比例 | 亮色模式 | 暗色模式 | Tailwind class |
+|---------|---------|---------|---------------|
+| > 30% | 绿色 | 绿色 | `bg-green-500` / `dark:bg-green-500` |
+| 10% - 30% | 黄色 | 黄色 | `bg-yellow-500` / `dark:bg-yellow-500` |
+| < 10% | 红色 | 红色 | `bg-red-500` / `dark:bg-red-500` |
+
+进度条背景：`bg-gray-200 dark:bg-gray-700`
 
 ### 卡片状态
 
@@ -102,8 +104,9 @@
    - 新增 Token 展示区域（主卡片 + 小卡片网格）
 
 2. 修改 `MiniMaxTokenService`：
-   - 新增 `getOtherModelRemains()` 方法返回非主模型列表
-   - 进度条颜色逻辑可抽离为工具函数
+   - `getOtherModelRemains()`: 返回 `MiniMaxTokenRemain[]`，过滤掉 `model_name === 'MiniMax-M*'` 的其他模型
+   - 进度条颜色通过 `getProgressColor(percentage)` 工具函数返回 Tailwind 类名
+   - **数据来源**：`tokenService.modelRemains`（从 API `/api/v1/minimax/token` 获取的原始数组）
 
 3. 样式：
    - 使用现有 design system（绿色主调、hover上浮、backdrop-blur）
