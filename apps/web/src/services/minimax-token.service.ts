@@ -74,6 +74,10 @@ export class MiniMaxTokenService extends Service {
     return this.modelRemains.find((m) => m.model_name === 'MiniMax-M*');
   }
 
+  getOtherModelRemains(): MiniMaxModelRemain[] {
+    return this.modelRemains.filter((m) => m.model_name !== 'MiniMax-M*');
+  }
+
   getWeeklyUsageCount(modelName: string): number {
     const model = this.modelRemains.find((m) => m.model_name === modelName);
     return model?.current_weekly_usage_count || 0;
@@ -106,6 +110,23 @@ export class MiniMaxTokenService extends Service {
       return `${minutes}分钟${seconds % 60}秒`;
     }
     return `${seconds}秒`;
+  }
+
+  /** @param percentage - 0 to 100
+   * @returns Tailwind color class: green (>30%), yellow (>10%), red (≤10%) */
+  getProgressColor(percentage: number): string {
+    if (percentage > 30) return 'bg-green-500';
+    if (percentage > 10) return 'bg-yellow-500';
+    return 'bg-red-500';
+  }
+
+  getProgressPercentage(model: MiniMaxModelRemain): number {
+    if (model.current_interval_total_count === 0) return 0;
+    return Math.max(0, Math.min(100, Math.round(
+      ((model.current_interval_total_count - model.current_interval_usage_count) /
+        model.current_interval_total_count) *
+        100
+    )));
   }
 
   formatNextRefreshTime(): string {
