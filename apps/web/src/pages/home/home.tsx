@@ -103,6 +103,9 @@ export const HomePage = view(() => {
                   </h1>
                 </div>
                 <p className="text-gray-500 dark:text-gray-400 text-lg">欢迎回来，开始您的工作吧</p>
+                <div className="mt-2 text-sm text-gray-400 dark:text-gray-500">
+                  {currentTime.toLocaleDateString('zh-CN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                </div>
               </div>
               <div className="hidden md:flex items-center">
                 {userAvatar ? (
@@ -120,80 +123,88 @@ export const HomePage = view(() => {
             </div>
           </div>
 
-          {/* Stats Grid - 4 columns */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {/* Time Card (compact) */}
-            <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-xl shadow-sm p-4 hover:shadow-md hover:-translate-y-0.5 hover:bg-green-50/50 dark:hover:bg-green-900/15 transition-all duration-150">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                  <Clock className="w-4 h-4 text-green-600 dark:text-green-400" />
-                </div>
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">时间</span>
-              </div>
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400 font-mono">
-                {timeString}
-              </div>
+          {/* Token 独占一行 */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+            {/* 主 Token 卡片 */}
+            <div className="lg:col-span-2 bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-xl shadow-sm p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
+              {(() => {
+                const mainModel = tokenService.getMainModelRemain();
+                if (!mainModel) {
+                  return <div className="text-gray-400">加载中...</div>;
+                }
+                const remaining = mainModel.current_interval_total_count - mainModel.current_interval_usage_count;
+                const percentage = tokenService.getProgressPercentage(mainModel);
+                const color = tokenService.getProgressColor(percentage);
+                return (
+                  <>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                          <Zap className="w-4 h-4 text-green-600 dark:text-green-400" />
+                        </div>
+                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{mainModel.model_name}</span>
+                      </div>
+                      <button
+                        onClick={() => tokenService.refresh()}
+                        disabled={tokenService.refreshing}
+                        className="p-1 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors disabled:opacity-50"
+                      >
+                        <RefreshCw className={`w-3 h-3 text-green-600 dark:text-green-400 ${tokenService.refreshing ? 'animate-spin' : ''}`} />
+                      </button>
+                    </div>
+                    <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">
+                      {remaining.toLocaleString()}
+                    </div>
+                    <div className="mb-3">
+                      <div className="flex justify-between text-xs text-gray-500 mb-1">
+                        <span>剩余 {percentage}%</span>
+                      </div>
+                      <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${color} transition-all duration-300`}
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                      <span>本周: {(mainModel.current_weekly_total_count - mainModel.current_weekly_usage_count).toLocaleString()} / {mainModel.current_weekly_total_count.toLocaleString()}</span>
+                      <span className={mainModel.remains_time < 3600000 ? 'text-red-500' : ''}>
+                        剩余 {tokenService.formatRemainsTime(mainModel.remains_time)}
+                      </span>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
 
-            {/* Token Card (compact) */}
-            <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-xl shadow-sm p-4 hover:shadow-md hover:-translate-y-0.5 hover:bg-green-50/50 dark:hover:bg-green-900/15 transition-all duration-150">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                    <Zap className="w-4 h-4 text-green-600 dark:text-green-400" />
+            {/* 其他模型小卡片网格 */}
+            <div className="lg:col-span-3 grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 content-start">
+              {tokenService.getOtherModelRemains().map((model) => {
+                const remaining = model.current_interval_total_count - model.current_interval_usage_count;
+                const percentage = tokenService.getProgressPercentage(model);
+                const color = tokenService.getProgressColor(percentage);
+                const isEmpty = remaining === 0;
+                return (
+                  <div
+                    key={model.model_name}
+                    className={`bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-lg p-3 hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 ${isEmpty ? 'opacity-50' : ''}`}
+                  >
+                    <div className="text-xs text-gray-500 dark:text-gray-400 truncate mb-1" title={model.model_name}>
+                      {model.model_name}
+                    </div>
+                    <div className={`text-lg font-bold ${isEmpty ? 'text-gray-400' : 'text-gray-900 dark:text-white'}`}>
+                      {remaining.toLocaleString()}
+                    </div>
+                    <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full mt-1 overflow-hidden">
+                      <div
+                        className={`h-full ${color} transition-all duration-300`}
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
                   </div>
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Token</span>
-                </div>
-                <button
-                  onClick={() => tokenService.refresh()}
-                  disabled={tokenService.refreshing}
-                  className="p-1 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors disabled:opacity-50"
-                >
-                  <RefreshCw className={`w-3 h-3 text-green-600 dark:text-green-400 ${tokenService.refreshing ? 'animate-spin' : ''}`} />
-                </button>
-              </div>
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {(() => {
-                  const mainModel = tokenService.getMainModelRemain();
-                  const tokenRemaining = mainModel
-                    ? mainModel.current_interval_total_count - mainModel.current_interval_usage_count
-                    : 0;
-                  return tokenRemaining.toLocaleString();
-                })()}
-              </div>
+                );
+              })}
             </div>
-
-            {/* Task Stats Card (clickable) */}
-            <button
-              onClick={() => navigate('/tasks')}
-              className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-xl shadow-sm p-4 hover:shadow-md hover:-translate-y-0.5 hover:bg-green-50/50 dark:hover:bg-green-900/15 transition-all duration-150 text-left"
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                  <Zap className="w-4 h-4 text-green-600 dark:text-green-400" />
-                </div>
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">任务</span>
-              </div>
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                待处理
-              </div>
-            </button>
-
-            {/* Notification Count (clickable) */}
-            <button
-              onClick={() => navigate('/notifications')}
-              className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-xl shadow-sm p-4 hover:shadow-md hover:-translate-y-0.5 hover:bg-green-50/50 dark:hover:bg-green-900/15 transition-all duration-150 text-left"
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                  <Bell className="w-4 h-4 text-green-600 dark:text-green-400" />
-                </div>
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">通知</span>
-              </div>
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {notificationService.unreadCount}
-              </div>
-            </button>
           </div>
 
           {/* Dual-column content area */}
