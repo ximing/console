@@ -194,7 +194,7 @@ export const HomePage = view(() => {
             </div>
 
             {/* 其他模型小卡片网格 */}
-            <div className="lg:col-span-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 content-start">
+            <div className="lg:col-span-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 content-start auto-rows-fr">
               {tokenService.getOtherModelRemains().map((model) => {
                 const remaining = model.current_interval_total_count - model.current_interval_usage_count;
                 const percentage = tokenService.getProgressPercentage(model);
@@ -203,15 +203,15 @@ export const HomePage = view(() => {
                 return (
                   <div
                     key={model.model_name}
-                    className={`bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-lg p-2 transition-all duration-150 ${isEmpty ? 'opacity-50' : 'hover:shadow-md hover:-translate-y-0.5'}`}
+                    className={`bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-lg p-2 flex flex-col justify-between transition-all duration-150 ${isEmpty ? 'opacity-50' : 'hover:shadow-md hover:-translate-y-0.5'}`}
                   >
-                    <div className="text-xs text-gray-500 dark:text-gray-400 truncate mb-1" title={model.model_name}>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 truncate" title={model.model_name}>
                       {model.model_name}
                     </div>
-                    <div className={`text-lg font-bold ${isEmpty ? 'text-gray-400' : 'text-gray-900 dark:text-white'}`}>
+                    <div className={`text-lg font-bold mt-1 ${isEmpty ? 'text-gray-400' : 'text-gray-900 dark:text-white'}`}>
                       {remaining.toLocaleString()}
                     </div>
-                    <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full mt-1 overflow-hidden">
+                    <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full mt-2 overflow-hidden">
                       <div
                         className={`h-full ${color} transition-all duration-300`}
                         style={{ width: `${percentage}%` }}
