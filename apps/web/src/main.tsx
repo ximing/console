@@ -17,6 +17,7 @@ import { NotificationService } from './services/notification.service';
 import { ApiTokenService } from './services/api-token.service';
 import { GithubService } from './pages/github/github.service';
 import { MiniMaxTokenService } from './services/minimax-token.service';
+import { InsightService } from './pages/insight/insight.service';
 
 /**
  * Register services globally
@@ -35,7 +36,8 @@ register(NotificationService);
 register(TagService);
 register(ApiTokenService);
 register(GithubService);
-register(MiniMaxTokenService)
+register(MiniMaxTokenService);
+register(InsightService);
 // Initialize theme before rendering
 resolve(ThemeService).loadTheme();
 

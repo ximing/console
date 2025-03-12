@@ -13,6 +13,7 @@ import ActionsPage from './pages/github/actions';
 import BlogPage from './pages/blogs';
 import AppsPage from './pages/apps';
 import VersionsPage from './pages/apps/[appId]/versions';
+import { InsightPage } from './pages/insight';
 import { ProtectedRoute } from './components/protected-route';
 import { ToastContainer } from './components/toast';
 import { CommandPalette } from './components/command-palette/command-palette';
@@ -147,6 +148,14 @@ function App() {
           element={
             <ProtectedRoute>
               <VersionsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/insight/*"
+          element={
+            <ProtectedRoute>
+              <InsightPage />
             </ProtectedRoute>
           }
         />
