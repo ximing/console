@@ -1,7 +1,8 @@
 import { Service } from 'typedi';
-import { eq, and, asc } from 'drizzle-orm';
+import { eq, and, asc, inArray } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { getDatabase } from '../db/connection.js';
+import { withTransaction } from '../db/transaction.js';
 import { insightProfiles, insightDayun } from '../db/schema/index.js';
 import type { InsightProfile, PillarDetail } from '../db/schema/insight-profiles.js';
 import type { InsightDayun } from '../db/schema/insight-dayun.js';
@@ -50,16 +51,23 @@ export class InsightService {
       .where(eq(insightProfiles.userId, userId))
       .orderBy(asc(insightProfiles.sortOrder), asc(insightProfiles.createdAt));
 
-    const result: ProfileWithDayun[] = [];
-    for (const profile of profiles) {
-      const dayunList = await this.db
-        .select()
-        .from(insightDayun)
-        .where(eq(insightDayun.profileId, profile.id))
-        .orderBy(asc(insightDayun.sortOrder));
-      result.push({ ...profile, dayunList });
+    if (profiles.length === 0) return [];
+
+    const profileIds = profiles.map((p) => p.id);
+    const allDayun = await this.db
+      .select()
+      .from(insightDayun)
+      .where(inArray(insightDayun.profileId, profileIds))
+      .orderBy(asc(insightDayun.sortOrder));
+
+    const dayunByProfile = new Map<string, InsightDayun[]>();
+    for (const d of allDayun) {
+      const list = dayunByProfile.get(d.profileId) ?? [];
+      list.push(d);
+      dayunByProfile.set(d.profileId, list);
     }
-    return result;
+
+    return profiles.map((p) => ({ ...p, dayunList: dayunByProfile.get(p.id) ?? [] }));
   }
 
   async createProfile(userId: string, input: CreateProfileInput): Promise<ProfileWithDayun> {
@@ -133,29 +141,31 @@ export class InsightService {
     return true;
   }
 
-  async replaceDayun(profileId: string, userId: string, items: DayunInput[]): Promise<InsightDayun[]> {
+  async replaceDayun(profileId: string, userId: string, items: DayunInput[]): Promise<InsightDayun[] | null> {
     const [profile] = await this.db
       .select()
       .from(insightProfiles)
       .where(and(eq(insightProfiles.id, profileId), eq(insightProfiles.userId, userId)));
-    if (!profile) return [];
+    if (!profile) return null;
 
-    await this.db.delete(insightDayun).where(eq(insightDayun.profileId, profileId));
+    await withTransaction(async (tx) => {
+      await tx.delete(insightDayun).where(eq(insightDayun.profileId, profileId));
 
-    if (items.length === 0) return [];
-
-    const now = new Date();
-    await this.db.insert(insightDayun).values(
-      items.map((item) => ({
-        id: randomUUID(),
-        profileId,
-        gan: item.gan,
-        zhi: item.zhi,
-        startYear: item.startYear,
-        sortOrder: item.sortOrder,
-        createdAt: now,
-      }))
-    );
+      if (items.length > 0) {
+        const now = new Date();
+        await tx.insert(insightDayun).values(
+          items.map((item) => ({
+            id: randomUUID(),
+            profileId,
+            gan: item.gan,
+            zhi: item.zhi,
+            startYear: item.startYear,
+            sortOrder: item.sortOrder,
+            createdAt: now,
+          }))
+        );
+      }
+    });
 
     return this.db
       .select()

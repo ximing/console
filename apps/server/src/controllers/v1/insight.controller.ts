@@ -83,6 +83,7 @@ export class InsightController {
         user.id,
         body.dayunList ?? []
       );
+      if (dayunList === null) return ResponseUtil.error(ErrorCode.NOT_FOUND, '档案不存在');
       return ResponseUtil.success({ dayunList });
     } catch (err) {
       logger.error('insight replaceDayun error:', err);
