@@ -5,7 +5,7 @@ import {
 import { Service } from 'typedi';
 import { ErrorCode } from '../../constants/error-codes.js';
 import { InsightService } from '../../services/insight.service.js';
-import type { CreateProfileInput, DayunInput } from '../../services/insight.service.js';
+import type { CreateProfileInput, DayunInput, ParsedBaziResult } from '../../services/insight.service.js';
 import { ResponseUtil } from '../../utils/response.js';
 import { logger } from '../../utils/logger.js';
 import type { UserInfoDto } from '@x-console/dto';
@@ -88,6 +88,19 @@ export class InsightController {
     } catch (err) {
       logger.error('insight replaceDayun error:', err);
       return ResponseUtil.error(ErrorCode.DB_ERROR);
+    }
+  }
+
+  @Post('/parse-bazi')
+  async parseBazi(@CurrentUser() user: UserInfoDto, @Body() body: { text: string }) {
+    if (!user?.id) return ResponseUtil.error(ErrorCode.UNAUTHORIZED);
+    if (!body.text?.trim()) return ResponseUtil.error(ErrorCode.PARAMS_ERROR, '请提供八字文本');
+    try {
+      const result = await this.insightService.parseBazi(body.text);
+      return ResponseUtil.success(result);
+    } catch (e) {
+      logger.error('insight parseBazi error:', e);
+      return ResponseUtil.error(ErrorCode.BUSINESS_ERROR, 'AI解析失败，请重试');
     }
   }
 }

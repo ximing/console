@@ -1,11 +1,14 @@
 import { Service } from 'typedi';
 import { eq, and, asc, inArray } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
+import { ChatOpenAI } from '@langchain/openai';
 import { getDatabase } from '../db/connection.js';
 import { withTransaction } from '../db/transaction.js';
 import { insightProfiles, insightDayun } from '../db/schema/index.js';
 import type { InsightProfile, PillarDetail } from '../db/schema/insight-profiles.js';
 import type { InsightDayun } from '../db/schema/insight-dayun.js';
+import { config } from '../config/config.js';
+import { logger } from '../utils/logger.js';
 
 export interface CreateProfileInput {
   name: string;
@@ -23,8 +26,27 @@ export interface CreateProfileInput {
   hourDetail?: PillarDetail;
   shenshas?: string[];
   birthYear: number;
+  birthDate?: string | null;
   customAspects?: string[];
   sortOrder?: number;
+}
+
+export interface ParsedBaziResult {
+  yearGan: string;
+  yearZhi: string;
+  monthGan: string;
+  monthZhi: string;
+  dayGan: string;
+  dayZhi: string;
+  hourGan: string;
+  hourZhi: string;
+  birthYear: number | null;
+  birthDate: string | null;
+  yearDetail: Record<string, unknown> | null;
+  monthDetail: Record<string, unknown> | null;
+  dayDetail: Record<string, unknown> | null;
+  hourDetail: Record<string, unknown> | null;
+  shenshas: string[];
 }
 
 export interface DayunInput {
@@ -91,6 +113,7 @@ export class InsightService {
       hourDetail: input.hourDetail ?? null,
       shenshas: input.shenshas ?? null,
       birthYear: input.birthYear,
+      birthDate: input.birthDate ?? null,
       customAspects: input.customAspects ?? null,
       sortOrder: input.sortOrder ?? 0,
       createdAt: now,
@@ -172,5 +195,53 @@ export class InsightService {
       .from(insightDayun)
       .where(eq(insightDayun.profileId, profileId))
       .orderBy(asc(insightDayun.sortOrder));
+  }
+
+  async parseBazi(text: string): Promise<ParsedBaziResult> {
+    const model = new ChatOpenAI({
+      modelName: config.openai.model || 'gpt-4o-mini',
+      apiKey: config.openai.apiKey,
+      configuration: {
+        baseURL: config.openai.baseURL,
+      },
+      temperature: 0,
+    });
+
+    const systemPrompt = `你是一个专业的八字解析助手。用户会提供一段八字排盘文字，请从中提取结构化数据并以JSON格式返回。
+
+提取以下字段：
+- yearGan, yearZhi, monthGan, monthZhi, dayGan, dayZhi, hourGan, hourZhi (天干地支，单个汉字或两字)
+- birthYear (出生公历年份，整数)
+- birthDate (出生公历日期，格式 YYYY-MM-DD，如无则null)
+- yearDetail, monthDetail, dayDetail, hourDetail (每柱详细信息，结构见下)
+- shenshas (全局神煞字符串数组，如文中没有单独的全局神煞行则为空数组)
+
+每柱 detail 结构：
+{
+  "shishen_gan": "主星（十神）",
+  "shishen_gan_sub": "副星（可多个用空格分隔）",
+  "canggan": [{"gan": "天干", "shishen": "该藏干十神（如无则空字符串）"}],
+  "nayin": "纳音",
+  "shenshas": ["神煞1", "神煞2"]
+}
+
+只返回JSON，不要任何其他文字。`;
+
+    const response = await model.invoke([
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: text },
+    ]);
+
+    const responseContent = typeof response.content === 'string' ? response.content : '';
+
+    // Strip markdown code fences if present
+    const jsonStr = responseContent.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+
+    try {
+      return JSON.parse(jsonStr) as ParsedBaziResult;
+    } catch (err) {
+      logger.error('parseBazi: failed to parse LLM response as JSON:', responseContent);
+      throw new Error('Failed to parse LLM response as JSON');
+    }
   }
 }
