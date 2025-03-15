@@ -3,7 +3,8 @@ import { X } from 'lucide-react';
 import { useService } from '@rabjs/react';
 import { InsightService } from '../../insight.service';
 import { DayunEditor } from './dayun-editor';
-import type { InsightProfileDto, DayunInput } from '../../../../api/insight';
+import type { InsightProfileDto, DayunInput, ParsedBaziResult } from '../../../../api/insight';
+import { insightApi } from '../../../../api/insight';
 
 interface ProfileFormProps {
   profile?: InsightProfileDto;
@@ -25,6 +26,7 @@ export function ProfileForm({ profile, onClose }: ProfileFormProps) {
 
   const [name, setName] = useState(profile?.name ?? '');
   const [birthYear, setBirthYear] = useState(profile?.birthYear ?? new Date().getFullYear() - 30);
+  const [birthDate, setBirthDate] = useState(profile?.birthDate ?? '');
   const [fields, setFields] = useState<Record<FieldKey, string>>({
     yearGan: profile?.yearGan ?? '',
     yearZhi: profile?.yearZhi ?? '',
@@ -39,6 +41,41 @@ export function ProfileForm({ profile, onClose }: ProfileFormProps) {
     profile?.dayunList?.map((d) => ({ gan: d.gan, zhi: d.zhi, startYear: d.startYear, sortOrder: d.sortOrder })) ?? []
   );
   const [saving, setSaving] = useState(false);
+  const [parsedDetails, setParsedDetails] = useState<Partial<ParsedBaziResult> | null>(null);
+
+  // AI录入 state
+  const [showAiInput, setShowAiInput] = useState(false);
+  const [aiText, setAiText] = useState('');
+  const [aiParsing, setAiParsing] = useState(false);
+  const [aiError, setAiError] = useState('');
+
+  const handleAiParse = async () => {
+    if (!aiText.trim()) return;
+    setAiParsing(true);
+    setAiError('');
+    try {
+      const result = await insightApi.parseBazi(aiText);
+      setFields({
+        yearGan: result.yearGan ?? '',
+        yearZhi: result.yearZhi ?? '',
+        monthGan: result.monthGan ?? '',
+        monthZhi: result.monthZhi ?? '',
+        dayGan: result.dayGan ?? '',
+        dayZhi: result.dayZhi ?? '',
+        hourGan: result.hourGan ?? '',
+        hourZhi: result.hourZhi ?? '',
+      });
+      if (result.birthYear) setBirthYear(result.birthYear);
+      if (result.birthDate) setBirthDate(result.birthDate);
+      setParsedDetails(result);
+      setShowAiInput(false);
+      setAiText('');
+    } catch (e) {
+      setAiError(e instanceof Error ? e.message : 'AI解析失败，请重试');
+    } finally {
+      setAiParsing(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,12 +84,13 @@ export function ProfileForm({ profile, onClose }: ProfileFormProps) {
     const data = {
       name: name.trim(),
       birthYear,
+      birthDate: birthDate || null,
       ...fields,
-      yearDetail: profile?.yearDetail ?? null,
-      monthDetail: profile?.monthDetail ?? null,
-      dayDetail: profile?.dayDetail ?? null,
-      hourDetail: profile?.hourDetail ?? null,
-      shenshas: profile?.shenshas ?? null,
+      yearDetail: parsedDetails?.yearDetail ?? profile?.yearDetail ?? null,
+      monthDetail: parsedDetails?.monthDetail ?? profile?.monthDetail ?? null,
+      dayDetail: parsedDetails?.dayDetail ?? profile?.dayDetail ?? null,
+      hourDetail: parsedDetails?.hourDetail ?? profile?.hourDetail ?? null,
+      shenshas: parsedDetails?.shenshas ?? profile?.shenshas ?? null,
       customAspects: profile?.customAspects ?? null,
       sortOrder: profile?.sortOrder ?? 0,
     };
@@ -91,6 +129,38 @@ export function ProfileForm({ profile, onClose }: ProfileFormProps) {
           </button>
         </div>
 
+        {/* AI录入 section */}
+        <div className="border border-dashed border-gray-200 dark:border-zinc-700 rounded-lg overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setShowAiInput(!showAiInput)}
+            className="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
+          >
+            <span className="font-medium">AI 录入</span>
+            <span className="text-xs">{showAiInput ? '收起' : '粘贴八字排盘文字自动填入'}</span>
+          </button>
+          {showAiInput && (
+            <div className="px-3 pb-3 space-y-2">
+              <textarea
+                value={aiText}
+                onChange={(e) => setAiText(e.target.value)}
+                placeholder="粘贴八字排盘文字..."
+                rows={8}
+                className="w-full rounded-lg px-3 py-2 text-sm bg-gray-50 dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-green-500/50 resize-none font-mono"
+              />
+              {aiError && <p className="text-xs text-red-500">{aiError}</p>}
+              <button
+                type="button"
+                onClick={handleAiParse}
+                disabled={aiParsing || !aiText.trim()}
+                className="px-4 py-1.5 text-sm rounded-lg bg-gradient-to-br from-green-500 to-green-600 text-white disabled:opacity-50 transition-all"
+              >
+                {aiParsing ? '解析中...' : '解析'}
+              </button>
+            </div>
+          )}
+        </div>
+
         <div className="space-y-1">
           <label className="text-xs font-medium text-gray-600 dark:text-zinc-400">命主名称</label>
           <input
@@ -109,6 +179,16 @@ export function ProfileForm({ profile, onClose }: ProfileFormProps) {
             className="w-32 rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:border-green-500"
             value={birthYear}
             onChange={(e) => setBirthYear(parseInt(e.target.value) || 1990)}
+          />
+        </div>
+
+        <div>
+          <label className="text-xs text-gray-500 dark:text-zinc-400 mb-1 block">阳历日期</label>
+          <input
+            type="date"
+            value={birthDate ?? ''}
+            onChange={(e) => setBirthDate(e.target.value)}
+            className="w-full rounded-lg px-3 py-2 text-sm bg-gray-50 dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-green-500/50"
           />
         </div>
 

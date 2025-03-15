@@ -65,11 +65,13 @@ export function buildPrompt(
 
   const aspectLine = aspects.length > 0 ? aspects.join('、') : '综合运势';
 
+  const birthDateLine = profile.birthDate ? `阳历生日：${profile.birthDate}\n` : '';
+
   return `【命主信息】
 八字：
   天干：${profile.yearGan}  ${profile.monthGan}  ${profile.dayGan}  ${profile.hourGan}
   地支：${profile.yearZhi}  ${profile.monthZhi}  ${profile.dayZhi}  ${profile.hourZhi}
-${dayunLine}
+${birthDateLine}${dayunLine}
 
 【时间背景 - ${periodLabel}】
 ${timeSection}

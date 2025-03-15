@@ -35,6 +35,7 @@ export interface InsightProfileDto {
   hourDetail: PillarDetail | null;
   shenshas: string[] | null;
   birthYear: number;
+  birthDate?: string | null;
   customAspects: string[] | null;
   sortOrder: number;
   dayunList: DayunDto[];
@@ -42,7 +43,27 @@ export interface InsightProfileDto {
   updatedAt: string;
 }
 
-export type CreateProfileInput = Omit<InsightProfileDto, 'id' | 'userId' | 'dayunList' | 'createdAt' | 'updatedAt'>;
+export interface ParsedBaziResult {
+  yearGan: string;
+  yearZhi: string;
+  monthGan: string;
+  monthZhi: string;
+  dayGan: string;
+  dayZhi: string;
+  hourGan: string;
+  hourZhi: string;
+  birthYear: number | null;
+  birthDate: string | null;
+  yearDetail: Record<string, unknown> | null;
+  monthDetail: Record<string, unknown> | null;
+  dayDetail: Record<string, unknown> | null;
+  hourDetail: Record<string, unknown> | null;
+  shenshas: string[];
+}
+
+export type CreateProfileInput = Omit<InsightProfileDto, 'id' | 'userId' | 'dayunList' | 'createdAt' | 'updatedAt'> & {
+  birthDate?: string | null;
+};
 
 export interface DayunInput {
   gan: string;
@@ -91,5 +112,17 @@ export const insightApi = {
       { dayunList }
     );
     return res.data.dayunList;
+  },
+
+  parseBazi: async (text: string): Promise<ParsedBaziResult> => {
+    const res = await fetch('/api/v1/insight/parse-bazi', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
+    const json = await res.json();
+    if (json.code !== 0) throw new Error(json.msg ?? 'AI解析失败');
+    return json.data as ParsedBaziResult;
   },
 };
