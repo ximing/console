@@ -27,6 +27,7 @@ export interface CreateProfileInput {
   shenshas?: string[];
   birthYear: number;
   birthDate?: string | null;
+  birthTime?: string | null;
   customAspects?: string[];
   sortOrder?: number;
 }
@@ -42,6 +43,7 @@ export interface ParsedBaziResult {
   hourZhi: string;
   birthYear: number | null;
   birthDate: string | null;
+  birthTime: string | null;
   yearDetail: Record<string, unknown> | null;
   monthDetail: Record<string, unknown> | null;
   dayDetail: Record<string, unknown> | null;
@@ -114,6 +116,7 @@ export class InsightService {
       shenshas: input.shenshas ?? null,
       birthYear: input.birthYear,
       birthDate: input.birthDate ?? null,
+      birthTime: input.birthTime ?? null,
       customAspects: input.customAspects ?? null,
       sortOrder: input.sortOrder ?? 0,
       createdAt: now,
@@ -207,25 +210,55 @@ export class InsightService {
       temperature: 0,
     });
 
-    const systemPrompt = `你是一个专业的八字解析助手。用户会提供一段八字排盘文字，请从中提取结构化数据并以JSON格式返回。
+    const systemPrompt = `你是一个专业的八字解析助手。用户会提供一段八字排盘文字（表格格式），请提取结构化数据并返回纯JSON，不要任何markdown或其他文字。
 
-提取以下字段：
-- yearGan, yearZhi, monthGan, monthZhi, dayGan, dayZhi, hourGan, hourZhi (天干地支，单个汉字或两字)
-- birthYear (出生公历年份，整数)
-- birthDate (出生公历日期，格式 YYYY-MM-DD，如无则null)
-- yearDetail, monthDetail, dayDetail, hourDetail (每柱详细信息，结构见下)
-- shenshas (全局神煞字符串数组，如文中没有单独的全局神煞行则为空数组)
+【表格格式说明】
+每行格式为"字段名：年柱值, 月柱值, 日柱值, 时柱值"，逗号分隔四柱。
 
-每柱 detail 结构：
+【关键解析规则】
+1. 藏干：每个值是"天干+五行"组合，如"壬水"取"壬"，"甲木"取"甲"，多个用空格分隔
+2. 副星：各藏干的十神，与藏干一一对应（按空格分隔的顺序匹配）
+3. 神煞：逗号分隔四柱，每柱内空格分隔多个神煞名称（注意有时逗号后有多个空格）
+4. 主星为"元女"/"日元"等时，原样保留在shishen_gan中
+5. 纳音、星运、自坐、空亡都是逗号分隔四柱，直接取对应位置即可
+
+【提取字段】
+顶层：yearGan, yearZhi, monthGan, monthZhi, dayGan, dayZhi, hourGan, hourZhi（各单字天干地支）
+birthYear（公历年份整数），birthDate（YYYY-MM-DD，找不到则null）
+birthTime（HH:MM格式，从"阳历: YYYY年MM月DD日 HH:MM:SS"中提取，找不到则null）
+yearDetail, monthDetail, dayDetail, hourDetail（每柱详情对象）
+shenshas（全局神煞数组，神煞若都在各柱detail中则为[]）
+
+【每柱detail结构】
 {
-  "shishen_gan": "主星（十神）",
-  "shishen_gan_sub": "副星（可多个用空格分隔）",
-  "canggan": [{"gan": "天干", "shishen": "该藏干十神（如无则空字符串）"}],
+  "shishen_gan": "主星",
+  "shishen_gan_sub": "副星（空格分隔）",
+  "canggan": [{"gan":"天干单字","shishen":"十神"}],
   "nayin": "纳音",
-  "shenshas": ["神煞1", "神煞2"]
+  "shenshas": ["神煞1","神煞2"],
+  "xiyun": "星运",
+  "zizuo": "自坐",
+  "kongwang": "空亡"
 }
 
-只返回JSON，不要任何其他文字。`;
+【示例】
+输入片段（年柱为例）：
+  主星：偏财, ...
+  天干：乙, ...
+  地支：亥, ...
+  藏干：壬水 甲木, ...
+  副星：伤官 正财, ...
+  星运：沐浴, ...
+  自坐：死, ...
+  空亡：申酉, ...
+  纳音：山头火, ...
+  神煞：国印贵人 太极贵人 德秀贵人 金舆, ...
+
+年柱输出：
+  yearGan:"乙", yearZhi:"亥"
+  yearDetail:{shishen_gan:"偏财",shishen_gan_sub:"伤官 正财",canggan:[{gan:"壬",shishen:"伤官"},{gan:"甲",shishen:"正财"}],nayin:"山头火",xiyun:"沐浴",zizuo:"死",kongwang:"申酉",shenshas:["国印贵人","太极贵人","德秀贵人","金舆"]}
+
+只返回JSON对象，不要代码块标记。`;
 
     const response = await model.invoke([
       { role: 'system', content: systemPrompt },

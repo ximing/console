@@ -5,6 +5,7 @@ import { InsightService } from '../../insight.service';
 import { DayunEditor } from './dayun-editor';
 import type { InsightProfileDto, DayunInput, ParsedBaziResult } from '../../../../api/insight';
 import { insightApi } from '../../../../api/insight';
+import { TIAN_GAN, DI_ZHI } from '../../utils/ganzhi';
 
 interface ProfileFormProps {
   profile?: InsightProfileDto;
@@ -27,6 +28,7 @@ export function ProfileForm({ profile, onClose }: ProfileFormProps) {
   const [name, setName] = useState(profile?.name ?? '');
   const [birthYear, setBirthYear] = useState(profile?.birthYear ?? new Date().getFullYear() - 30);
   const [birthDate, setBirthDate] = useState(profile?.birthDate ?? '');
+  const [birthTime, setBirthTime] = useState(profile?.birthTime ?? '');
   const [fields, setFields] = useState<Record<FieldKey, string>>({
     yearGan: profile?.yearGan ?? '',
     yearZhi: profile?.yearZhi ?? '',
@@ -67,6 +69,7 @@ export function ProfileForm({ profile, onClose }: ProfileFormProps) {
       });
       if (result.birthYear) setBirthYear(result.birthYear);
       if (result.birthDate) setBirthDate(result.birthDate);
+      if (result.birthTime) setBirthTime(result.birthTime);
       setParsedDetails(result);
       setShowAiInput(false);
       setAiText('');
@@ -85,6 +88,7 @@ export function ProfileForm({ profile, onClose }: ProfileFormProps) {
       name: name.trim(),
       birthYear,
       birthDate: birthDate || null,
+      birthTime: birthTime || null,
       ...fields,
       yearDetail: parsedDetails?.yearDetail ?? profile?.yearDetail ?? null,
       monthDetail: parsedDetails?.monthDetail ?? profile?.monthDetail ?? null,
@@ -112,15 +116,23 @@ export function ProfileForm({ profile, onClose }: ProfileFormProps) {
     if (success) onClose();
   };
 
-  const inputCls = 'w-12 rounded-md border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm px-2 py-1.5 text-center focus:outline-none focus:border-green-500 dark:focus:border-green-400';
+  const selectCls = 'w-full rounded-md border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm px-1 py-1.5 text-center focus:outline-none focus:border-green-500 dark:focus:border-green-400';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex justify-end">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Drawer panel */}
       <form
         onSubmit={handleSubmit}
-        className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6 space-y-5 overflow-y-auto max-h-[90vh]"
+        className="animate-slide-in-right relative flex flex-col h-full w-[480px] max-w-full bg-white dark:bg-zinc-900 shadow-2xl"
       >
-        <div className="flex items-center justify-between">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-zinc-800 shrink-0">
           <h3 className="text-base font-semibold text-gray-900 dark:text-white">
             {isEdit ? '编辑命主档案' : '新建命主档案'}
           </h3>
@@ -129,99 +141,108 @@ export function ProfileForm({ profile, onClose }: ProfileFormProps) {
           </button>
         </div>
 
-        {/* AI录入 section */}
-        <div className="border border-dashed border-gray-200 dark:border-zinc-700 rounded-lg overflow-hidden">
-          <button
-            type="button"
-            onClick={() => setShowAiInput(!showAiInput)}
-            className="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
-          >
-            <span className="font-medium">AI 录入</span>
-            <span className="text-xs">{showAiInput ? '收起' : '粘贴八字排盘文字自动填入'}</span>
-          </button>
-          {showAiInput && (
-            <div className="px-3 pb-3 space-y-2">
-              <textarea
-                value={aiText}
-                onChange={(e) => setAiText(e.target.value)}
-                placeholder="粘贴八字排盘文字..."
-                rows={8}
-                className="w-full rounded-lg px-3 py-2 text-sm bg-gray-50 dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-green-500/50 resize-none font-mono"
-              />
-              {aiError && <p className="text-xs text-red-500">{aiError}</p>}
-              <button
-                type="button"
-                onClick={handleAiParse}
-                disabled={aiParsing || !aiText.trim()}
-                className="px-4 py-1.5 text-sm rounded-lg bg-gradient-to-br from-green-500 to-green-600 text-white disabled:opacity-50 transition-all"
-              >
-                {aiParsing ? '解析中...' : '解析'}
-              </button>
-            </div>
-          )}
-        </div>
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
 
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-600 dark:text-zinc-400">命主名称</label>
-          <input
-            className="w-full rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-            placeholder="如：自己、妈妈、老公"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-600 dark:text-zinc-400">出生公历年份</label>
-          <input
-            type="number"
-            className="w-32 rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-            value={birthYear}
-            onChange={(e) => setBirthYear(parseInt(e.target.value) || 1990)}
-          />
-        </div>
-
-        <div>
-          <label className="text-xs text-gray-500 dark:text-zinc-400 mb-1 block">阳历日期</label>
-          <input
-            type="date"
-            value={birthDate ?? ''}
-            onChange={(e) => setBirthDate(e.target.value)}
-            className="w-full rounded-lg px-3 py-2 text-sm bg-gray-50 dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-green-500/50"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-xs font-medium text-gray-600 dark:text-zinc-400">八字（天干 / 地支）</label>
-          <div className="grid grid-cols-4 gap-3">
-            {GAN_ZHI_LABELS.map(({ label, ganKey, zhiKey }) => (
-              <div key={label} className="flex flex-col items-center gap-1.5">
-                <span className="text-xs text-gray-400">{label}</span>
-                <input
-                  className={inputCls}
-                  placeholder="干"
-                  value={fields[ganKey]}
-                  onChange={(e) => setFields((f) => ({ ...f, [ganKey]: e.target.value }))}
-                  maxLength={2}
+          {/* AI录入 section */}
+          <div className="border border-dashed border-gray-200 dark:border-zinc-700 rounded-lg overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setShowAiInput(!showAiInput)}
+              className="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
+            >
+              <span className="font-medium">AI 录入</span>
+              <span className="text-xs">{showAiInput ? '收起' : '粘贴八字排盘文字自动填入'}</span>
+            </button>
+            {showAiInput && (
+              <div className="px-3 pb-3 space-y-2">
+                <textarea
+                  value={aiText}
+                  onChange={(e) => setAiText(e.target.value)}
+                  placeholder="粘贴八字排盘文字..."
+                  rows={8}
+                  className="w-full rounded-lg px-3 py-2 text-sm bg-gray-50 dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-green-500/50 resize-none font-mono"
                 />
-                <input
-                  className={inputCls}
-                  placeholder="支"
-                  value={fields[zhiKey]}
-                  onChange={(e) => setFields((f) => ({ ...f, [zhiKey]: e.target.value }))}
-                  maxLength={2}
-                />
+                {aiError && <p className="text-xs text-red-500">{aiError}</p>}
+                <button
+                  type="button"
+                  onClick={handleAiParse}
+                  disabled={aiParsing || !aiText.trim()}
+                  className="px-4 py-1.5 text-sm rounded-lg bg-gradient-to-br from-green-500 to-green-600 text-white disabled:opacity-50 transition-all"
+                >
+                  {aiParsing ? '解析中...' : '解析'}
+                </button>
               </div>
-            ))}
+            )}
           </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-gray-600 dark:text-zinc-400">命主名称</label>
+            <input
+              className="w-full rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+              placeholder="如：自己、妈妈、老公"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-gray-600 dark:text-zinc-400">出生日期 / 时间</label>
+            <div className="flex gap-2">
+              <input
+                type="date"
+                value={birthDate ?? ''}
+                onChange={(e) => {
+                  setBirthDate(e.target.value);
+                  if (e.target.value) setBirthYear(new Date(e.target.value).getFullYear());
+                }}
+                className="flex-1 rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+              />
+              <input
+                type="time"
+                value={birthTime ?? ''}
+                onChange={(e) => setBirthTime(e.target.value)}
+                className="w-32 rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-gray-600 dark:text-zinc-400">八字（天干 / 地支）</label>
+            <div className="grid grid-cols-4 gap-3">
+              {GAN_ZHI_LABELS.map(({ label, ganKey, zhiKey }) => (
+                <div key={label} className="flex flex-col items-center gap-1.5">
+                  <span className="text-xs text-gray-400">{label}</span>
+                  <select
+                    className={selectCls}
+                    value={fields[ganKey]}
+                    onChange={(e) => setFields((f) => ({ ...f, [ganKey]: e.target.value }))}
+                  >
+                    <option value="">干</option>
+                    {TIAN_GAN.map((g) => <option key={g} value={g}>{g}</option>)}
+                  </select>
+                  <select
+                    className={selectCls}
+                    value={fields[zhiKey]}
+                    onChange={(e) => setFields((f) => ({ ...f, [zhiKey]: e.target.value }))}
+                  >
+                    <option value="">支</option>
+                    {DI_ZHI.map((z) => <option key={z} value={z}>{z}</option>)}
+                  </select>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2 border-t border-gray-100 dark:border-zinc-800 pt-4">
+            <DayunEditor value={dayunList} onChange={setDayunList} />
+          </div>
+
         </div>
 
-        <div className="space-y-2 border-t border-gray-100 dark:border-zinc-800 pt-4">
-          <DayunEditor value={dayunList} onChange={setDayunList} />
-        </div>
-
-        <div className="flex justify-end gap-3 pt-2">
+        {/* Footer */}
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-100 dark:border-zinc-800 shrink-0">
           <button
             type="button"
             onClick={onClose}
