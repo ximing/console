@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, ChevronDown, ChevronRight } from 'lucide-react';
+import { X, ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react';
 import { useService } from '@rabjs/react';
 import { InsightService } from '../../insight.service';
 import { DayunEditor } from './dayun-editor';
@@ -55,6 +55,49 @@ export function ProfileForm({ profile, onClose }: ProfileFormProps) {
 
   const updateDetail = (key: DetailKey, field: keyof PillarDetail, value: string) => {
     setDetails((prev) => ({ ...prev, [key]: { ...prev[key], [field]: value } }));
+  };
+
+  const addCanggan = (key: DetailKey) => {
+    setDetails((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], canggan: [...(prev[key].canggan ?? []), { gan: '', shishen: '' }] },
+    }));
+  };
+
+  const removeCanggan = (key: DetailKey, index: number) => {
+    setDetails((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], canggan: (prev[key].canggan ?? []).filter((_, i) => i !== index) },
+    }));
+  };
+
+  const updateCanggan = (key: DetailKey, index: number, field: 'gan' | 'shishen', value: string) => {
+    setDetails((prev) => {
+      const next = (prev[key].canggan ?? []).map((c, i) => i === index ? { ...c, [field]: value } : c);
+      return { ...prev, [key]: { ...prev[key], canggan: next } };
+    });
+  };
+
+  const addShensha = (key: DetailKey) => {
+    setDetails((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], shenshas: [...(prev[key].shenshas ?? []), ''] },
+    }));
+  };
+
+  const removeShensha = (key: DetailKey, index: number) => {
+    setDetails((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], shenshas: (prev[key].shenshas ?? []).filter((_, i) => i !== index) },
+    }));
+  };
+
+  const updateShensha = (key: DetailKey, index: number, value: string) => {
+    setDetails((prev) => {
+      const next = [...(prev[key].shenshas ?? [])];
+      next[index] = value;
+      return { ...prev, [key]: { ...prev[key], shenshas: next } };
+    });
   };
 
   // AI录入 state
@@ -146,7 +189,7 @@ export function ProfileForm({ profile, onClose }: ProfileFormProps) {
       {/* Drawer panel */}
       <form
         onSubmit={handleSubmit}
-        className="animate-slide-in-right relative flex flex-col h-full w-[480px] max-w-full bg-white dark:bg-zinc-900 shadow-2xl"
+        className="animate-slide-in-right relative flex flex-col h-full w-[960px] max-w-full bg-white dark:bg-zinc-900 shadow-2xl"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-zinc-800 shrink-0">
@@ -274,6 +317,49 @@ export function ProfileForm({ profile, onClose }: ProfileFormProps) {
                     </tr>
                   </thead>
                   <tbody className="space-y-1">
+                    {/* 藏干 */}
+                    <tr>
+                      <td className="py-1.5 pr-2 text-gray-400 dark:text-zinc-500 align-top pt-2 whitespace-nowrap">藏干</td>
+                      {DETAIL_KEYS.map((key) => (
+                        <td key={key} className="py-1.5 px-1 align-top">
+                          <div className="flex flex-col gap-1">
+                            {(details[key].canggan ?? []).map((c, j) => (
+                              <div key={j} className="flex items-center gap-0.5">
+                                <select
+                                  value={c.gan}
+                                  onChange={(e) => updateCanggan(key, j, 'gan', e.target.value)}
+                                  className="w-10 rounded border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 py-1 text-center focus:outline-none focus:border-green-500 dark:focus:border-green-400"
+                                >
+                                  <option value="">干</option>
+                                  {TIAN_GAN.map((g) => <option key={g} value={g}>{g}</option>)}
+                                </select>
+                                <input
+                                  type="text"
+                                  value={c.shishen}
+                                  onChange={(e) => updateCanggan(key, j, 'shishen', e.target.value)}
+                                  placeholder="十神"
+                                  className="min-w-0 flex-1 rounded border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-1.5 py-1 text-center focus:outline-none focus:border-green-500 dark:focus:border-green-400"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => removeCanggan(key, j)}
+                                  className="shrink-0 text-red-400 hover:text-red-600 transition-colors"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={() => addCanggan(key)}
+                              className="flex items-center justify-center gap-0.5 text-green-600 dark:text-green-400 hover:opacity-70 transition-opacity"
+                            >
+                              <Plus className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </td>
+                      ))}
+                    </tr>
                     {/* 纳音 */}
                     <tr>
                       <td className="py-1.5 pr-2 text-gray-400 dark:text-zinc-500 align-middle whitespace-nowrap">纳音</td>
@@ -306,29 +392,40 @@ export function ProfileForm({ profile, onClose }: ProfileFormProps) {
                     </tr>
                     {/* 神煞 */}
                     <tr>
-                      <td className="py-1.5 pr-2 text-gray-400 dark:text-zinc-500 align-middle whitespace-nowrap">神煞</td>
+                      <td className="py-1.5 pr-2 text-gray-400 dark:text-zinc-500 align-top pt-2 whitespace-nowrap">神煞</td>
                       {DETAIL_KEYS.map((key) => (
-                        <td key={key} className="py-1.5 px-1">
-                          <input
-                            type="text"
-                            value={(details[key].shenshas ?? []).join('、')}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              const arr = val ? val.split(/[、,，\s]+/).filter(Boolean) : [];
-                              setDetails((prev) => ({
-                                ...prev,
-                                [key]: { ...prev[key], shenshas: arr },
-                              }));
-                            }}
-                            placeholder="逗号分隔"
-                            className="w-full rounded border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-1.5 py-1 text-center focus:outline-none focus:border-green-500 dark:focus:border-green-400"
-                          />
+                        <td key={key} className="py-1.5 px-1 align-top">
+                          <div className="flex flex-col gap-1">
+                            {(details[key].shenshas ?? []).map((s, j) => (
+                              <div key={j} className="flex items-center gap-0.5">
+                                <input
+                                  type="text"
+                                  value={s}
+                                  onChange={(e) => updateShensha(key, j, e.target.value)}
+                                  className="min-w-0 flex-1 rounded border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-1.5 py-1 text-center focus:outline-none focus:border-green-500 dark:focus:border-green-400"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => removeShensha(key, j)}
+                                  className="shrink-0 text-red-400 hover:text-red-600 transition-colors"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={() => addShensha(key)}
+                              className="flex items-center justify-center gap-0.5 text-green-600 dark:text-green-400 hover:opacity-70 transition-opacity"
+                            >
+                              <Plus className="w-3 h-3" />
+                            </button>
+                          </div>
                         </td>
                       ))}
                     </tr>
                   </tbody>
                 </table>
-                <p className="mt-2 text-xs text-gray-400 dark:text-zinc-500">神煞多个用顿号或逗号分隔</p>
               </div>
             )}
           </div>
