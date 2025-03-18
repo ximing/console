@@ -18,6 +18,24 @@ export const PromptGenerator = view(() => {
   const [customAspect, setCustomAspect] = useState('');
   const [prompt, setPrompt] = useState('');
   const [copied, setCopied] = useState(false);
+  const [copiedDayunYear, setCopiedDayunYear] = useState<number | null>(null);
+  const [copiedAllDayun, setCopiedAllDayun] = useState(false);
+
+  const copyDayun = async (gan: string, zhi: string, startYear: number) => {
+    await navigator.clipboard.writeText(`${gan}${zhi}`);
+    setCopiedDayunYear(startYear);
+    setTimeout(() => setCopiedDayunYear(null), 1500);
+  };
+
+  const copyAllDayun = async (list: { gan: string; zhi: string; startYear: number }[]) => {
+    const text = list.map((d, i) => {
+      const end = list[i + 1] ? list[i + 1].startYear - 1 : '…';
+      return `${d.gan}${d.zhi}(${d.startYear}-${end})`;
+    }).join(' ');
+    await navigator.clipboard.writeText(text);
+    setCopiedAllDayun(true);
+    setTimeout(() => setCopiedAllDayun(false), 1500);
+  };
 
   const allAspects = [...PRESET_ASPECTS, ...(profile?.customAspects ?? [])];
 
@@ -55,7 +73,8 @@ export const PromptGenerator = view(() => {
     );
   }
 
-  const dayun = getCurrentDayun(profile.dayunList);
+  const currentDayun = getCurrentDayun(profile.dayunList);
+  const sortedDayun = [...profile.dayunList].sort((a, b) => a.startYear - b.startYear);
 
   return (
     <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
@@ -71,11 +90,49 @@ export const PromptGenerator = view(() => {
           dayDetail={profile.dayDetail}
           hourDetail={profile.hourDetail}
         />
-        {dayun ? (
-          <p className="text-xs text-gray-500 dark:text-zinc-500">
-            当前大运：<span className="text-green-600 dark:text-green-400 font-medium">{dayun.gan}{dayun.zhi}</span>
-            （{dayun.startYear}年起）
-          </p>
+        {sortedDayun.length > 0 ? (
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-medium text-gray-500 dark:text-zinc-400">大运</p>
+              <button
+                type="button"
+                onClick={() => copyAllDayun(sortedDayun)}
+                className="flex items-center gap-1 text-[10px] text-gray-400 dark:text-zinc-500 hover:text-green-600 dark:hover:text-green-400 transition-colors"
+              >
+                {copiedAllDayun ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                {copiedAllDayun ? '已复制' : '复制全部'}
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {sortedDayun.map((d, i) => {
+                const isCurrent = currentDayun?.startYear === d.startYear;
+                const endYear = sortedDayun[i + 1] ? sortedDayun[i + 1].startYear - 1 : '…';
+                return (
+                  <button
+                    key={d.startYear}
+                    type="button"
+                    onClick={() => copyDayun(d.gan, d.zhi, d.startYear)}
+                    title="点击复制"
+                    className={`flex flex-col items-center rounded-lg px-2.5 py-1.5 text-xs transition-colors cursor-pointer hover:opacity-80 active:scale-95 ${
+                      isCurrent
+                        ? 'bg-green-100 dark:bg-green-900/30 ring-1 ring-green-400/60'
+                        : 'bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400'
+                    }`}
+                  >
+                    <span className={`text-sm font-semibold leading-tight ${isCurrent ? 'text-green-700 dark:text-green-300' : ''}`}>
+                      {copiedDayunYear === d.startYear ? <Check className="w-3.5 h-3.5 text-green-500" /> : `${d.gan}${d.zhi}`}
+                    </span>
+                    <span className={`text-[10px] leading-tight mt-0.5 ${isCurrent ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-zinc-500'}`}>
+                      {d.startYear}–{endYear}
+                    </span>
+                    {isCurrent && (
+                      <span className="text-[10px] text-green-600 dark:text-green-400 font-medium mt-0.5">当前</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         ) : (
           <p className="text-xs text-gray-400">尚未录入大运</p>
         )}
