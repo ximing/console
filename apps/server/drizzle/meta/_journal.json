@@ -120,6 +120,13 @@
       "when": 1750666800000,
       "tag": "0016_add_birth_time",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "5",
+      "when": 1783010860975,
+      "tag": "0017_broken_yellow_claw",
+      "breakpoints": true
     }
   ]
 }
