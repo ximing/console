@@ -41,6 +41,7 @@ export interface InsightProfileDto {
   birthDate?: string | null;
   birthTime?: string | null;
   customAspects: string[] | null;
+  macroAnalysis?: string | null;
   sortOrder: number;
   dayunList: DayunDto[];
   createdAt: string;
