@@ -29,7 +29,7 @@ export interface CreateProfileInput {
   birthDate?: string | null;
   birthTime?: string | null;
   customAspects?: string[];
-  macroAnalysis?: string | null;  // 新增
+  macroAnalysis?: string | null;
   sortOrder?: number;
 }
 
