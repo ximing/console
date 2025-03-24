@@ -19,13 +19,21 @@ const AUTH_EXCLUDED_PATHS = [
 
 /**
  * Check if the request path requires authentication
+ *
+ * Only `/api/*` routes require authentication. Static assets and SPA routes
+ * (served by express.static / StaticController) must stay public so the web
+ * app can boot and redirect to the login page client-side when there is no
+ * session. WebSocket endpoints (`/socket.io`, `/collaboration`) perform their
+ * own JWT verification and also bypass this middleware.
  */
 const requiresAuth = (path: string): boolean => {
-  // First check if path is explicitly excluded from auth
+  if (!path.startsWith('/api')) {
+    return false;
+  }
+  // Explicitly excluded API paths (e.g. login/register handled by baAuthInterceptor)
   if (AUTH_EXCLUDED_PATHS.some((excluded) => path === excluded || path.startsWith(excluded))) {
     return false;
   }
-  // Then check if path requires authentication
   return true;
 };
 
