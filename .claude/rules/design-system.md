@@ -1,7 +1,11 @@
 ---
 paths:
-  - "apps/web/src/**/*.{ts,tsx,css}"
-  - "apps/client/src/**/*.{ts,tsx,css}"
+  - "apps/web/src/**/*.ts"
+  - "apps/web/src/**/*.tsx"
+  - "apps/web/src/**/*.css"
+  - "apps/client/src/**/*.ts"
+  - "apps/client/src/**/*.tsx"
+  - "apps/client/src/**/*.css"
 ---
 
 # Design System Rules

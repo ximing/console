@@ -38,7 +38,7 @@ This module handles MySQL database connections, schema definitions, and migratio
 - **Run migrations**: `pnpm migrate` (manual) or automatic on server startup
 - **View database**: `pnpm migrate:studio` (Drizzle Studio)
 - Migration files stored in `drizzle/` folder at server root
-- Migrations run automatically after MySQL connection, before LanceDB initialization
+- Migrations run automatically after MySQL connection, during server startup
 
 ## Startup Sequence
 
@@ -47,9 +47,8 @@ The app follows this initialization order:
 1. IOC container
 2. MySQL connection pool
 3. **Database migrations** ← This module
-4. LanceDB initialization
-5. Scheduler service
-6. Express server
+4. Scheduler service
+5. Express server
 
 ## Shutdown Sequence
 
@@ -58,7 +57,6 @@ Graceful shutdown closes resources in reverse order:
 1. Express server stops accepting requests
 2. Scheduler service stops
 3. **MySQL connection pool closes** ← This module
-4. LanceDB closes
 
 ## Common Tasks
 

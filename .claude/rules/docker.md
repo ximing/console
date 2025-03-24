@@ -1,6 +1,10 @@
 ---
-ruleType: Model Request
-description: 构建docker镜像时使用
+description: 构建 docker 镜像时使用
+paths:
+  - "Dockerfile"
+  - "docker-compose*.yml"
+  - "**/docker-compose*.yml"
+  - ".github/workflows/**"
 ---
 
 ## Console Docker 镜像构建注意事项

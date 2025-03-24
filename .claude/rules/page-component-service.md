@@ -1,8 +1,8 @@
 ---
-ruleType: Model Request
-description: 页面级组件的服务管理模式。页面组件及其子组件的 Service
-  应在页面统一注册，子组件通过 Domain 机制获取 Service，避免组件内重复注册。
-name: page-component-service
+description: 页面级组件的服务管理模式。页面组件及其子组件的 Service 应在页面统一注册，子组件通过 Domain 机制获取 Service，避免组件内重复注册。
+paths:
+  - "apps/web/src/pages/**/*.tsx"
+  - "apps/web/src/pages/**/*.service.ts"
 ---
 
 # 页面级组件的服务管理模式
@@ -143,5 +143,5 @@ src/pages/workbench/
 
 ## 相关规则
 
-- 参考 `principle.md` 的目录规范
-- 参考 `rs-react.md` 的状态管理原则
+- 参考 `apps/web/CLAUDE.md` 的 Component Organization Convention（目录规范）
+- 参考 `.claude/rules/rs-react.md` 的状态管理原则
