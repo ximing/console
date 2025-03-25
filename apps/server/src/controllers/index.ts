@@ -18,6 +18,7 @@ import { BlogMediaController } from './v1/blog-media.controller.js';
 import { AppController } from './v1/app.controller.js';
 import { MiniMaxController } from './v1/minimax.controller.js';
 import { InsightController } from './v1/insight.controller.js';
+import { BlogAuthController } from './v1/blog-auth.controller.js';
 import { StaticController } from './static.controller.js';
 
 // StaticController 必须在最后
@@ -41,5 +42,6 @@ export const controllers = [
   AppController,
   MiniMaxController,
   InsightController,
+  BlogAuthController,
   StaticController,
 ];

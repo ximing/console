@@ -15,6 +15,10 @@ const AUTH_EXCLUDED_PATHS = [
   '/api/v1/auth/register',
   '/api/v1/auth/config',
   '/api/v1/ba',
+  // Public blog visitor routes (GitHub OAuth, engagement APIs). Trailing slash so
+  // the `/api/v1/blog/*` subtree is excluded without also matching the admin
+  // `/api/v1/blogs*` controllers (`startsWith('/api/v1/blog')` would swallow them).
+  '/api/v1/blog/',
 ];
 
 /**

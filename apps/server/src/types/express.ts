@@ -5,6 +5,7 @@ declare global {
   namespace Express {
     interface Request {
       user?: UserInfoDto;
+      visitor?: import('../db/schema/blog-visitor.js').BlogVisitor;
     }
   }
 }
