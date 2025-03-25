@@ -156,6 +156,14 @@ export interface Config {
     enabled: boolean;
     token: string;
   };
+  blog: {
+    githubClientId: string;
+    githubClientSecret: string;
+    githubCallbackUrl: string;
+    visitorJwtSecret: string;
+    allowedOrigins: string[];
+    anonSalt: string;
+  };
   allowRegistration: boolean;
   env: string;
 }
@@ -326,6 +334,19 @@ export const config: Config = {
   ba: {
     enabled: process.env.BA_AUTH_ENABLED === 'true',
     token: process.env.BA_AUTH_TOKEN || '',
+  },
+  blog: {
+    githubClientId: process.env.GITHUB_OAUTH_CLIENT_ID || '',
+    githubClientSecret: process.env.GITHUB_OAUTH_CLIENT_SECRET || '',
+    githubCallbackUrl:
+      process.env.GITHUB_OAUTH_CALLBACK_URL ||
+      'https://console.aimo.plus/api/v1/blog/auth/github/callback',
+    visitorJwtSecret: process.env.VISITOR_JWT_SECRET || 'dev-visitor-jwt-secret',
+    allowedOrigins: (
+      process.env.BLOG_ALLOWED_ORIGINS ||
+      'https://www.ximing.ren,https://ximing.ren,http://localhost:8000'
+    ).split(','),
+    anonSalt: process.env.BLOG_ANON_SALT || 'dev-blog-anon-salt',
   },
   allowRegistration: process.env.ALLOW_REGISTRATION !== 'false',
   env: process.env.NODE_ENV || 'development',

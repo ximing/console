@@ -28,6 +28,11 @@ export const ErrorCode = {
   ATTACHMENT_NOT_FOUND: 4002,
   STORAGE_ERROR: 4003,
   FILE_UPLOAD_ERROR: 4004,
+
+  // 博客互动 5000-5099
+  VISITOR_BLOCKED: 5001,
+  COMMENT_FORBIDDEN: 5002,
+  VISITOR_UNAUTHORIZED: 5003,
 } as const;
 
 export const ErrorMessage = {
@@ -51,4 +56,7 @@ export const ErrorMessage = {
   [ErrorCode.ATTACHMENT_NOT_FOUND]: '附件不存在',
   [ErrorCode.STORAGE_ERROR]: '存储错误',
   [ErrorCode.FILE_UPLOAD_ERROR]: '文件上传失败',
+  [ErrorCode.VISITOR_BLOCKED]: '账号已被限制，无法执行该操作',
+  [ErrorCode.COMMENT_FORBIDDEN]: '无权操作该评论',
+  [ErrorCode.VISITOR_UNAUTHORIZED]: '请先使用 GitHub 登录',
 } as const;
