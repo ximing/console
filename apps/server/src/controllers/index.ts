@@ -20,6 +20,8 @@ import { MiniMaxController } from './v1/minimax.controller.js';
 import { InsightController } from './v1/insight.controller.js';
 import { BlogAuthController } from './v1/blog-auth.controller.js';
 import { BlogCommentController } from './v1/blog-comment.controller.js';
+import { BlogLikeController } from './v1/blog-like.controller.js';
+import { BlogStatsController } from './v1/blog-stats.controller.js';
 import { StaticController } from './static.controller.js';
 
 // StaticController 必须在最后
@@ -45,5 +47,7 @@ export const controllers = [
   InsightController,
   BlogAuthController,
   BlogCommentController,
+  BlogLikeController,
+  BlogStatsController,
   StaticController,
 ];
