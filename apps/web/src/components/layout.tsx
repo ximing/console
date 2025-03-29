@@ -4,7 +4,7 @@ import { view, useService } from '@rabjs/react';
 import { AuthService } from '../services/auth.service';
 import { ThemeService } from '../services/theme.service';
 import { NotificationService } from '../services/notification.service';
-import { Zap, Sun, Moon, LogOut, Settings, ListTodo, Bell, Github, FileText, Boxes, Compass } from 'lucide-react';
+import { Zap, Sun, Moon, LogOut, Settings, ListTodo, Bell, Github, FileText, Boxes, Compass, MessageCircle } from 'lucide-react';
 import logoUrl from '../assets/logo.png';
 import logoDarkUrl from '../assets/logo-dark.png';
 import { isElectron, isMacOS } from '../electron/isElectron';
@@ -49,6 +49,7 @@ export const Layout = view(({ children }: LayoutProps) => {
   const isBlogPage = location.pathname.startsWith('/blogs');
   const isAppsPage = location.pathname.startsWith('/apps');
   const isInsightPage = location.pathname.startsWith('/insight');
+  const isBlogEngagementPage = location.pathname.startsWith('/blog-engagement');
 
   // Get unread count from service (updated via socket events)
   const unreadCount = notificationService.unreadCount;
@@ -241,6 +242,23 @@ export const Layout = view(({ children }: LayoutProps) => {
             aria-label="不惑"
           >
             <Compass className="w-6 h-6" />
+          </button>
+
+          {/* Blog Engagement Navigation */}
+          <button
+            onClick={() => {
+              const search = location.search;
+              navigate(`/blog-engagement${search}`);
+            }}
+            className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors ${
+              isBlogEngagementPage
+                ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
+                : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-dark-800'
+            }`}
+            title="博客互动"
+            aria-label="博客互动"
+          >
+            <MessageCircle className="w-6 h-6" />
           </button>
         </nav>
 

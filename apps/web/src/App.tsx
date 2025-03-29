@@ -14,6 +14,7 @@ import BlogPage from './pages/blogs';
 import AppsPage from './pages/apps';
 import VersionsPage from './pages/apps/[appId]/versions';
 import { InsightPage } from './pages/insight';
+import BlogEngagementPage from './pages/blog-engagement';
 import { ProtectedRoute } from './components/protected-route';
 import { ToastContainer } from './components/toast';
 import { CommandPalette } from './components/command-palette/command-palette';
@@ -156,6 +157,14 @@ function App() {
           element={
             <ProtectedRoute>
               <InsightPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/blog-engagement/*"
+          element={
+            <ProtectedRoute>
+              <BlogEngagementPage />
             </ProtectedRoute>
           }
         />
