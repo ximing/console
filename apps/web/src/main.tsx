@@ -18,6 +18,7 @@ import { ApiTokenService } from './services/api-token.service';
 import { GithubService } from './pages/github/github.service';
 import { MiniMaxTokenService } from './services/minimax-token.service';
 import { InsightService } from './pages/insight/insight.service';
+import { BlogEngagementService } from './pages/blog-engagement/blog-engagement.service';
 
 /**
  * Register services globally
@@ -38,6 +39,7 @@ register(ApiTokenService);
 register(GithubService);
 register(MiniMaxTokenService);
 register(InsightService);
+register(BlogEngagementService);
 // Initialize theme before rendering
 resolve(ThemeService).loadTheme();
 
