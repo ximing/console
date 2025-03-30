@@ -62,6 +62,10 @@ export async function createApp() {
 
   const app: any = express();
 
+  // 生产环境位于反向代理（TLS 终止）之后，信任第一跳代理以还原访客真实 IP
+  // （匿名点赞身份 buildAnonKey 与 IP 限流均依赖 req.ip）
+  app.set('trust proxy', 1);
+
   // 中间件配置
   app.use(
     helmet({

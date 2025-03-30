@@ -97,5 +97,3 @@ export class BlogEngagementService extends Service {
     }
   }
 }
-
-export const blogEngagementService = new BlogEngagementService();
