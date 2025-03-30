@@ -10,6 +10,20 @@ import { requireVisitor } from '../../middlewares/visitor-auth.js';
 
 import type { Request, Response } from 'express';
 
+/** GitHub 访问在国内网络下偶发连接超时，每次尝试 15s 超时、最多 3 次，仅网络错误重试。 */
+async function fetchWithRetry(url: string, init: RequestInit, attempts = 3): Promise<globalThis.Response> {
+  let lastError: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fetch(url, { ...init, signal: AbortSignal.timeout(15000) });
+    } catch (error) {
+      lastError = error;
+      logger.warn(`github fetch attempt ${i + 1}/${attempts} failed:`, { url, error });
+    }
+  }
+  throw lastError;
+}
+
 @Service()
 @JsonController('/api/v1/blog/auth')
 export class BlogAuthController {
@@ -39,7 +53,7 @@ export class BlogAuthController {
     }
 
     try {
-      const tokenResp = await fetch('https://github.com/login/oauth/access_token', {
+      const tokenResp = await fetchWithRetry('https://github.com/login/oauth/access_token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({
@@ -51,7 +65,7 @@ export class BlogAuthController {
       const tokenData = (await tokenResp.json()) as { access_token?: string };
       if (!tokenData.access_token) throw new Error('no access_token');
 
-      const userResp = await fetch('https://api.github.com/user', {
+      const userResp = await fetchWithRetry('https://api.github.com/user', {
         headers: {
           Authorization: `Bearer ${tokenData.access_token}`,
           'User-Agent': 'x-console-blog-auth',
