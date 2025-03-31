@@ -38,7 +38,13 @@ export class BlogAuthController {
       `https://github.com/login/oauth/authorize?client_id=${config.blog.githubClientId}` +
       `&redirect_uri=${encodeURIComponent(config.blog.githubCallbackUrl)}` +
       `&scope=read:user&state=${state}`;
-    return res.redirect(url);
+    // 弹窗 OAuth 需要保持 window.opener 以便回调页 postMessage 回传 token，
+    // 覆盖 helmet 默认的 COOP: same-origin（它会切断跨域 opener 关系）
+    res.setHeader('Cross-Origin-Opener-Policy', 'unsafe-none');
+    // 注意：express res.redirect() 返回 undefined，不能作为返回值
+    // （routing-controllers 会对 undefined 结果抛 NotFoundError）
+    res.redirect(url);
+    return res;
   }
 
   @Get('/github/callback')
@@ -47,6 +53,7 @@ export class BlogAuthController {
     @QueryParam('state') state: string,
     @Res() res: Response
   ) {
+    res.setHeader('Cross-Origin-Opener-Policy', 'unsafe-none');
     const entry = consumeOAuthState(state);
     if (!entry || !code) {
       return res.status(400).type('html').send('<p>授权已过期，请关闭窗口重试。</p>');
@@ -85,9 +92,12 @@ export class BlogAuthController {
       return res.type('html').send(`<!doctype html><html><body><script>
         if (window.opener) {
           window.opener.postMessage({ type: 'blog-auth', token: ${JSON.stringify(token)} }, ${JSON.stringify(entry.origin)});
+          window.close();
+          document.body.innerHTML = '<p>登录成功，正在关闭窗口…</p>';
+        } else {
+          document.body.innerHTML = '<p>登录成功，但未能回传到博客页面，请关闭本页后重新点击登录。</p>';
         }
-        window.close();
-      </script><p>登录成功，正在关闭窗口…</p></body></html>`);
+      </script></body></html>`);
     } catch (error) {
       logger.error('blog github oauth callback error:', error);
       return res.status(500).type('html').send('<p>登录失败，请关闭窗口重试。</p>');
