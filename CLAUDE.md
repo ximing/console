@@ -62,3 +62,7 @@ Copy `apps/server/.env.example` to `.env`. Docker dev infrastructure (`pnpm dev:
 - `.claude/rules/rs-react.md` — @rabjs/react 核心用法（编辑 `*.service.ts` / `*.tsx` 时自动附加）
 - `.claude/rules/page-component-service.md` — 页面级 Service 注册模式（编辑 `pages/**` 时自动附加）
 - `.claude/rules/docker.md` — Docker 镜像构建注意事项（编辑 Dockerfile / workflows 时自动附加）
+
+## CatPaw IDE 规则镜像
+
+`.catpaw/rules/` 及各子树 `.catpaw/rules/readme.md` 是上述规则的 CatPaw IDE 镜像：正文必须与对应 `CLAUDE.md` / `.claude/rules/*.md` 逐字节一致，仅 frontmatter 不同（CatPaw 用 `ruleType` + `globs` + `paths`）。修改任何一侧规则时，必须同步更新另一侧同名文件。
