@@ -1,4 +1,5 @@
-import Redis from 'ioredis';
+import { Redis } from 'ioredis';
+import type { Redis as RedisType } from 'ioredis';
 import { Service } from 'typedi';
 
 import { config } from '../config/config.js';
@@ -6,9 +7,9 @@ import { logger } from '../utils/logger.js';
 
 @Service()
 export class RedisService {
-  private client: Redis | null = null;
-  private subscriber: Redis | null = null;
-  private publisher: Redis | null = null;
+  private client: RedisType | null = null;
+  private subscriber: RedisType | null = null;
+  private publisher: RedisType | null = null;
   private isEnabled: boolean = false;
 
   constructor() {
