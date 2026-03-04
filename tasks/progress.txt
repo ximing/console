@@ -508,3 +508,20 @@
   - The DTO package is now minimal and only contains authentication-related types
   - This story was effectively a verification/documentation step rather than an implementation step
 ---
+
+## 2026-03-04 20:15 - US-025
+- Verified all AI-related DTOs have been removed from packages/dto
+- Files remaining in packages/dto/src/:
+  - auth.ts (RegisterDto, LoginDto, LoginResponseDto)
+  - user.ts (UserInfoDto)
+  - index.ts (exports both modules)
+- Files changed:
+  - Modified: tasks/prd.json (marked US-025 as passes: true)
+- **Learnings for future iterations:**
+  - All AI-related DTOs (push-rule, insight, explore, ai-conversation, ai-message, daily-recommendation) were already removed in previous iterations (likely during US-014 when auth/user DTOs were created)
+  - DTO package builds successfully with Rollup (no warnings except empty chunks)
+  - No new typecheck errors - all errors are expected from previous stories (user.controller.ts, migration files, migrate-lancedb-to-mysql.ts)
+  - The DTO package is now minimal and only contains authentication-related types
+  - This story was effectively a verification/documentation step rather than an implementation step
+  - Same pattern as US-024 - both memo and AI DTOs were cleaned up earlier in the process
+---
