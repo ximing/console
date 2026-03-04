@@ -186,3 +186,26 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - Foreign keys use .references() with cascade delete rules
   - JSON columns: Use `.$type<T>()` for type safety
   - Enum columns: Use mysqlEnum() from drizzle-orm/mysql-core
+---
+
+## 2026-03-04 09:45:00 - US-002 (Task Orchestration)
+- Implemented action registration system with:
+  - ActionHandler interface (id, name, description, paramSchema, execute())
+  - ActionResult interface (success, data?, error?)
+  - ActionRegistry class with register(), get(), getAll(), has() methods
+  - Example HTTP request action (http-request)
+- Actions auto-register via IOC on app startup
+- Typecheck and build pass
+- Files changed:
+  - apps/server/src/actions/types.ts (new)
+  - apps/server/src/actions/registry.ts (new)
+  - apps/server/src/actions/http-request.action.ts (new)
+  - apps/server/src/actions/index.ts (new)
+  - apps/server/src/actions/register.ts (new)
+  - apps/server/src/ioc.ts (added actions glob pattern)
+- **Learnings for future iterations:**
+  - Action handlers are placed in apps/server/src/actions/ directory
+  - Use @Service() decorator for TypeDI dependency injection
+  - Auto-load actions by adding `${__dirname}/actions/**/*.ts` to IOC glob patterns
+  - Built-in actions are registered in register.ts when imported by IOC
+  - Action configuration is stored as JSON in the database (actionConfig field)
