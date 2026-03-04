@@ -56,7 +56,7 @@ export const Layout = view(({ children }: LayoutProps) => {
     navigate(`/home${search}`, { replace: true });
   };
 
-  const userName = authService.user?.nickname || authService.user?.email?.split('@')[0] || 'User';
+  const userName = authService.user?.username || authService.user?.email?.split('@')[0] || 'User';
   const userEmail = authService.user?.email || '';
   const userAvatar = authService.user?.avatar;
 
