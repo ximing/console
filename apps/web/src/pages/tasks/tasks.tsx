@@ -817,11 +817,11 @@ export const TasksPage = view(() => {
                           {execution.errorMessage}
                         </div>
                       )}
-                      {execution.result && (
+                      {execution.result !== undefined && (
                         <div className="mt-2">
                           <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">结果:</p>
                           <pre className="text-xs bg-gray-100 dark:bg-dark-600 p-2 rounded overflow-x-auto text-gray-700 dark:text-gray-300">
-                            {JSON.stringify(execution.result, null, 2)}
+                            {JSON.stringify(execution.result as object, null, 2)}
                           </pre>
                         </div>
                       )}

@@ -4,7 +4,7 @@ import { view, useService } from '@rabjs/react';
 import { AuthService } from '../services/auth.service';
 import { ThemeService } from '../services/theme.service';
 import { NotificationService } from '../services/notification.service';
-import { Zap, Sun, Moon, LogOut, Settings, Sparkles, Images, ListTodo, Bell } from 'lucide-react';
+import { Zap, Sun, Moon, LogOut, Settings, ListTodo, Bell } from 'lucide-react';
 import logoUrl from '../assets/logo.png';
 import logoDarkUrl from '../assets/logo-dark.png';
 import { isElectron, isMacOS } from '../electron/isElectron';
@@ -29,8 +29,6 @@ export const Layout = view(({ children }: LayoutProps) => {
 
   // Check active routes
   const isHomePage = location.pathname === '/home';
-  const isAIExplorePage = location.pathname === '/ai-explore';
-  const isGalleryPage = location.pathname === '/gallery';
   const isSettingsPage = location.pathname.startsWith('/settings');
   const isTasksPage = location.pathname.startsWith('/tasks');
   const isNotificationsPage = location.pathname.startsWith('/notifications');

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Layout } from '../../components/layout';
 import { NotificationService } from '../../services/notification.service';
 import { ToastService } from '../../services/toast.service';
-import { Bell, Check, CheckCheck, Trash2, ChevronLeft, Loader2, Filter } from 'lucide-react';
+import { Bell, Check, CheckCheck, Trash2, Loader2 } from 'lucide-react';
 import type { NotificationDto } from '@aimo-console/dto';
 
 type StatusFilter = 'all' | 'unread' | 'read';
