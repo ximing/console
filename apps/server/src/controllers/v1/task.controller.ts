@@ -253,6 +253,48 @@ export class TaskController {
   }
 
   /**
+   * PATCH /api/v1/tasks/:id/toggle - Toggle task enabled status
+   */
+  @Patch('/:id/toggle')
+  async toggleTask(@CurrentUser() userDto: UserInfoDto, @Param('id') id: string) {
+    try {
+      if (!userDto?.id) {
+        return ResponseUtility.error(ErrorCode.UNAUTHORIZED);
+      }
+
+      // Check if task exists
+      const existingTask = await this.taskService.getTask(id, userDto.id);
+      if (!existingTask) {
+        return ResponseUtility.error(ErrorCode.NOT_FOUND, 'Task not found');
+      }
+
+      // Toggle the task
+      const updatedTask = await this.taskService.toggleTask(id, userDto.id);
+      if (!updatedTask) {
+        return ResponseUtility.error(ErrorCode.NOT_FOUND, 'Task not found');
+      }
+
+      // Handle scheduler registration based on new enabled status
+      if (this.schedulerService.getRunning()) {
+        const isScheduled = updatedTask.triggerType === 'scheduled';
+
+        if (isScheduled && updatedTask.enabled && updatedTask.cronExpression) {
+          // Register or re-register scheduled task
+          this.schedulerService.registerTask(updatedTask.id, updatedTask.cronExpression);
+        } else {
+          // Unregister if disabled or not scheduled
+          this.schedulerService.unregisterTask(updatedTask.id);
+        }
+      }
+
+      return ResponseUtility.success(convertTaskToDto(updatedTask));
+    } catch (error) {
+      logger.error('Toggle task error:', error);
+      return ResponseUtility.error(ErrorCode.DB_ERROR);
+    }
+  }
+
+  /**
    * POST /api/v1/tasks/:id/trigger - Manually trigger a task
    */
   @Post('/:id/trigger')
