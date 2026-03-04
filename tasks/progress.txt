@@ -299,3 +299,42 @@
   - Typecheck passes with no errors - DTOs are clean
 ---
 
+
+## 2026-03-04 18:30 - US-015 and US-016
+- Implemented both user registration and login endpoints in auth.controller.ts
+- Files changed:
+  - Modified: apps/server/src/controllers/v1/auth.controller.ts (55 insertions, 28 deletions)
+- Changes made for US-015 (Registration):
+  - Added bcrypt import for password hashing
+  - Implemented POST /api/v1/auth/register endpoint
+  - Validates email format with regex (/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
+  - Validates required fields (email, password, username)
+  - Hashes password with bcrypt.hash (10 salt rounds)
+  - Creates user via UserService.createUser()
+  - Generates JWT token with 90-day expiration (id in payload, not uid)
+  - Sets httpOnly cookie with token
+  - Returns LoginResponseDto with token and user info
+  - Handles duplicate email error (USER_ALREADY_EXISTS)
+  - Converts avatar from null to undefined for DTO compatibility
+- Changes made for US-016 (Login):
+  - Implemented POST /api/v1/auth/login endpoint
+  - Validates required fields (email, password)
+  - Looks up user via UserService.getUserByEmail()
+  - Verifies password with bcrypt.compare()
+  - Returns 401 for invalid credentials (USER_NOT_FOUND, PASSWORD_ERROR)
+  - Generates JWT token with 90-day expiration (id in payload, not uid)
+  - Sets httpOnly cookie with token
+  - Returns LoginResponseDto with token and user info
+  - Converts avatar from null to undefined for DTO compatibility
+- **Learnings for future iterations:**
+  - Both registration and login were in the same controller file, so implemented both together
+  - Password hashing is now handled in the controller, not in UserService (US-013 removed those methods)
+  - JWT token payload uses `id` field (new schema) instead of `uid` (old schema)
+  - Database avatar field is `string | null` but DTO expects `string | undefined` - use `?? undefined` to convert
+  - UserService.createUser() requires `id` field in TypeScript type, but generates it if empty string passed
+  - Both endpoints set httpOnly cookies for security (secure flag enabled in production)
+  - LoginResponseDto provides consistent response format for both endpoints
+  - Expected typecheck errors remain in user.controller.ts, auth-handler.ts (use old field names) and app.ts (import deleted services) - these will be resolved in US-017 and US-023
+  - No typecheck errors exist in auth.controller.ts itself
+---
+
