@@ -406,3 +406,15 @@
   - Next stories will remove OCR/ASR dependencies (US-020), storage adapters (US-021), and update environment config (US-022)
 ---
 
+## 2026-03-04 19:20 - US-020
+- Verified no OCR, ASR, or image processing packages exist in package.json
+- No changes needed - packages were never added or already removed
+- Files checked:
+  - apps/server/package.json (no tesseract, sharp, jimp, ASR, speech, zhipu, or OCR packages found)
+- **Learnings for future iterations:**
+  - The project never included OCR/ASR/image processing dependencies in package.json
+  - OCR and ASR services were deleted in US-011, but they may have used external APIs rather than local packages
+  - This story is complete with no changes needed
+  - Typecheck errors remain the same as US-019 (expected from previous stories)
+---
+
