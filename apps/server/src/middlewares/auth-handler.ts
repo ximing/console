@@ -57,12 +57,12 @@ export const authHandler = async (request: Request, res: Response, next: NextFun
 
     // Verify the token
     const decoded = jwt.verify(token, config.jwt.secret) as {
-      uid: string;
+      id: string;
     };
 
     // Get user from database
     const userService = Container.get(UserService);
-    const user = await userService.findUserByUid(decoded.uid);
+    const user = await userService.getUserById(decoded.id);
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -72,9 +72,10 @@ export const authHandler = async (request: Request, res: Response, next: NextFun
 
     // Add user information to request context
     request.user = {
-      uid: user.uid,
+      id: user.id,
       email: user.email ?? undefined,
-      nickname: user.nickname ?? undefined,
+      username: user.username ?? undefined,
+      avatar: user.avatar ?? undefined,
     };
 
     // Continue to the next middleware or route handler
