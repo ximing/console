@@ -3,7 +3,387 @@ import { useEffect, useState } from 'react';
 import { Layout } from '../../components/layout';
 import { TaskService } from '../../services/task.service';
 import { ToastService } from '../../services/toast.service';
-import { Play, Pause, Trash2, Clock, Zap, Plus, AlertCircle } from 'lucide-react';
+import {
+  Play,
+  Pause,
+  Trash2,
+  Clock,
+  Zap,
+  Plus,
+  AlertCircle,
+  X,
+  ChevronDown,
+  Loader2,
+} from 'lucide-react';
+import type { TaskDto, CreateTaskDto } from '@aimo-console/dto';
+
+// CRON templates
+const CRON_TEMPLATES = [
+  { label: '每小时', value: '0 * * * *' },
+  { label: '每天凌晨', value: '0 0 * * *' },
+  { label: '每天早上 9 点', value: '0 9 * * *' },
+  { label: '每周一', value: '0 9 * * 1' },
+  { label: '每月 1 号', value: '0 0 1 * *' },
+];
+
+interface TaskFormModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+  editTask?: TaskDto | null;
+}
+
+const TaskFormModal = view(({ isOpen, onClose, onSuccess, editTask }: TaskFormModalProps) => {
+  const taskService = useService(TaskService);
+  const toastService = useService(ToastService);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCronDropdown, setShowCronDropdown] = useState(false);
+  const [showActionDropdown, setShowActionDropdown] = useState(false);
+
+  // Form state
+  const [name, setName] = useState('');
+  const [triggerType, setTriggerType] = useState<'manual' | 'scheduled'>('manual');
+  const [cronExpression, setCronExpression] = useState('');
+  const [actionId, setActionId] = useState('');
+  const [actionConfig, setActionConfig] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Reset form when modal opens or editTask changes
+  useEffect(() => {
+    if (isOpen) {
+      if (editTask) {
+        setName(editTask.name);
+        setTriggerType(editTask.triggerType);
+        setCronExpression(editTask.cronExpression || '');
+        setActionId(editTask.actionId);
+        setActionConfig(
+          editTask.actionConfig ? JSON.stringify(editTask.actionConfig, null, 2) : ''
+        );
+      } else {
+        // Reset for new task
+        setName('');
+        setTriggerType('manual');
+        setCronExpression('');
+        setActionId('');
+        setActionConfig('');
+      }
+      setErrors({});
+    }
+  }, [isOpen, editTask]);
+
+  // Load actions when modal opens (only once)
+  useEffect(() => {
+    if (isOpen && taskService.availableActions.length === 0) {
+      taskService.loadAvailableActions();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  // Validate form
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!name.trim()) {
+      newErrors.name = '请输入任务名称';
+    }
+
+    if (triggerType === 'scheduled' && !cronExpression.trim()) {
+      newErrors.cronExpression = '请输入 CRON 表达式';
+    }
+
+    if (!actionId) {
+      newErrors.actionId = '请选择动作';
+    }
+
+    // Validate JSON for action config
+    if (actionConfig.trim()) {
+      try {
+        JSON.parse(actionConfig);
+      } catch {
+        newErrors.actionConfig = '请输入有效的 JSON 格式';
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Handle submit
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validate()) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const taskData: CreateTaskDto = {
+        name: name.trim(),
+        triggerType,
+        actionId,
+        ...(triggerType === 'scheduled' && { cronExpression: cronExpression.trim() }),
+        ...(actionConfig.trim() && { actionConfig: JSON.parse(actionConfig.trim()) }),
+      };
+
+      let success: TaskDto | null;
+
+      if (editTask) {
+        success = await taskService.updateTask(editTask.id, taskData);
+        if (success) {
+          toastService.success('任务更新成功');
+        } else {
+          toastService.error('更新任务失败');
+        }
+      } else {
+        success = await taskService.createTask(taskData);
+        if (success) {
+          toastService.success('任务创建成功');
+        } else {
+          toastService.error('创建任务失败');
+        }
+      }
+
+      if (success) {
+        onSuccess();
+        onClose();
+      }
+    } catch (err) {
+      console.error('Submit task error:', err);
+      toastService.error(editTask ? '更新任务失败' : '创建任务失败');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Select CRON template
+  const selectCronTemplate = (value: string) => {
+    setCronExpression(value);
+    setShowCronDropdown(false);
+  };
+
+  // Get selected action
+  const selectedAction = taskService.availableActions.find((a) => a.id === actionId);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+
+      {/* Modal */}
+      <div className="relative bg-white dark:bg-dark-800 rounded-xl shadow-xl w-full max-w-lg mx-4 border border-gray-200 dark:border-dark-700 max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-dark-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            {editTask ? '编辑任务' : '新建任务'}
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
+          {/* Task Name */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              任务名称 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="请输入任务名称"
+              className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-dark-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                errors.name ? 'border-red-500' : 'border-gray-300 dark:border-dark-600'
+              }`}
+            />
+            {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
+          </div>
+
+          {/* Trigger Type */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              触发类型 <span className="text-red-500">*</span>
+            </label>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setTriggerType('manual')}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 border rounded-lg transition-colors ${
+                  triggerType === 'manual'
+                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
+                    : 'border-gray-300 dark:border-dark-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-dark-700'
+                }`}
+              >
+                <Zap className="w-4 h-4" />
+                手动触发
+              </button>
+              <button
+                type="button"
+                onClick={() => setTriggerType('scheduled')}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 border rounded-lg transition-colors ${
+                  triggerType === 'scheduled'
+                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
+                    : 'border-gray-300 dark:border-dark-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-dark-700'
+                }`}
+              >
+                <Clock className="w-4 h-4" />
+                定时触发
+              </button>
+            </div>
+          </div>
+
+          {/* CRON Expression (for scheduled) */}
+          {triggerType === 'scheduled' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                CRON 表达式 <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={cronExpression}
+                  onChange={(e) => setCronExpression(e.target.value)}
+                  placeholder="0 * * * *"
+                  className={`w-full px-3 py-2 pr-20 border rounded-lg bg-white dark:bg-dark-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                    errors.cronExpression
+                      ? 'border-red-500'
+                      : 'border-gray-300 dark:border-dark-600'
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCronDropdown(!showCronDropdown)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 bg-gray-100 dark:bg-dark-600 rounded transition-colors"
+                >
+                  模板 <ChevronDown className="w-3 h-3 inline" />
+                </button>
+                {showCronDropdown && (
+                  <div className="absolute z-10 w-full mt-1 bg-white dark:bg-dark-700 border border-gray-200 dark:border-dark-600 rounded-lg shadow-lg overflow-hidden">
+                    {CRON_TEMPLATES.map((template) => (
+                      <button
+                        key={template.value}
+                        type="button"
+                        onClick={() => selectCronTemplate(template.value)}
+                        className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-600 transition-colors"
+                      >
+                        {template.label}
+                        <span className="ml-2 text-gray-400 dark:text-gray-500 text-xs">
+                          {template.value}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {errors.cronExpression && (
+                <p className="mt-1 text-sm text-red-500">{errors.cronExpression}</p>
+              )}
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                格式: 分 时 日 月 周 (例如: 0 9 * * * 表示每天早上 9 点)
+              </p>
+            </div>
+          )}
+
+          {/* Action Selector */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              动作 <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowActionDropdown(!showActionDropdown)}
+                className={`w-full flex items-center justify-between px-3 py-2 border rounded-lg bg-white dark:bg-dark-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                  errors.actionId ? 'border-red-500' : 'border-gray-300 dark:border-dark-600'
+                }`}
+              >
+                <span className={selectedAction ? 'text-gray-900 dark:text-white' : 'text-gray-400'}>
+                  {selectedAction ? selectedAction.name : '请选择动作'}
+                </span>
+                <ChevronDown className="w-4 h-4 text-gray-400" />
+              </button>
+              {showActionDropdown && (
+                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-dark-700 border border-gray-200 dark:border-dark-600 rounded-lg shadow-lg overflow-hidden max-h-48 overflow-y-auto">
+                  {taskService.availableActions.length === 0 ? (
+                    <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      加载中...
+                    </div>
+                  ) : (
+                    taskService.availableActions.map((action) => (
+                      <button
+                        key={action.id}
+                        type="button"
+                        onClick={() => {
+                          setActionId(action.id);
+                          setShowActionDropdown(false);
+                        }}
+                        className="w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-dark-600 transition-colors"
+                      >
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">
+                          {action.name}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          {action.description}
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+            {errors.actionId && <p className="mt-1 text-sm text-red-500">{errors.actionId}</p>}
+          </div>
+
+          {/* Action Config */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              动作配置 (JSON)
+            </label>
+            <textarea
+              value={actionConfig}
+              onChange={(e) => setActionConfig(e.target.value)}
+              placeholder='{"url": "https://api.example.com", "method": "GET"}'
+              rows={4}
+              className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-dark-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 font-mono text-sm ${
+                errors.actionConfig ? 'border-red-500' : 'border-gray-300 dark:border-dark-600'
+              }`}
+            />
+            {errors.actionConfig && <p className="mt-1 text-sm text-red-500">{errors.actionConfig}</p>}
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              输入 JSON 格式的配置参数，具体参数取决于所选动作
+            </p>
+          </div>
+        </form>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-dark-700">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-dark-700 hover:bg-gray-200 dark:hover:bg-dark-600 rounded-lg transition-colors"
+          >
+            取消
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            {editTask ? '保存' : '创建'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+});
 
 export const TasksPage = view(() => {
   const taskService = useService(TaskService);
@@ -12,11 +392,26 @@ export const TasksPage = view(() => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
   const [triggeringTaskId, setTriggeringTaskId] = useState<string | null>(null);
+  const [formModalOpen, setFormModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<TaskDto | null>(null);
 
   // Load tasks on mount
   useEffect(() => {
     taskService.loadTasks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Open form modal for new task
+  const openNewTaskModal = () => {
+    setEditingTask(null);
+    setFormModalOpen(true);
+  };
+
+  // Open form modal for editing
+  const openEditTaskModal = (task: TaskDto) => {
+    setEditingTask(task);
+    setFormModalOpen(true);
+  };
 
   // Handle toggle task
   const handleToggle = async (taskId: string) => {
@@ -91,7 +486,10 @@ export const TasksPage = view(() => {
                 管理您的自动化任务
               </p>
             </div>
-            <button className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors">
+            <button
+              onClick={openNewTaskModal}
+              className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+            >
               <Plus className="w-5 h-5" />
               <span>新建任务</span>
             </button>
@@ -120,7 +518,10 @@ export const TasksPage = view(() => {
               <p className="text-gray-500 dark:text-gray-400 mb-6">
                 创建您的第一个自动化任务吧
               </p>
-              <button className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors">
+              <button
+                onClick={openNewTaskModal}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+              >
                 <Plus className="w-5 h-5" />
                 <span>新建任务</span>
               </button>
@@ -221,6 +622,13 @@ export const TasksPage = view(() => {
                         <td className="px-6 py-4 whitespace-nowrap text-right">
                           <div className="flex items-center justify-end gap-2">
                             <button
+                              onClick={() => openEditTaskModal(task)}
+                              className="p-2 text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
+                              title="编辑任务"
+                            >
+                              <Zap className="w-4 h-4" />
+                            </button>
+                            <button
                               onClick={() => handleTrigger(task.id)}
                               disabled={triggeringTaskId === task.id}
                               className="p-2 text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -250,6 +658,14 @@ export const TasksPage = view(() => {
           )}
         </div>
       </div>
+
+      {/* Task Form Modal */}
+      <TaskFormModal
+        isOpen={formModalOpen}
+        onClose={() => setFormModalOpen(false)}
+        onSuccess={() => taskService.loadTasks()}
+        editTask={editingTask}
+      />
 
       {/* Delete Confirmation Modal */}
       {deleteModalOpen && (

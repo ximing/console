@@ -314,3 +314,23 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - Use ApiResponse<T> interface for API wrapper typing
   - Services call API and extract data before returning to components
   - UI uses toastService.success() and toastService.error() methods (not showSuccess/showError)
+---
+
+## 2026-03-04 23:30:00 - US-009 (Task Orchestration)
+- Created task form modal component for create/edit:
+  - Form fields: name, triggerType (manual/scheduled), cronExpression, actionId, actionConfig
+  - CRON template dropdown with common presets (hourly, daily, weekly, etc.)
+  - Action selector dropdown showing available actions loaded from API
+  - JSON editor for action configuration with validation
+  - Full validation for required fields with error messages
+  - Edit mode pre-fills form with existing task data
+- Added "Edit" button (Zap icon) to each task row in the table
+- Integrated form modal with TaskService for create/update operations
+- Typecheck and lint pass
+- Files changed:
+  - apps/web/src/pages/tasks/tasks.tsx (added TaskFormModal component)
+- **Learnings for future iterations:**
+  - Use modal form pattern for create/edit operations to keep user in context
+  - CRON templates provide convenient presets but allow custom expressions
+  - JSON validation using try/catch with JSON.parse for user input
+  - Use empty dependency array with eslint-disable for mount-only effects
