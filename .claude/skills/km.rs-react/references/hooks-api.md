@@ -5,7 +5,7 @@
 追踪特定值的变化，只在该值变化时重渲染：
 
 ```typescript
-import { useObserver } from "@osgfe/rs-react";
+import { useObserver } from "@rabjs/react";
 
 function Count() {
   // 只在 count 变化时重渲染
@@ -17,7 +17,7 @@ function Count() {
 ## useObserverService - 追踪服务的特定字段
 
 ```typescript
-import { useObserverService } from "@osgfe/rs-react";
+import { useObserverService } from "@rabjs/react";
 
 function UserCount() {
   // 只在 users.length 变化时重渲染
@@ -34,7 +34,7 @@ function UserCount() {
 创建组件内部的响应式状态：
 
 ```typescript
-import { observer, useLocalObservable } from "@osgfe/rs-react";
+import { observer, useLocalObservable } from "@rabjs/react";
 
 const Counter = observer(() => {
   const state = useLocalObservable(() => ({
@@ -58,7 +58,7 @@ const Counter = observer(() => {
 当依赖的 observable 变化时自动执行副作用：
 
 ```typescript
-import { observer, useReaction, useLocalObservable } from "@osgfe/rs-react";
+import { observer, useReaction, useLocalObservable } from "@rabjs/react";
 
 const Component = observer(() => {
   const state = useLocalObservable(() => ({ count: 0 }));
@@ -76,7 +76,7 @@ const Component = observer(() => {
 ## useContainer - 获取当前容器
 
 ```typescript
-import { useContainer } from "@osgfe/rs-react";
+import { useContainer } from "@rabjs/react";
 
 const Component = observer(() => {
   const container = useContainer();
@@ -88,7 +88,7 @@ const Component = observer(() => {
 ## useContainerEvents - 获取事件发射器
 
 ```typescript
-import { useContainerEvents } from "@osgfe/rs-react";
+import { useContainerEvents } from "@rabjs/react";
 
 const Component = observer(() => {
   const events = useContainerEvents();

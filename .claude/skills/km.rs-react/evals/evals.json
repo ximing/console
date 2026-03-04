@@ -3,7 +3,7 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "我需要创建一个计数器组件，用户可以点击按钮增加或减少数字。请使用 @osgfe/rs-react 实现。",
+      "prompt": "我需要创建一个计数器组件，用户可以点击按钮增加或减少数字。请使用 @rabjs/react 实现。",
       "expected_output": "应该创建一个 CounterService 继承自 Service，包含 count 属性和 increment/decrement 方法。组件使用 observer 包裹，通过 useService 获取服务，使用 bindServices 导出。",
       "files": [],
       "assertions": [
@@ -31,7 +31,7 @@
     },
     {
       "id": 2,
-      "prompt": "我需要实现一个用户列表页面，从 API 加载数据。加载时显示 loading 状态，出错时显示错误信息。请用 @osgfe/rs-react 实现。",
+      "prompt": "我需要实现一个用户列表页面，从 API 加载数据。加载时显示 loading 状态，出错时显示错误信息。请用 @rabjs/react 实现。",
       "expected_output": "应该创建 UserService 包含 users 数组和 async fetchUsers 方法。组件中通过 service.$model.fetchUsers.loading 和 service.$model.fetchUsers.error 访问异步状态。",
       "files": [],
       "assertions": [
@@ -119,7 +119,7 @@
     },
     {
       "id": 6,
-      "prompt": "我需要实现一个搜索功能，用户输入时自动搜索，但要防抖 300ms。使用 @osgfe/rs-react 如何实现？",
+      "prompt": "我需要实现一个搜索功能，用户输入时自动搜索，但要防抖 300ms。使用 @rabjs/react 如何实现？",
       "expected_output": "应该创建 SearchService，使用 @Debounce(300) 装饰器装饰搜索方法。如果用户不熟悉装饰器，也应该提到可以查看 decorators.md 参考文档。",
       "files": [],
       "assertions": [
@@ -199,7 +199,7 @@
     },
     {
       "id": 10,
-      "prompt": "我需要创建一个购物车组件，显示商品总价。总价应该是计算属性，根据商品列表自动计算。使用 @osgfe/rs-react 如何实现？",
+      "prompt": "我需要创建一个购物车组件，显示商品总价。总价应该是计算属性，根据商品列表自动计算。使用 @rabjs/react 如何实现？",
       "expected_output": "应该在 CartService 中使用 getter 定义计算属性 get total()。说明 getter 会自动追踪依赖并在依赖变化时重新计算。",
       "files": [],
       "assertions": [

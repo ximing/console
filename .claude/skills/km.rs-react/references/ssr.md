@@ -7,7 +7,7 @@ RSJS 支持服务端渲染（Server-Side Rendering）。
 在服务端禁用响应式追踪：
 
 ```typescript
-import { enableStaticRendering } from "@osgfe/rs-react";
+import { enableStaticRendering } from "@rabjs/react";
 
 // 在服务端代码中
 if (typeof window === "undefined") {
@@ -21,7 +21,7 @@ if (typeof window === "undefined") {
 
 ```typescript
 // server.tsx
-import { enableStaticRendering } from "@osgfe/rs-react";
+import { enableStaticRendering } from "@rabjs/react";
 
 // 禁用响应式追踪
 enableStaticRendering(true);
