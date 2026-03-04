@@ -1,0 +1,18 @@
+## Codebase Patterns
+- This project uses routing-controllers with @CurrentUser() decorator for authentication
+- Services are decorated with @Service() from TypeDI for dependency injection
+- DTOs are defined in packages/dto and must be rebuilt after changes
+- Controllers auto-register via glob import in src/controllers/index.ts
+- Use ResponseUtil.success() and ResponseUtil.error() for API responses
+
+## 2026-03-04 15:30 - US-007
+- Implemented execution log API endpoint GET /api/v1/tasks/:id/executions
+- Added pagination support with limit and offset query parameters
+- Updated TaskService.getExecutionLogs to return both logs and total count
+- Added convertExecutionLogToDto helper in controller
+- Typecheck passes
+- **Learnings for future iterations:**
+  - The ExecutionLog type is in execution-logs schema, not tasks schema
+  - Use count() from drizzle-orm for counting rows properly
+  - QueryParams from routing-controllers is used for query string parameters
+  - Import ExecutionLog type from the correct schema file

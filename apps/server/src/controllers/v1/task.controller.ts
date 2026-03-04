@@ -7,6 +7,7 @@ import {
   Delete,
   Body,
   Param,
+  QueryParams,
   CurrentUser,
 } from 'routing-controllers';
 import { Service } from 'typedi';
@@ -22,12 +23,14 @@ import type {
   AvailableActionDto,
   CreateTaskDto,
   ExecutionLogDto,
+  ExecutionLogListDto,
   TaskDto,
   TaskTriggerResultDto,
   UpdateTaskDto,
   UserInfoDto,
 } from '@aimo-console/dto';
 import type { Task } from '../../db/schema/tasks.js';
+import type { ExecutionLog } from '../../db/schema/execution-logs.js';
 
 /**
  * Helper to convert Task model to TaskDto
@@ -44,6 +47,26 @@ function convertTaskToDto(task: Task): TaskDto {
     createdBy: task.createdBy,
     createdAt: task.createdAt instanceof Date ? task.createdAt.toISOString() : task.createdAt,
     updatedAt: task.updatedAt instanceof Date ? task.updatedAt.toISOString() : task.updatedAt,
+  };
+}
+
+/**
+ * Helper to convert ExecutionLog model to ExecutionLogDto
+ */
+function convertExecutionLogToDto(log: ExecutionLog): ExecutionLogDto {
+  return {
+    id: log.id,
+    taskId: log.taskId,
+    status: log.status,
+    startedAt: log.startedAt instanceof Date ? log.startedAt.toISOString() : log.startedAt,
+    finishedAt: log.finishedAt
+      ? log.finishedAt instanceof Date
+        ? log.finishedAt.toISOString()
+        : log.finishedAt
+      : undefined,
+    errorMessage: log.errorMessage ?? undefined,
+    errorType: log.errorType ?? undefined,
+    result: log.result as unknown ?? undefined,
   };
 }
 
@@ -338,6 +361,48 @@ export class TaskController {
       return ResponseUtility.success({ actions });
     } catch (error) {
       logger.error('Get available actions error:', error);
+      return ResponseUtility.error(ErrorCode.DB_ERROR);
+    }
+  }
+
+  /**
+   * GET /api/v1/tasks/:id/executions - List execution logs for a task
+   */
+  @Get('/:id/executions')
+  async getTaskExecutions(
+    @CurrentUser() userDto: UserInfoDto,
+    @Param('id') id: string,
+    @QueryParams() params: { limit?: string; offset?: string }
+  ) {
+    try {
+      if (!userDto?.id) {
+        return ResponseUtility.error(ErrorCode.UNAUTHORIZED);
+      }
+
+      // Verify task belongs to user
+      const task = await this.taskService.getTask(id, userDto.id);
+      if (!task) {
+        return ResponseUtility.error(ErrorCode.NOT_FOUND, 'Task not found');
+      }
+
+      const limit = params.limit ? parseInt(params.limit, 10) : 20;
+      const offset = params.offset ? parseInt(params.offset, 10) : 0;
+
+      if (isNaN(limit) || isNaN(offset) || limit < 0 || offset < 0) {
+        return ResponseUtility.error(ErrorCode.PARAMS_ERROR, 'Invalid pagination parameters');
+      }
+
+      const result = await this.taskService.getExecutionLogs(id, userDto.id, limit, offset);
+      const executionDtos = result.logs.map(convertExecutionLogToDto);
+
+      const response: ExecutionLogListDto = {
+        executions: executionDtos,
+        total: result.total,
+      };
+
+      return ResponseUtility.success(response);
+    } catch (error) {
+      logger.error('Get task executions error:', error);
       return ResponseUtility.error(ErrorCode.DB_ERROR);
     }
   }
