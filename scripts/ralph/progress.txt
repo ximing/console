@@ -369,3 +369,29 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - Calculate duration from startedAt and finishedAt timestamps
   - Status badge uses green/red colors for success/failed
   - JSON.stringify with indentation for readable result display
+---
+
+## 2026-03-05 00:05:00 - US-001 (LLM Settings)
+- Created user_models table schema in apps/server/src/db/schema/user-models.ts
+- Fields: id, userId, name, provider, apiBaseUrl, apiKey, modelName, isDefault, createdAt, updatedAt
+- Added indexes on userId and isDefault for efficient queries
+- Generated migration 0003_loud_iron_monger.sql using drizzle-kit
+- Migration ran successfully creating table in MySQL
+- Fixed pre-existing build errors (unused imports in layout.tsx, notifications.tsx, type error in tasks.tsx)
+- Typecheck passes
+- Files changed:
+  - apps/server/src/db/schema/user-models.ts (new)
+  - apps/server/src/db/schema/index.ts (export user-models)
+  - apps/server/drizzle/0003_loud_iron_monger.sql (new migration)
+  - apps/server/drizzle/meta/0003_snapshot.json (new)
+  - apps/server/drizzle/meta/_journal.json (updated)
+  - tasks/prd.json (marked US-001 as complete)
+  - apps/web/src/components/layout.tsx (fixed unused imports)
+  - apps/web/src/pages/notifications/notifications.tsx (fixed unused imports)
+  - apps/web/src/pages/tasks/tasks.tsx (fixed type error)
+- **Learnings for future iterations:**
+  - Database uses Drizzle ORM with MySQL, not LanceDB (LanceDB is for vector search)
+  - Schema files are in apps/server/src/db/schema/ using mysqlTable() from drizzle-orm/mysql-core
+  - Migration generation: pnpm build && pnpm migrate:generate
+  - Migration runs automatically on server start or manually with pnpm migrate
+  - VARCHAR(191) limit for keys due to MySQL utf8mb4 index limit
