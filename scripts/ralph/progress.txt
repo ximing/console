@@ -425,3 +425,46 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - Service pattern uses Drizzle ORM with getDatabase() for MySQL
   - Controllers use ResponseUtil for consistent API responses
   - Use eq() and and() from drizzle-orm for query building
+---
+
+## 2026-03-05 00:25:00 - US-003 (LLM Settings)
+- Created LLMService with unified chat interface:
+  - chat(userId, options) - call default model
+  - chatWithModel(userId, modelId, options) - call specific model
+  - listModels(userId) - list user's configured models
+  - getModel(userId, modelId) - get model details
+- Supports providers: openai, deepseek, openrouter, other (custom)
+- Uses OpenAI-compatible /chat/completions endpoint
+- Handles API base URL configuration per provider
+- Default base URLs:
+  - openai: https://api.openai.com/v1
+  - deepseek: https://api.deepseek.com/v1
+  - openrouter: https://openrouter.ai/api/v1
+- Custom error handling with LLMError class (includes statusCode, isRetryable)
+- Typecheck passes
+- Files changed:
+  - apps/server/src/services/llm.service.ts (new)
+  - tasks/prd.json (marked US-003 as complete)
+- **Learnings for future iterations:**
+  - Use fetch API for HTTP calls to LLM providers
+  - LLMError includes provider, statusCode, and isRetryable for proper error handling
+  - Service injects UserModelService to get user model configurations
+---
+
+## 2026-03-05 00:35:00 - US-007 (LLM Settings)
+- Created frontend API wrapper in apps/web/src/api/user-model.ts:
+  - getModels() - fetch all models for current user
+  - getModel(id) - fetch single model by ID
+  - createModel(data) - create new model configuration
+  - updateModel(id, data) - update existing model
+  - deleteModel(id) - delete model
+  - setDefault(id) - set model as default
+- Uses axios request wrapper from '../utils/request'
+- Typecheck passes
+- Files changed:
+  - apps/web/src/api/user-model.ts (new)
+  - tasks/prd.json (marked US-007 as complete)
+- **Learnings for future iterations:**
+  - API wrapper returns typed response using ApiResponse<T> interface
+  - Use request.get/post/put/delete/patch methods for HTTP calls
+  - Return response.data directly after API call
