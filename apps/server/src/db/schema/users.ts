@@ -1,20 +1,17 @@
-import { mysqlTable, varchar, int, timestamp, index } from 'drizzle-orm/mysql-core';
+import { mysqlTable, varchar, timestamp, index } from 'drizzle-orm/mysql-core';
 
 /**
- * Users table - stores user account information
- * All fields except embeddings from LanceDB users table
+ * Users table - minimal auth boilerplate
+ * Essential fields only: id, email, password, username, avatar, timestamps
  */
 export const users = mysqlTable(
   'users',
   {
-    uid: varchar('uid', { length: 191 }).primaryKey().notNull(),
-    email: varchar('email', { length: 255 }),
-    phone: varchar('phone', { length: 50 }),
+    id: varchar('id', { length: 191 }).primaryKey().notNull(),
+    email: varchar('email', { length: 255 }).notNull().unique(),
     password: varchar('password', { length: 255 }).notNull(),
-    salt: varchar('salt', { length: 255 }).notNull(),
-    nickname: varchar('nickname', { length: 100 }),
+    username: varchar('username', { length: 100 }).notNull(),
     avatar: varchar('avatar', { length: 500 }),
-    status: int('status').notNull().default(1),
     createdAt: timestamp('created_at', { mode: 'date', fsp: 3 }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { mode: 'date', fsp: 3 })
       .notNull()
@@ -23,7 +20,6 @@ export const users = mysqlTable(
   },
   (table) => ({
     emailIdx: index('email_idx').on(table.email),
-    phoneIdx: index('phone_idx').on(table.phone),
   })
 );
 
