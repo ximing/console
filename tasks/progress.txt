@@ -192,3 +192,31 @@
   - These controller errors are intentional and will be resolved in US-012 when controllers are deleted
   - The services deletion completes the removal of memo-related functionality from the backend
 ---
+
+## 2026-03-04 17:40 - US-011
+- Deleted OCR, ASR, and other specialized service files
+- Files changed:
+  - Deleted: apps/server/src/services/ocr/ directory (4 files: ocr.service.ts, interfaces.ts, index.ts, adapters/zhipu-ocr.adapter.ts)
+  - Deleted: apps/server/src/services/asr.service.ts (11K)
+  - Deleted: apps/server/src/services/push-rule.service.ts (6.9K)
+  - Deleted: apps/server/src/services/scheduler.service.ts (5.5K)
+  - Deleted: apps/server/src/services/channels/ directory (6 files: channel.factory.ts, content-generator.interface.ts, daily-content.generator.ts, feishu.channel.ts, meow.channel.ts, push-channel.interface.ts)
+  - Deleted: apps/server/src/services/avatar.service.ts (7.0K)
+  - Deleted: apps/server/src/services/github-release.service.ts (3.3K)
+- Total: 1974 lines removed
+- **Learnings for future iterations:**
+  - OCR services handled text extraction from images using Zhipu OCR adapter
+  - ASR service handled audio speech recognition
+  - Push-rule service managed notification rules
+  - Scheduler service handled background task scheduling (cron jobs)
+  - Channels directory contained push notification integrations (Feishu, Meow) and daily content generation
+  - Avatar service managed user avatar generation and updates
+  - Github-release service checked for application updates
+  - Expected typecheck errors now appear in:
+    - app.ts (imports scheduler.service and lancedb - will be fixed in US-023)
+    - Controllers that import deleted services (ocr.controller.ts, asr.controller.ts, push-rule.controller.ts, system.controller.ts, user.controller.ts) - will be fixed in US-012
+    - user.service.ts uses old field names (uid, nickname, phone, salt, status) - will be fixed in US-013
+    - auth middleware uses old field names - will be fixed in US-017
+  - Only user.service.ts remains in the services directory - all other business logic services are now deleted
+  - This completes the removal of specialized services from the backend
+---
