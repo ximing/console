@@ -77,4 +77,36 @@ export class UserService {
       throw error;
     }
   }
+
+  /**
+   * Update user information
+   */
+  async updateUser(
+    id: string,
+    updateData: { username?: string; avatar?: string }
+  ): Promise<void> {
+    try {
+      const db = getDatabase();
+
+      // Build update object with only provided fields
+      const updateFields: Partial<User> = {};
+      if (updateData.username !== undefined) {
+        updateFields.username = updateData.username;
+      }
+      if (updateData.avatar !== undefined) {
+        updateFields.avatar = updateData.avatar;
+      }
+
+      if (Object.keys(updateFields).length === 0) {
+        return; // Nothing to update
+      }
+
+      await db.update(users).set(updateFields).where(eq(users.id, id));
+
+      logger.info('User updated successfully', { id, fields: Object.keys(updateFields) });
+    } catch (error) {
+      logger.error('Error updating user:', error);
+      throw error;
+    }
+  }
 }

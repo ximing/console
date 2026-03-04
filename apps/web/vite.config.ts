@@ -19,10 +19,10 @@ export default defineConfig(({ mode }) => {
     base: isElectron ? './' : '/',
     plugins: [react()],
     server: {
-      port: 5173,
+      port: 5273,
       proxy: {
         '/api': {
-          target: 'http://localhost:3000',
+          target: 'http://localhost:3002',
           changeOrigin: true,
         },
       },

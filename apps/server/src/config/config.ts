@@ -88,6 +88,15 @@ export interface MySQLConfig {
   connectionLimit?: number; // Connection pool size
 }
 
+export interface MinIOConfig {
+  endpoint: string;
+  port: number;
+  useSSL: boolean;
+  accessKey: string;
+  secretKey: string;
+  bucket: string;
+}
+
 export interface Config {
   port: number;
   cors: {
@@ -98,6 +107,7 @@ export interface Config {
     secret: string;
   };
   mysql: MySQLConfig;
+  minio?: MinIOConfig;
   lancedb: {
     storageType: StorageType;
     path: string; // local: "./lancedb_data" or s3: "s3://bucket/path/to/database"
@@ -153,6 +163,16 @@ export const config: Config = {
     database: process.env.MYSQL_DATABASE || 'aimo',
     connectionLimit: Number(process.env.MYSQL_CONNECTION_LIMIT) || 10,
   },
+  minio: process.env.MINIO_ENDPOINT
+    ? {
+        endpoint: process.env.MINIO_ENDPOINT,
+        port: Number(process.env.MINIO_PORT) || 9000,
+        useSSL: process.env.MINIO_USE_SSL === 'true',
+        accessKey: process.env.MINIO_ACCESS_KEY || '',
+        secretKey: process.env.MINIO_SECRET_KEY || '',
+        bucket: process.env.MINIO_BUCKET || 'avatars',
+      }
+    : undefined,
   lancedb: {
     storageType: (process.env.LANCEDB_STORAGE_TYPE || 'local') as StorageType,
     path:

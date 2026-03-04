@@ -1,66 +1,201 @@
 import { view, useService } from '@rabjs/react';
+import { useState, useEffect } from 'react';
 import { Layout } from '../../components/layout';
 import { AuthService } from '../../services/auth.service';
+import { Clock, Calendar, User, Mail, Sun, Moon, Sunrise, Sunset } from 'lucide-react';
 
 export const HomePage = view(() => {
   const authService = useService(AuthService);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update time every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   const userName = authService.user?.username || authService.user?.email?.split('@')[0] || 'User';
   const userAvatar = authService.user?.avatar;
 
+  // Format time and date
+  const timeString = currentTime.toLocaleTimeString('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+  const dateString = currentTime.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'long',
+  });
+
+  // Get greeting based on time
+  const hour = currentTime.getHours();
+  let greeting = '早上好';
+  let greetingIcon = Sunrise;
+  if (hour >= 12 && hour < 18) {
+    greeting = '下午好';
+    greetingIcon = Sun;
+  } else if (hour >= 18) {
+    greeting = '晚上好';
+    greetingIcon = Sunset;
+  } else if (hour >= 6) {
+    greeting = '早上好';
+    greetingIcon = Sunrise;
+  } else {
+    greeting = '夜深了';
+    greetingIcon = Moon;
+  }
+
+  const GreetingIcon = greetingIcon;
+
   return (
     <Layout>
-      <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-dark-900">
-        <div className="text-center max-w-md px-6">
-          {/* User Avatar */}
-          <div className="mb-6 flex justify-center">
-            {userAvatar ? (
-              <img
-                src={userAvatar}
-                alt={`${userName} avatar`}
-                className="w-24 h-24 rounded-full object-cover border-4 border-primary-200 dark:border-primary-800"
-              />
-            ) : (
-              <div className="w-24 h-24 bg-primary-600 rounded-full flex items-center justify-center text-white text-4xl font-semibold border-4 border-primary-200 dark:border-primary-800">
-                {userName.charAt(0).toUpperCase()}
-              </div>
-            )}
-          </div>
-
-          {/* Welcome Message */}
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Welcome, {userName}!
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            You're successfully logged in to your account.
-          </p>
-
-          {/* User Info Card */}
-          <div className="bg-white dark:bg-dark-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-dark-700">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                  Username:
-                </span>
-                <span className="text-sm text-gray-900 dark:text-white">{userName}</span>
-              </div>
-              {authService.user?.email && (
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                    Email:
-                  </span>
-                  <span className="text-sm text-gray-900 dark:text-white truncate max-w-[200px]">
-                    {authService.user.email}
-                  </span>
+      <div className="flex-1 bg-gray-50 dark:bg-dark-900 p-6 overflow-auto">
+        <div className="max-w-6xl mx-auto space-y-6">
+          {/* Header - Greeting */}
+          <div className="bg-gradient-to-r from-primary-500 to-primary-600 dark:from-primary-600 dark:to-primary-700 rounded-xl shadow-lg p-8 text-white">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <GreetingIcon className="w-8 h-8" />
+                  <h1 className="text-3xl font-bold">{greeting}，{userName}！</h1>
                 </div>
-              )}
+                <p className="text-primary-100 text-lg">欢迎回来，开始您的工作吧</p>
+              </div>
+              <div className="hidden md:flex items-center">
+                {userAvatar ? (
+                  <img
+                    src={userAvatar}
+                    alt={`${userName} avatar`}
+                    className="w-20 h-20 rounded-full object-cover border-4 border-white/30"
+                  />
+                ) : (
+                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center text-white text-3xl font-semibold border-4 border-white/30">
+                    {userName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Tip */}
-          <p className="mt-6 text-sm text-gray-500 dark:text-gray-500">
-            Use the theme toggle in the sidebar to switch between light and dark modes.
-          </p>
+          {/* Main Dashboard Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Time Card */}
+            <div className="bg-white dark:bg-dark-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-dark-700">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-lg">
+                  <Clock className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">当前时间</h2>
+              </div>
+              <div className="space-y-2">
+                <div className="text-4xl font-bold text-gray-900 dark:text-white font-mono">
+                  {timeString}
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">{dateString}</div>
+              </div>
+            </div>
+
+            {/* Date Card */}
+            <div className="bg-white dark:bg-dark-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-dark-700">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                  <Calendar className="w-6 h-6 text-green-600 dark:text-green-400" />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">今日日期</h2>
+              </div>
+              <div className="space-y-2">
+                <div className="text-3xl font-bold text-gray-900 dark:text-white">
+                  {currentTime.getDate()}
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  {currentTime.toLocaleDateString('zh-CN', {
+                    year: 'numeric',
+                    month: 'long',
+                  })}
+                </div>
+                <div className="text-xs text-gray-400 dark:text-gray-500">
+                  {currentTime.toLocaleDateString('zh-CN', { weekday: 'long' })}
+                </div>
+              </div>
+            </div>
+
+            {/* User Info Card */}
+            <div className="bg-white dark:bg-dark-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-dark-700">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                  <User className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">用户信息</h2>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-gray-400" />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">用户名：</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    {userName}
+                  </span>
+                </div>
+                {authService.user?.email && (
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-gray-400" />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">邮箱：</span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                      {authService.user.email}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-white dark:bg-dark-800 rounded-lg shadow p-4 border border-gray-200 dark:border-dark-700">
+              <div className="text-2xl font-bold text-primary-600 dark:text-primary-400">
+                {currentTime.getHours()}
+              </div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">当前小时</div>
+            </div>
+            <div className="bg-white dark:bg-dark-800 rounded-lg shadow p-4 border border-gray-200 dark:border-dark-700">
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                {currentTime.getMinutes()}
+              </div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">当前分钟</div>
+            </div>
+            <div className="bg-white dark:bg-dark-800 rounded-lg shadow p-4 border border-gray-200 dark:border-dark-700">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {Math.ceil((currentTime - new Date(currentTime.getFullYear(), 0, 1)) / 86400000)}
+              </div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">今年第几天</div>
+            </div>
+            <div className="bg-white dark:bg-dark-800 rounded-lg shadow p-4 border border-gray-200 dark:border-dark-700">
+              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                {Math.ceil(
+                  (currentTime - new Date(currentTime.getFullYear(), currentTime.getMonth(), 1)) /
+                    86400000
+                )}
+              </div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">本月第几天</div>
+            </div>
+          </div>
+
+          {/* Info Section */}
+          <div className="bg-white dark:bg-dark-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-dark-700">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              系统提示
+            </h2>
+            <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+              <p>• 您可以使用侧边栏的主题切换按钮在明暗模式之间切换</p>
+              <p>• 点击右上角的用户菜单可以退出登录</p>
+              <p>• 当前时间会实时更新，无需刷新页面</p>
+            </div>
+          </div>
         </div>
       </div>
     </Layout>
