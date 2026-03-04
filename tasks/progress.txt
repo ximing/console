@@ -1,0 +1,12 @@
+## Codebase Patterns
+- Backend uses Express.js with routing-controllers (decorator-based routing)
+- TypeDI for dependency injection - all services decorated with @Service()
+- MySQL with Drizzle ORM for database operations
+- Frontend uses React 19 + Vite + Tailwind CSS
+- @rabjs/react for reactive state management
+- Shared types in packages/dto to prevent duplication
+- JWT authentication with bcrypt password hashing
+- Monorepo managed with pnpm workspaces and Turbo
+- Build order: DTO package builds first, then apps can build in parallel
+
+---

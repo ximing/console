@@ -1,0 +1,9 @@
+{
+  "name": "@aimo-console/typescript-config",
+  "version": "0.0.0",
+  "private": true,
+  "license": "BSL-1.1",
+  "publishConfig": {
+    "access": "public"
+  }
+}
