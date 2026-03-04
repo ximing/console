@@ -1,10 +1,16 @@
-import { Service } from '@rabjs/react';
+import { Service, resolve } from '@rabjs/react';
 import { updateUserInfo, uploadAvatar } from '../api/user';
 import { AuthService } from './auth.service';
 
-@Service()
-export class UserService {
-  constructor(private authService: AuthService) {}
+/**
+ * User Service
+ * Manages user profile operations
+ */
+export class UserService extends Service {
+  // 使用 getter + resolve 获取依赖
+  private get authService() {
+    return resolve(AuthService);
+  }
 
   /**
    * Update user information (username)
@@ -20,7 +26,7 @@ export class UserService {
       };
 
       // Update localStorage
-      localStorage.setItem('user', JSON.stringify(this.authService.user));
+      localStorage.setItem('aimo_user', JSON.stringify(this.authService.user));
     }
   }
 
@@ -38,7 +44,7 @@ export class UserService {
       };
 
       // Update localStorage
-      localStorage.setItem('user', JSON.stringify(this.authService.user));
+      localStorage.setItem('aimo_user', JSON.stringify(this.authService.user));
     }
   }
 }
