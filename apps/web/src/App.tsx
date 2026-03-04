@@ -5,6 +5,7 @@ import AuthPage from './pages/auth';
 import HomePage from './pages/home';
 import SettingsPage from './pages/settings';
 import TasksPage from './pages/tasks';
+import { NotificationsPage } from './pages/notifications';
 import NotFoundPage from './pages/not-found';
 import { ProtectedRoute } from './components/protected-route';
 import { ToastContainer } from './components/toast';
@@ -66,6 +67,14 @@ function App() {
           element={
             <ProtectedRoute>
               <TasksPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/notifications/*"
+          element={
+            <ProtectedRoute>
+              <NotificationsPage />
             </ProtectedRoute>
           }
         />

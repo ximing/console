@@ -334,3 +334,38 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - CRON templates provide convenient presets but allow custom expressions
   - JSON validation using try/catch with JSON.parse for user input
   - Use empty dependency array with eslint-disable for mount-only effects
+---
+
+## 2026-03-04 23:45:00 - US-010 (Task Orchestration)
+- Already implemented in tasks.tsx as part of the initial task list:
+  - Execute button on each task row with loading state
+  - Toast notifications for success/failure after execution
+  - TaskService.triggerTask() returns result with success flag and message
+- Typecheck passes
+- **Learnings for future iterations:**
+  - Execute button uses Play icon for visual clarity
+  - Loading state disables button and shows spinner during execution
+  - toastService handles user feedback for async operations
+---
+
+## 2026-03-04 23:50:00 - US-011 (Task Orchestration)
+- Created execution history view:
+  - Added loadTaskExecutions() method to TaskService
+  - Added History icon button to each task row
+  - Created execution history modal with:
+    - Loading state while fetching executions
+    - Empty state ("暂无执行记录") when no executions
+    - Execution list showing status badge, startedAt, finishedAt, duration
+    - Error details (errorMessage, errorType) for failed executions
+    - Result JSON display for successful executions
+    - Total execution count footer
+- Added state management: historyModalOpen, historyTask, executions, executionsTotal
+- Typecheck and lint pass
+- Files changed:
+  - apps/web/src/services/task.service.ts (added loadTaskExecutions method)
+  - apps/web/src/pages/tasks/tasks.tsx (added history button and modal)
+- **Learnings for future iterations:**
+  - Use modal for viewing detailed information to keep context
+  - Calculate duration from startedAt and finishedAt timestamps
+  - Status badge uses green/red colors for success/failed
+  - JSON.stringify with indentation for readable result display

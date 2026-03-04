@@ -1,5 +1,8 @@
 import { AuthV1Controller } from './v1/auth.controller.js';
 import { UserV1Controller } from './v1/user.controller.js';
 import { TaskController } from './v1/task.controller.js';
+import { NotificationController } from './v1/notification.controller.js';
+import { NotificationBAController } from './v1/notification.ba.controller.js';
+import { AIController } from './v1/ai.controller.js';
 
-export const controllers = [AuthV1Controller, UserV1Controller, TaskController];
+export const controllers = [AuthV1Controller, UserV1Controller, TaskController, NotificationController, NotificationBAController, AIController];
