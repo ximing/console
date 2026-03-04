@@ -124,3 +124,22 @@
   - These errors are intentional and will be resolved when we delete the services (US-008 through US-011) and controllers (US-012)
   - The sources/unified-storage-adapter/ directory still exists and will be removed in US-021
 ---
+
+## 2026-03-04 17:30 - US-008
+- Deleted embedding and vector-related service files
+- Files changed:
+  - Deleted: apps/server/src/services/embedding.service.ts (6328 bytes)
+  - Deleted: apps/server/src/services/multimodal-embedding.service.ts (16029 bytes)
+- **Learnings for future iterations:**
+  - embedding.service.ts contained EmbeddingService for text embeddings using OpenAI
+  - multimodal-embedding.service.ts contained MultimodalEmbeddingService for image/text embeddings
+  - Expected typecheck errors appear in services that import these:
+    - explore.service.ts (imports EmbeddingService)
+    - scheduler.service.ts (imports EmbeddingService)
+    - attachment.service.ts (imports MultimodalEmbeddingService)
+    - tag.service.ts (imports MultimodalEmbeddingService)
+    - daily-content.generator.ts (imports EmbeddingService)
+  - Also errors in app.ts and debug.ba.controller.ts
+  - These services will be deleted in US-009 through US-011, which will resolve these errors
+  - The embedding services were core to the vector search functionality that's being removed
+---
