@@ -1,30 +1,46 @@
 import type { UserInfoDto } from '@aimo-console/dto';
 import request from '../utils/request';
 
+interface ApiResponse<T> {
+  code: number;
+  data: T;
+  msg?: string;
+}
+
 /**
  * Get current user info
  */
-export const getUserInfo = () => {
-  return request.get<unknown, { code: number; data: UserInfoDto }>('/api/v1/user/info');
+export const getUserInfo = async (): Promise<UserInfoDto> => {
+  const response = await request.get<unknown, ApiResponse<UserInfoDto>>('/api/v1/user/info');
+  return response.data;
 };
 
 /**
  * Update user info (username)
  */
-export const updateUserInfo = (data: { username: string }) => {
-  return request.put<unknown, UserInfoDto>('/api/v1/user/info', data);
+export const updateUserInfo = async (data: { username: string }): Promise<UserInfoDto> => {
+  const response = await request.put<unknown, ApiResponse<UserInfoDto>>(
+    '/api/v1/user/info',
+    data
+  );
+  return response.data;
 };
 
 /**
  * Upload user avatar
  */
-export const uploadAvatar = (file: File) => {
+export const uploadAvatar = async (file: File): Promise<{ avatar: string }> => {
   const formData = new FormData();
   formData.append('avatar', file);
 
-  return request.post<unknown, { avatar: string }>('/api/v1/user/avatar', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
+  const response = await request.post<unknown, ApiResponse<{ avatar: string }>>(
+    '/api/v1/user/avatar',
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  );
+  return response.data;
 };

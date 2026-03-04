@@ -1,4 +1,4 @@
-import { Service, observable } from '@rabjs/react';
+import { Service } from '@rabjs/react';
 import { updateUserInfo, uploadAvatar } from '../api/user';
 import { AuthService } from './auth.service';
 

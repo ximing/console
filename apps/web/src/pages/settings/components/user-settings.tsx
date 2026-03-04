@@ -3,7 +3,7 @@ import { useState, useRef } from 'react';
 import { AuthService } from '../../../services/auth.service';
 import { UserService } from '../../../services/user.service';
 import { ToastService } from '../../../services/toast.service';
-import { User, Upload, Loader2, Camera } from 'lucide-react';
+import { Loader2, Camera } from 'lucide-react';
 
 export const UserSettings = view(() => {
   const authService = useService(AuthService);
@@ -27,8 +27,9 @@ export const UserSettings = view(() => {
     try {
       await userService.updateUserInfo({ username: username.trim() });
       toastService.success('用户信息更新成功');
-    } catch (error: any) {
-      toastService.error(error.message || '更新失败');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '更新失败';
+      toastService.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -58,8 +59,9 @@ export const UserSettings = view(() => {
     try {
       await userService.uploadAvatar(file);
       toastService.success('头像上传成功');
-    } catch (error: any) {
-      toastService.error(error.message || '头像上传失败');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '头像上传失败';
+      toastService.error(errorMessage);
     } finally {
       setIsUploading(false);
       // Clear input value to allow uploading the same file again
