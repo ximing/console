@@ -220,8 +220,8 @@
         "Typecheck passes"
       ],
       "priority": 14,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed - Created auth.ts with RegisterDto (email, password, username) and LoginDto (email, password). Created user.ts with simplified UserInfoDto (id, email, username, avatar). Updated index.ts to export both. Built successfully. Typecheck passes."
     },
     {
       "id": "US-015",

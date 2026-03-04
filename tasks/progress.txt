@@ -277,3 +277,25 @@
   - No typecheck errors exist in user.service.ts itself
 ---
 
+## 2026-03-04 18:00 - US-014
+- Created auth DTOs for registration and login
+- Files changed:
+  - Created: packages/dto/src/auth.ts (RegisterDto, LoginDto, LoginResponseDto)
+  - Created: packages/dto/src/user.ts (UserInfoDto with simplified fields)
+  - Modified: packages/dto/src/index.ts (exports both modules)
+  - Built: packages/dto/dist/ (compiled types)
+- Changes made:
+  - RegisterDto has email, password, username (not nickname)
+  - LoginDto has email, password
+  - LoginResponseDto has token and user (UserInfoDto)
+  - UserInfoDto uses new field names: id (not uid), username (not nickname)
+  - UserInfoDto has: id, email, username, avatar (no phone, status, timestamps)
+- **Learnings for future iterations:**
+  - DTO package uses Rollup to build CommonJS, ESM, and TypeScript declarations
+  - Must run `pnpm --filter @aimo-console/dto build` after changes for apps to see updates
+  - DTOs use .js extensions in imports (ESM convention) even though source is .ts
+  - UserInfoDto is simplified to match new users table schema (id, email, username, avatar)
+  - Auth DTOs are ready for use in US-015 (registration) and US-016 (login) endpoints
+  - Typecheck passes with no errors - DTOs are clean
+---
+
