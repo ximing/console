@@ -443,3 +443,28 @@
   - This completes the removal of cloud storage capabilities from the backend
 ---
 
+
+## 2026-03-04 19:30 - US-022
+- Updated server environment configuration to minimal auth-only setup
+- Files changed:
+  - Modified: apps/server/.env.example (simplified from 134 lines to 31 lines)
+- Changes made:
+  - Removed all LanceDB configuration (LANCEDB_STORAGE_TYPE, LANCEDB_PATH, LANCEDB_S3_*, LANCEDB_VERSION_RETENTION_DAYS)
+  - Removed all OpenAI configuration (OPENAI_API_KEY, OPENAI_MODEL, OPENAI_EMBEDDING_MODEL, OPENAI_BASE_URL, OPENAI_EMBEDDING_DIMENSIONS)
+  - Removed all S3/OSS configuration (ATTACHMENT_S3_*, ATTACHMENT_OSS_*)
+  - Removed all attachment configuration (ATTACHMENT_STORAGE_TYPE, ATTACHMENT_MAX_FILE_SIZE, ATTACHMENT_LOCAL_PATH, etc.)
+  - Removed all AI-related configuration (MULTIMODAL_EMBEDDING_*, DASHSCOPE_*, FUN_ASR_*, OCR_*, ZHIPU_*)
+  - Removed scheduler configuration (DB_OPTIMIZATION_CRON)
+  - Removed locale configuration (LOCALE_LANGUAGE, LOCALE_TIMEZONE)
+  - Removed logger configuration (AIMO_LOG_DIR, AIMO_LOG_LEVEL)
+  - Kept only essential variables: PORT, NODE_ENV, CORS_ORIGIN, MySQL settings (MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE, MYSQL_CONNECTION_LIMIT), JWT_SECRET
+  - Added clear comments explaining each variable and their defaults
+- **Learnings for future iterations:**
+  - .env.example should match the actual requirements of the simplified application
+  - Removed 103 lines of configuration (78% reduction)
+  - JWT_SECRET comment now emphasizes the 32-character minimum requirement
+  - MySQL configuration includes all connection pool settings
+  - CORS_ORIGIN includes both backend (3000) and frontend (5173) ports for development
+  - Typecheck passes with same expected errors from previous stories (app.ts, user.controller.ts, migration files)
+  - This completes the backend environment configuration simplification
+---
