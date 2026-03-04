@@ -1,4 +1,4 @@
-import type { UserInfoDto, UpdateUserDto, ChangePasswordDto } from '@aimo-console/dto';
+import type { UserInfoDto } from '@aimo-console/dto';
 import request from '../utils/request';
 
 /**
@@ -6,42 +6,4 @@ import request from '../utils/request';
  */
 export const getUserInfo = () => {
   return request.get<unknown, { code: number; data: UserInfoDto }>('/api/v1/user/info');
-};
-
-/**
- * Update user info
- */
-export const updateUserInfo = (data: UpdateUserDto) => {
-  return request.put<unknown, { code: number; data: { message: string; user: UserInfoDto } }>(
-    '/api/v1/user/info',
-    data
-  );
-};
-
-/**
- * Change password
- */
-export const changePassword = (data: ChangePasswordDto) => {
-  return request.post<unknown, { code: number; data: { message: string } }>(
-    '/api/v1/user/password',
-    data
-  );
-};
-
-/**
- * Upload avatar
- */
-export const uploadAvatar = (file: File) => {
-  const formData = new FormData();
-  formData.append('avatar', file);
-
-  return request.post<unknown, { code: number; data: { message: string; avatar: string } }>(
-    '/api/v1/user/avatar',
-    formData,
-    {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    }
-  );
 };
