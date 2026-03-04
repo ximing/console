@@ -35,3 +35,22 @@
   - These errors will be resolved when we delete the services in US-009
   - Schema cleanup is progressing in order: memos → AI → services → controllers
 ---
+## 2026-03-04 17:05 - US-003
+- Simplified users table schema to essential fields only
+- Files changed:
+  - Modified: apps/server/src/db/schema/users.ts
+- Changes made:
+  - Renamed `uid` → `id`
+  - Renamed `nickname` → `username`
+  - Removed fields: `phone`, `salt`, `status`
+  - Added `.unique()` constraint to email field
+  - Changed `username` to `.notNull()`
+  - Kept: id, email, password, username, avatar, createdAt, updatedAt
+- **Learnings for future iterations:**
+  - Field renames (uid→id, nickname→username) will cause typecheck errors in services and controllers
+  - These errors are expected and will be fixed in US-013 (user.service.ts) and US-017 (auth middleware)
+  - The schema itself is now correct and ready for migration generation in US-005
+  - Email unique constraint is implemented at the database level via `.unique()`
+  - Timestamps use `.defaultNow()` and `.$onUpdate(() => new Date())` for automatic management
+---
+
