@@ -220,3 +220,37 @@
   - Only user.service.ts remains in the services directory - all other business logic services are now deleted
   - This completes the removal of specialized services from the backend
 ---
+## 2026-03-04 17:45 - US-012
+- Deleted all non-auth/user controller files
+- Files changed:
+  - Deleted: apps/server/src/controllers/v1/memo.controller.ts (14426 bytes)
+  - Deleted: apps/server/src/controllers/v1/memo.ba.controller.ts (3770 bytes)
+  - Deleted: apps/server/src/controllers/v1/attachment.controller.ts (9952 bytes)
+  - Deleted: apps/server/src/controllers/v1/attachment.ba.controller.ts (5010 bytes)
+  - Deleted: apps/server/src/controllers/v1/category.controller.ts (4264 bytes)
+  - Deleted: apps/server/src/controllers/v1/tag.controller.ts (3800 bytes)
+  - Deleted: apps/server/src/controllers/v1/ai.controller.ts (2783 bytes)
+  - Deleted: apps/server/src/controllers/v1/explore.controller.ts (9817 bytes)
+  - Deleted: apps/server/src/controllers/v1/insights.controller.ts (2694 bytes)
+  - Deleted: apps/server/src/controllers/v1/ocr.controller.ts (4874 bytes)
+  - Deleted: apps/server/src/controllers/v1/asr.controller.ts (5219 bytes)
+  - Deleted: apps/server/src/controllers/v1/push-rule.controller.ts (4980 bytes)
+  - Deleted: apps/server/src/controllers/v1/system.controller.ts (1439 bytes)
+  - Deleted: apps/server/src/controllers/v1/debug.ba.controller.ts (4244 bytes)
+  - Deleted: apps/server/src/controllers/static.controller.ts (1286 bytes)
+  - Modified: apps/server/src/controllers/index.ts (now only exports AuthV1Controller and UserV1Controller)
+- Total: 2628 lines removed (16 files)
+- **Learnings for future iterations:**
+  - controllers/index.ts is the central registry for all controllers - must update it when adding/removing controllers
+  - Only auth.controller.ts and user.controller.ts remain in the v1 directory
+  - Expected typecheck errors remain in:
+    - auth.controller.ts: uses old field names (uid, nickname) - will be fixed in US-015/US-016
+    - user.controller.ts: uses old field names (uid, nickname) and imports deleted avatar.service - will be fixed in US-013
+    - user.service.ts: uses old field names and imports deleted services - will be fixed in US-013
+    - auth middleware: uses old field names - will be fixed in US-017
+    - app.ts: imports deleted scheduler and lancedb - will be fixed in US-023
+    - migrate-lancedb-to-mysql.ts script: references deleted schemas - can be deleted later
+  - This completes the controller cleanup - all business logic controllers are now deleted
+  - The backend now only has authentication and user management endpoints
+---
+
