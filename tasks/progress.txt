@@ -570,3 +570,23 @@
   - Only layout.tsx, protected-route.tsx, and toast/ components remain in apps/web/src/components/
   - Next story (US-028) will clean up home page components
 ---
+
+## 2026-03-04 18:22 - US-028
+- Deleted 17 home page component files from apps/web/src/pages/home/components/
+- Files changed:
+  - Deleted: audio-item.tsx, category-filter.tsx, confirm-delete-modal.tsx, create-category-modal.tsx, daily-recommendations.tsx, filter-bar.tsx, memo-card.tsx, memo-detail-modal.tsx, memo-editor.tsx, memo-list.tsx, on-this-day-banner.tsx, related-memos-modal.tsx, relation-graph.tsx, search-bar.tsx, search-dialog.tsx, search-sort-bar.tsx, tag-list.tsx
+  - Kept: user-menu.tsx (for logout functionality)
+- Total: 3607 lines removed
+- **Learnings for future iterations:**
+  - memo-card.tsx was the largest component (584 lines) - handled memo display, editing, attachments, tags, categories
+  - related-memos-modal.tsx (532 lines) displayed memo relationships and backlinks
+  - relation-graph.tsx (309 lines) visualized memo relationships as a graph
+  - daily-recommendations.tsx (214 lines) displayed AI-generated recommendations
+  - category-filter.tsx (167 lines) provided category filtering UI
+  - search-sort-bar.tsx (226 lines) provided search and sorting controls
+  - memo-list.tsx (172 lines) rendered the list of memos
+  - on-this-day-banner.tsx (177 lines) showed memos from the same day in previous years
+  - Only user-menu.tsx remains for logout functionality in the home page
+  - Typecheck passes with no errors - no other components depend on these
+  - Next story (US-029) will clean up frontend services
+---
