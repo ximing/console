@@ -395,3 +395,33 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - Migration generation: pnpm build && pnpm migrate:generate
   - Migration runs automatically on server start or manually with pnpm migrate
   - VARCHAR(191) limit for keys due to MySQL utf8mb4 index limit
+
+---
+
+## 2026-03-05 00:15:00 - US-002 (LLM Settings)
+- Created UserModelService with CRUD operations
+- Created UserModelController with REST endpoints:
+  - POST /api/v1/user-models - create model
+  - GET /api/v1/user-models - list models
+  - GET /api/v1/user-models/:id - get model
+  - PUT /api/v1/user-models/:id - update model
+  - DELETE /api/v1/user-models/:id - delete model
+  - PATCH /api/v1/user-models/:id/set-default - set default
+- Created DTOs in packages/dto/src/user-model.ts:
+  - LLMProvider type (openai, deepseek, openrouter, other)
+  - CreateUserModelDto, UpdateUserModelDto, UserModelDto, UserModelListDto
+- All endpoints require user authentication via @CurrentUser()
+- Service handles setting/unsetting default model automatically
+- Typecheck passes
+- Files changed:
+  - apps/server/src/services/user-model.service.ts (new)
+  - apps/server/src/controllers/v1/user-model.controller.ts (new)
+  - apps/server/src/controllers/index.ts (export controller)
+  - packages/dto/src/user-model.ts (new)
+  - packages/dto/src/index.ts (export user-model)
+  - tasks/prd.json (marked US-002 as complete)
+- **Learnings for future iterations:**
+  - DTOs are plain TypeScript interfaces, no validation library needed
+  - Service pattern uses Drizzle ORM with getDatabase() for MySQL
+  - Controllers use ResponseUtil for consistent API responses
+  - Use eq() and and() from drizzle-orm for query building
