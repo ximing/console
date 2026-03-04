@@ -23,6 +23,7 @@ import type {
   CreateTaskDto,
   ExecutionLogDto,
   TaskDto,
+  TaskTriggerResultDto,
   UpdateTaskDto,
   UserInfoDto,
 } from '@aimo-console/dto';
@@ -247,6 +248,40 @@ export class TaskController {
       return ResponseUtility.success({ deleted: true });
     } catch (error) {
       logger.error('Delete task error:', error);
+      return ResponseUtility.error(ErrorCode.DB_ERROR);
+    }
+  }
+
+  /**
+   * POST /api/v1/tasks/:id/trigger - Manually trigger a task
+   */
+  @Post('/:id/trigger')
+  async triggerTask(@CurrentUser() userDto: UserInfoDto, @Param('id') id: string) {
+    try {
+      if (!userDto?.id) {
+        return ResponseUtility.error(ErrorCode.UNAUTHORIZED);
+      }
+
+      // Verify task belongs to user
+      const task = await this.taskService.getTask(id, userDto.id);
+      if (!task) {
+        return ResponseUtility.error(ErrorCode.NOT_FOUND, 'Task not found');
+      }
+
+      // Execute the task
+      const result = await this.taskService.executeTask(id);
+
+      // Build response
+      const response: TaskTriggerResultDto = {
+        success: result.success,
+        executionId: id,
+        data: result.data,
+        error: result.error,
+      };
+
+      return ResponseUtility.success(response);
+    } catch (error) {
+      logger.error('Trigger task error:', error);
       return ResponseUtility.error(ErrorCode.DB_ERROR);
     }
   }
