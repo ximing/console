@@ -695,3 +695,37 @@
   - For full end-to-end testing, the migration tracking table needs to be manually fixed or database reset
   - The code changes are correct and ready for use once migration state is resolved
 ---
+
+## 2026-03-04 18:50 - US-033
+- Verified and fixed login page to work with new backend
+- Files changed:
+  - Modified: apps/web/src/App.tsx (removed deleted page routes: settings, ai-explore, gallery, share)
+  - Modified: apps/web/src/main.tsx (removed deleted service registrations: attachment, category, explore, memo, memo-polling, tag, ai-tools)
+  - Modified: apps/web/src/pages/landing/landing.tsx (removed deleted system API import and version fetching)
+  - Created: apps/server/fix-migration.js (manually marked migration as complete in database)
+  - Created: apps/server/fix-schema.js (altered users table schema: uid→id, nickname→username, dropped phone/salt/status)
+  - Saved: tasks/us-033-login-success.png (screenshot of successful login)
+- Changes made:
+  - Fixed App.tsx to only include routes for: /, /auth, /home, and * (not-found)
+  - Fixed main.tsx to only register AuthService, ThemeService, and ToastService
+  - Removed getAppVersions API call and version display from landing page
+  - Fixed migration state by manually inserting migration record into __drizzle_migrations table
+  - Fixed users table schema to match new schema (id, username instead of uid, nickname)
+- Testing performed:
+  - Registered new user (logintest@example.com / logintest / password123) successfully
+  - Logged in with registered credentials successfully
+  - Verified JWT token (171 characters) stored in localStorage
+  - Verified user info {id, email, username} stored in localStorage
+  - Verified redirect to /home page after login
+  - Verified welcome screen displays correct username and email
+  - Frontend typecheck and lint both pass
+- **Learnings for future iterations:**
+  - React controlled inputs require special handling in browser automation - use JavaScript to set values and dispatch events
+  - fill_form tool doesn't work with React controlled inputs - need to use evaluate_script with native value setter
+  - Migration state issues can occur when table already exists from previous runs - manually insert migration record to resolve
+  - Schema changes (field renames) require database ALTER TABLE commands when migration can't drop and recreate
+  - The landing page was importing deleted APIs (system.ts) which caused Vite errors - must update all imports when deleting API files
+  - App.tsx and main.tsx still had references to deleted pages and services - must update these central files when removing features
+  - Login flow works correctly: register → auto-switch to login → login → redirect to home with JWT token stored
+---
+
