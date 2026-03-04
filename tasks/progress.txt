@@ -622,3 +622,20 @@
   - Expected errors may appear in pages that still import these services (will be fixed in US-031 when home page is simplified)
   - Frontend is now minimal with only auth, theme, and toast services
 ---
+
+## 2026-03-04 20:30 - US-030
+- Deleted 11 frontend API files from apps/web/src/api/
+- Files changed:
+  - Deleted: ai.ts, attachment.ts, category.ts, explore-conversation.ts, explore.ts, export.ts, memo.ts, ocr.ts, push-rules.ts, system.ts, tag.ts
+  - Modified: user.ts (removed updateUserInfo, changePassword, uploadAvatar methods)
+  - Kept: auth.ts (register, login), user.ts (getUserInfo)
+- Total: 742 lines removed
+- **Learnings for future iterations:**
+  - auth.ts was already minimal with only register and login endpoints
+  - user.ts had 4 methods (getUserInfo, updateUserInfo, changePassword, uploadAvatar) - kept only getUserInfo
+  - Removed unused DTO imports (UpdateUserDto, ChangePasswordDto) from user.ts
+  - All deleted API files corresponded to services deleted in US-029 (memo, attachment, category, tag, ai-tools, explore, export)
+  - Typecheck passes with no errors - frontend API layer is now minimal
+  - Frontend now has only 2 API modules: auth (register/login) and user (getUserInfo)
+  - Next story (US-031) will simplify the home page to a welcome screen
+---
