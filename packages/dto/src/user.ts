@@ -16,3 +16,11 @@ export interface UserInfoDto {
   /** User avatar URL */
   avatar?: string;
 }
+
+/**
+ * Update user info DTO
+ */
+export interface UpdateUserDto {
+  /** Username */
+  username?: string;
+}
