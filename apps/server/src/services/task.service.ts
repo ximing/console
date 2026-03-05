@@ -8,7 +8,7 @@ import { generateUid } from '../utils/id.js';
 import { logger } from '../utils/logger.js';
 
 import { ActionRegistry } from '../actions/registry.js';
-import type { ActionResult } from '../actions/types.js';
+import type { ActionResult, ActionContext } from '../actions/types.js';
 
 @Service()
 export class TaskService {
@@ -168,7 +168,10 @@ export class TaskService {
 
       // Execute the action
       const config = (task.actionConfig as Record<string, unknown>) || {};
-      const result = await handler.execute(config);
+      const context: ActionContext = {
+        userId: task.createdBy,
+      };
+      const result = await handler.execute(config, context);
 
       // Update execution log
       await db.insert(executionLogs).values({

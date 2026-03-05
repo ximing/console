@@ -1,11 +1,13 @@
 import { Service } from '@rabjs/react';
 import { taskApi } from '../api/task';
+import { userModelApi } from '../api/user-model';
 import type {
   TaskDto,
   CreateTaskDto,
   UpdateTaskDto,
   AvailableActionDto,
   ExecutionLogDto,
+  UserModelDto,
 } from '@aimo-console/dto';
 
 /**
@@ -16,6 +18,7 @@ export class TaskService extends Service {
   // State
   tasks: TaskDto[] = [];
   availableActions: AvailableActionDto[] = [];
+  userModels: UserModelDto[] = [];
   executions: ExecutionLogDto[] = [];
   executionsTotal = 0;
   isLoading = false;
@@ -49,6 +52,18 @@ export class TaskService extends Service {
       this.availableActions = data.actions;
     } catch (err) {
       console.error('Load available actions error:', err);
+    }
+  }
+
+  /**
+   * Fetch user configured models
+   */
+  async loadUserModels(): Promise<void> {
+    try {
+      const data = await userModelApi.getModels();
+      this.userModels = data.models;
+    } catch (err) {
+      console.error('Load user models error:', err);
     }
   }
 

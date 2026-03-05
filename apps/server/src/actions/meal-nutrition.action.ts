@@ -1,7 +1,7 @@
 import { Container } from 'typedi';
 
-import type { ActionHandler, ActionResult, ActionParamSchema } from './types.js';
-import { AIService } from '../services/ai.service.js';
+import type { ActionHandler, ActionResult, ActionParamSchema, ActionContext, ModelInfo } from './types.js';
+import { LLMService } from '../services/llm.service.js';
 import { NotificationService } from '../services/notification.service.js';
 
 import type { NotificationChannel, NotificationOwnership } from '@aimo-console/dto';
@@ -18,6 +18,8 @@ export interface MealNutritionConfig {
   wifePreferences?: string;
   /** 微信群ID列表，用于发送通知到群聊 */
   groupIds?: string[];
+  /** 选择的模型ID */
+  modelId?: string;
 }
 
 /**
@@ -33,6 +35,7 @@ export class MealNutritionAction implements ActionHandler {
   id = 'meal-nutrition';
   name = '营养餐食建议';
   description = '为60+老年夫妇提供东北风味营养餐食建议';
+  requiresModel = true;
 
   paramSchema: Record<string, ActionParamSchema> = {
     recipient: {
@@ -99,12 +102,22 @@ export class MealNutritionAction implements ActionHandler {
     return recipient === 'husband' ? '先生' : '太太';
   }
 
-  async execute(params: Record<string, unknown>): Promise<ActionResult> {
+  /**
+   * Get available models for this action
+   */
+  async getModels(userId: string): Promise<ModelInfo[]> {
+    const llmService = Container.get(LLMService);
+    return llmService.listModels(userId);
+  }
+
+  async execute(params: Record<string, unknown>, context?: ActionContext): Promise<ActionResult> {
     const config = params as unknown as MealNutritionConfig;
     const recipient = config.recipient || 'couple';
     const husbandPreferences = config.husbandPreferences || '';
     const wifePreferences = config.wifePreferences || '';
     const groupIds = config.groupIds || [];
+    const modelId = config.modelId as string | undefined;
+    const userId = context?.userId;
 
     // Determine meal type based on current time
     const mealType = this.getMealType();
@@ -174,11 +187,38 @@ ${preferences ? `特别偏好：${preferences}` : ''}
     }
 
     try {
-      // Get AI service from container
-      const aiService = Container.get(AIService);
+      // Get LLM service from container
+      const llmService = Container.get(LLMService);
 
-      // Generate meal suggestion using AI
-      const mealSuggestion = await aiService.chat(userPrompt, systemPrompt);
+      if (!userId) {
+        return {
+          success: false,
+          error: {
+            message: 'User ID is required for this action',
+            code: 'USER_ID_REQUIRED',
+          },
+        };
+      }
+
+      // Generate meal suggestion using LLM
+      let mealSuggestion: string;
+      if (modelId) {
+        const response = await llmService.chatWithModel(userId, modelId, {
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+          ],
+        });
+        mealSuggestion = response.choices[0]?.message.content || '';
+      } else {
+        const response = await llmService.chat(userId, {
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+          ],
+        });
+        mealSuggestion = response.choices[0]?.message.content || '';
+      }
 
       const notificationIds: string[] = [];
 

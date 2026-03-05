@@ -94,4 +94,6 @@ export interface AvailableActionDto {
   id: string;
   name: string;
   description: string;
+  /** Whether this action requires user to select a model */
+  requiresModel?: boolean;
 }
