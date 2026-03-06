@@ -19,10 +19,7 @@ export const getUserInfo = async (): Promise<UserInfoDto> => {
  * Update user info (username)
  */
 export const updateUserInfo = async (data: { username: string }): Promise<UserInfoDto> => {
-  const response = await request.put<unknown, ApiResponse<UserInfoDto>>(
-    '/api/v1/user/info',
-    data
-  );
+  const response = await request.put<unknown, ApiResponse<UserInfoDto>>('/api/v1/user/info', data);
   return response.data;
 };
 

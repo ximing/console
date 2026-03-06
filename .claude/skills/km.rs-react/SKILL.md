@@ -141,12 +141,12 @@ export default bindServices(PageContent, [
 #### 全局单例 Service（应用级）
 
 ```typescript
-import { register, resolve, Service } from "@rabjs/react";
+import { register, resolve, Service } from '@rabjs/react';
 
 // 定义全局 Service
 export class AppService extends Service {
-  appName = "My App";
-  theme = "light";
+  appName = 'My App';
+  theme = 'light';
 }
 
 export class LoggerService extends Service {
@@ -208,7 +208,7 @@ export default bindServices(PageContent, [PageService]);
 **核心原则**：Service 内部使用其他 Service 时，使用 getter + `resolve()` 获取依赖。
 
 ```typescript
-import { Service, register } from "@rabjs/react";
+import { Service, register } from '@rabjs/react';
 
 // 依赖的 Service
 export class LoggerService extends Service {
@@ -226,8 +226,8 @@ export class ApiService extends Service {
   }
 
   async fetchUsers() {
-    this.loggerService.log("Fetching users...");
-    return fetch("/api/users").then((r) => r.json());
+    this.loggerService.log('Fetching users...');
+    return fetch('/api/users').then((r) => r.json());
   }
 }
 // 另一个全局Service
@@ -247,9 +247,9 @@ export class UserService extends Service {
   }
 
   async loadUsers() {
-    this.loggerService.log("Loading users...");
+    this.loggerService.log('Loading users...');
     this.users = await this.apiService.fetchUsers();
-    this.loggerService.log("Users loaded");
+    this.loggerService.log('Users loaded');
   }
 }
 
@@ -317,7 +317,7 @@ export default bindServices(ComponentContent, [ComponentService]);
 **依赖注入的替代方式（使用装饰器）**：
 
 ```typescript
-import { Service, Inject } from "@rabjs/react";
+import { Service, Inject } from '@rabjs/react';
 
 export class UserService extends Service {
   // 使用 @Inject 装饰器自动注入
@@ -328,7 +328,7 @@ export class UserService extends Service {
   private api!: ApiService;
 
   async loadUsers() {
-    this.logger.log("Loading users...");
+    this.logger.log('Loading users...');
     this.users = await this.api.fetchUsers();
   }
 }
@@ -470,7 +470,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(<App />);
 
 ```typescript
 // services/logger.service.ts
-import { Service } from "@rabjs/react";
+import { Service } from '@rabjs/react';
 
 export class LoggerService extends Service {
   log(message: string) {
@@ -511,12 +511,12 @@ export default bindServices(HomeContent, [HomeService]);
 
 ```typescript
 // pages/home/home.service.ts
-import { Service } from "@rabjs/react";
-import { LoggerService } from "@/services/logger.service";
-import { ApiService } from "@/services/api.service";
+import { Service } from '@rabjs/react';
+import { LoggerService } from '@/services/logger.service';
+import { ApiService } from '@/services/api.service';
 
 export class HomeService extends Service {
-  title = "首页";
+  title = '首页';
   data: any[] = [];
 
   // ✅ 使用 getter + resolve 访问全局 Service
@@ -529,9 +529,9 @@ export class HomeService extends Service {
   }
 
   async loadData() {
-    this.loggerService.log("Loading home data...");
+    this.loggerService.log('Loading home data...');
     this.data = await this.apiService.fetchHomeData();
-    this.loggerService.log("Home data loaded");
+    this.loggerService.log('Home data loaded');
   }
 }
 ```
@@ -562,12 +562,12 @@ export const UserInfo = bindServices(UserInfoContent, [UserInfoService]);
 
 ```typescript
 // components/user-info/user-info.service.ts
-import { Service } from "@rabjs/react";
-import { AuthService } from "@/services/auth.service";
+import { Service } from '@rabjs/react';
+import { AuthService } from '@/services/auth.service';
 
 export class UserInfoService extends Service {
-  userName = "";
-  email = "";
+  userName = '';
+  email = '';
 
   // ✅ 访问全局 AuthService
   get authService() {
@@ -578,8 +578,8 @@ export class UserInfoService extends Service {
     super();
     // 初始化时从 AuthService 获取用户信息
     const user = this.authService.currentUser;
-    this.userName = user?.name || "";
-    this.email = user?.email || "";
+    this.userName = user?.name || '';
+    this.email = user?.email || '';
   }
 }
 ```
@@ -617,13 +617,13 @@ export class UserInfoService extends Service {
    - ✅ 应用级生命周期
    - ❌ 禁止使用 `bindServices`
 
-2. **页面级 Services**（pages/*/）
+2. **页面级 Services**（pages/\*/）
    - ✅ 使用 `bindServices()` 注册
    - ✅ 页面组件生命周期
    - ✅ 可访问全局 Services
    - ✅ Service 文件与组件文件同目录
 
-3. **组件级 Services**（components/*/）
+3. **组件级 Services**（components/\*/）
    - ✅ 使用 `bindServices()` 注册
    - ✅ 组件生命周期
    - ✅ 可访问全局和父级 Services

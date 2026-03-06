@@ -4,7 +4,11 @@ import { SocketIOService, PushEventType } from './socket-io.service.js';
 import { logger } from '../utils/logger.js';
 
 import type { Notification } from '../db/schema/notifications.js';
-import type { NotificationChannel, NotificationOwnership, NotificationStatus } from '@aimo-console/dto';
+import type {
+  NotificationChannel,
+  NotificationOwnership,
+  NotificationStatus,
+} from '@aimo-console/dto';
 
 /**
  * Notification push payload sent to clients

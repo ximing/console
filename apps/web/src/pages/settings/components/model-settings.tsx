@@ -207,9 +207,7 @@ export const ModelSettings = view(() => {
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            大模型设置
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">大模型设置</h2>
           <p className="text-gray-600 dark:text-gray-400">
             管理您的大模型配置，支持 OpenAI、DeepSeek、OpenRouter 等
           </p>
@@ -240,9 +238,7 @@ export const ModelSettings = view(() => {
           <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-dark-700 rounded-full flex items-center justify-center">
             <Bot className="w-8 h-8 text-gray-400" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-            暂无模型配置
-          </h3>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">暂无模型配置</h3>
           <p className="text-gray-500 dark:text-gray-400 mb-6">
             添加您的大模型配置，以便在任务中使用
           </p>
@@ -407,10 +403,7 @@ const ModelFormModal = view(
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center">
         {/* Backdrop */}
-        <div
-          className="absolute inset-0 bg-black/50"
-          onClick={onClose}
-        />
+        <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
         {/* Modal */}
         <div className="relative bg-white dark:bg-dark-800 rounded-xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
@@ -437,9 +430,7 @@ const ModelFormModal = view(
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="例如：我的 GPT-4"
                 className="w-full px-4 py-2 border border-gray-300 dark:border-dark-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-700 text-gray-900 dark:text-white"
               />
@@ -478,9 +469,7 @@ const ModelFormModal = view(
                 <input
                   type="text"
                   value={formData.apiBaseUrl}
-                  onChange={(e) =>
-                    setFormData({ ...formData, apiBaseUrl: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, apiBaseUrl: e.target.value })}
                   placeholder="https://your-api.com/v1"
                   className="w-full px-4 py-2 border border-gray-300 dark:border-dark-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-700 text-gray-900 dark:text-white"
                 />
@@ -495,9 +484,7 @@ const ModelFormModal = view(
               <input
                 type="password"
                 value={formData.apiKey}
-                onChange={(e) =>
-                  setFormData({ ...formData, apiKey: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
                 placeholder={isEditing ? '••••••••' : 'sk-xxx...'}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-dark-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-700 text-gray-900 dark:text-white"
               />
@@ -511,9 +498,7 @@ const ModelFormModal = view(
               <input
                 type="text"
                 value={formData.modelName}
-                onChange={(e) =>
-                  setFormData({ ...formData, modelName: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, modelName: e.target.value })}
                 placeholder="例如：gpt-4, gpt-4o, deepseek-chat"
                 className="w-full px-4 py-2 border border-gray-300 dark:border-dark-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-700 text-gray-900 dark:text-white"
               />
@@ -576,15 +561,10 @@ const ModelFormModal = view(
                 type="checkbox"
                 id="isDefault"
                 checked={formData.isDefault}
-                onChange={(e) =>
-                  setFormData({ ...formData, isDefault: e.target.checked })
-                }
+                onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })}
                 className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
               />
-              <label
-                htmlFor="isDefault"
-                className="text-sm text-gray-700 dark:text-gray-300"
-              >
+              <label htmlFor="isDefault" className="text-sm text-gray-700 dark:text-gray-300">
                 设为默认模型
               </label>
             </div>

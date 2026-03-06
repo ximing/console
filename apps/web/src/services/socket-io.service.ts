@@ -151,7 +151,10 @@ export class SocketIOService extends Service {
 
     const socketUrl = this.getSocketIOUrl();
     console.log('Connecting to Socket.IO at:', socketUrl);
-    console.log('Using token:', authService.token ? `${authService.token.substring(0, 20)}...` : 'none');
+    console.log(
+      'Using token:',
+      authService.token ? `${authService.token.substring(0, 20)}...` : 'none'
+    );
 
     this.socket = io(socketUrl, {
       path: '/socket.io',
@@ -317,7 +320,12 @@ export class SocketIOService extends Service {
    * Show browser notification
    */
   private showBrowserNotification(payload: NotificationPushPayload): void {
-    console.log('Showing notification, permission:', this.notificationPermission, 'isElectron:', isElectron());
+    console.log(
+      'Showing notification, permission:',
+      this.notificationPermission,
+      'isElectron:',
+      isElectron()
+    );
 
     // Use Electron's Notification API if running in Electron
     if (isElectron()) {
@@ -371,7 +379,10 @@ export class SocketIOService extends Service {
    * Show Electron system notification
    */
   private async showElectronNotification(payload: NotificationPushPayload): Promise<void> {
-    console.log('Attempting to show Electron notification, electronAPI exists:', !!window.electronAPI);
+    console.log(
+      'Attempting to show Electron notification, electronAPI exists:',
+      !!window.electronAPI
+    );
 
     if (!window.electronAPI?.showNotification) {
       console.warn('Electron notification API not available, electronAPI:', window.electronAPI);

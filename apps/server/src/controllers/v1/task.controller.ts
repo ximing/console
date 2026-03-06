@@ -66,7 +66,7 @@ function convertExecutionLogToDto(log: ExecutionLog): ExecutionLogDto {
       : undefined,
     errorMessage: log.errorMessage ?? undefined,
     errorType: log.errorType ?? undefined,
-    result: log.result as unknown ?? undefined,
+    result: (log.result as unknown) ?? undefined,
   };
 }
 
@@ -100,7 +100,10 @@ export class TaskController {
 
       // Check if action exists
       if (!this.actionRegistry.has(createData.actionId)) {
-        return ResponseUtility.error(ErrorCode.PARAMS_ERROR, `Action "${createData.actionId}" not found`);
+        return ResponseUtility.error(
+          ErrorCode.PARAMS_ERROR,
+          `Action "${createData.actionId}" not found`
+        );
       }
 
       // Validate trigger type and cron expression
@@ -219,7 +222,10 @@ export class TaskController {
 
       // Validate action if provided
       if (updateData.actionId && !this.actionRegistry.has(updateData.actionId)) {
-        return ResponseUtility.error(ErrorCode.PARAMS_ERROR, `Action "${updateData.actionId}" not found`);
+        return ResponseUtility.error(
+          ErrorCode.PARAMS_ERROR,
+          `Action "${updateData.actionId}" not found`
+        );
       }
 
       // Update the task

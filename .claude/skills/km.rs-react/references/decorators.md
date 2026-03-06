@@ -5,7 +5,7 @@ RSJS 提供了多个装饰器来简化常见模式。
 ## @Inject - 依赖注入
 
 ```typescript
-import { Service, Inject } from "@rabjs/react";
+import { Service, Inject } from '@rabjs/react';
 
 export class LoggerService extends Service {
   log(message: string) {
@@ -19,7 +19,7 @@ export class UserService extends Service {
   private logger!: LoggerService;
 
   async fetchUsers() {
-    this.logger.log("Fetching users");
+    this.logger.log('Fetching users');
     // ...
   }
 }
@@ -31,10 +31,10 @@ bindServices(Component, [LoggerService, UserService]);
 ## @Debounce - 防抖
 
 ```typescript
-import { Service, Debounce } from "@rabjs/react";
+import { Service, Debounce } from '@rabjs/react';
 
 export class SearchService extends Service {
-  query = "";
+  query = '';
   results: any[] = [];
 
   setQuery(q: string) {
@@ -58,7 +58,7 @@ export class SearchService extends Service {
 ## @Throttle - 节流
 
 ```typescript
-import { Service, Throttle } from "@rabjs/react";
+import { Service, Throttle } from '@rabjs/react';
 
 export class ScrollService extends Service {
   scrollPosition = 0;
@@ -94,19 +94,19 @@ export class DataService extends Service {
 ## @On - 自动监听事件
 
 ```typescript
-import { Service, On } from "@rabjs/react";
+import { Service, On } from '@rabjs/react';
 
 export class NotificationService extends Service {
   notifications: string[] = [];
 
   // 自动监听容器事件
-  @On("chat:message")
+  @On('chat:message')
   handleMessage(data: { text: string }) {
     this.notifications.push(data.text);
   }
 
   // 自动监听全局事件
-  @On("app:notification", "global")
+  @On('app:notification', 'global')
   handleGlobalNotification(data: { text: string }) {
     this.notifications.push(data.text);
   }
@@ -116,7 +116,7 @@ export class NotificationService extends Service {
 ## 完整示例
 
 ```typescript
-import { Service, Inject, Debounce, Throttle, Memo, On } from "@rabjs/react";
+import { Service, Inject, Debounce, Throttle, Memo, On } from '@rabjs/react';
 
 export class CompleteService extends Service {
   // 依赖注入
@@ -124,7 +124,7 @@ export class CompleteService extends Service {
   private logger!: LoggerService;
 
   data: any[] = [];
-  query = "";
+  query = '';
 
   // 防抖搜索
   @Debounce(300)
@@ -137,17 +137,17 @@ export class CompleteService extends Service {
   // 节流滚动
   @Throttle(100)
   handleScroll() {
-    this.logger.log("Scrolling...");
+    this.logger.log('Scrolling...');
   }
 
   // 缓存计算
   @Memo()
   get filteredData() {
-    return this.data.filter(item => item.name.includes(this.query));
+    return this.data.filter((item) => item.name.includes(this.query));
   }
 
   // 监听事件
-  @On("data:refresh")
+  @On('data:refresh')
   handleRefresh() {
     this.search(this.query);
   }

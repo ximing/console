@@ -350,7 +350,11 @@ export class RedisService {
   /**
    * Get sorted set range with scores
    */
-  async zrangeWithScores(key: string, start: number, stop: number): Promise<Array<{ member: string; score: number }>> {
+  async zrangeWithScores(
+    key: string,
+    start: number,
+    stop: number
+  ): Promise<Array<{ member: string; score: number }>> {
     if (!this.isAvailable()) throw new Error('Redis is not available');
     const result = await this.client!.zrange(this.addPrefix(key), start, stop, 'WITHSCORES');
     const items: Array<{ member: string; score: number }> = [];

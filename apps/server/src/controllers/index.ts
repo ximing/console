@@ -7,4 +7,13 @@ import { AIController } from './v1/ai.controller.js';
 import { UserModelController } from './v1/user-model.controller.js';
 import { ApiTokenController } from './v1/api-token.controller.js';
 
-export const controllers = [AuthV1Controller, UserV1Controller, TaskController, NotificationController, NotificationBAController, AIController, UserModelController, ApiTokenController];
+export const controllers = [
+  AuthV1Controller,
+  UserV1Controller,
+  TaskController,
+  NotificationController,
+  NotificationBAController,
+  AIController,
+  UserModelController,
+  ApiTokenController,
+];

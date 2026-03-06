@@ -50,7 +50,12 @@ export class ActionRegistry {
    * Get all available action IDs
    * @returns Array of action IDs
    */
-  getAvailableActions(): Array<{ id: string; name: string; description: string; requiresModel?: boolean }> {
+  getAvailableActions(): Array<{
+    id: string;
+    name: string;
+    description: string;
+    requiresModel?: boolean;
+  }> {
     return this.getAll().map((handler) => ({
       id: handler.id,
       name: handler.name,

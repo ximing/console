@@ -1,12 +1,4 @@
-import {
-  JsonController,
-  Get,
-  Post,
-  Delete,
-  Body,
-  Param,
-  CurrentUser,
-} from 'routing-controllers';
+import { JsonController, Get, Post, Delete, Body, Param, CurrentUser } from 'routing-controllers';
 import { Service } from 'typedi';
 
 import { ErrorCode } from '../../constants/error-codes.js';
@@ -14,13 +6,26 @@ import { ApiTokenService, type GeneratedToken } from '../../services/api-token.s
 import { logger } from '../../utils/logger.js';
 import { ResponseUtil as ResponseUtility } from '../../utils/response.js';
 
-import type { CreateApiTokenDto, ApiTokenDto, ApiTokenListDto, UserInfoDto } from '@aimo-console/dto';
+import type {
+  CreateApiTokenDto,
+  ApiTokenDto,
+  ApiTokenListDto,
+  UserInfoDto,
+} from '@aimo-console/dto';
 
 /**
  * Helper to convert token to DTO
  */
 function convertToDto(
-  token: { id: string; userId: string; name: string; prefix: string; createdAt: Date; expiresAt: Date | null; lastUsedAt: Date | null },
+  token: {
+    id: string;
+    userId: string;
+    name: string;
+    prefix: string;
+    createdAt: Date;
+    expiresAt: Date | null;
+    lastUsedAt: Date | null;
+  },
   includeToken?: string
 ): ApiTokenDto {
   return {
@@ -28,7 +33,8 @@ function convertToDto(
     name: token.name,
     token: includeToken, // Only included when creating
     prefix: token.prefix,
-    createdAt: token.createdAt instanceof Date ? token.createdAt.toISOString() : String(token.createdAt),
+    createdAt:
+      token.createdAt instanceof Date ? token.createdAt.toISOString() : String(token.createdAt),
     expiresAt: token.expiresAt
       ? token.expiresAt instanceof Date
         ? token.expiresAt.toISOString()
@@ -81,7 +87,8 @@ export class ApiTokenController {
         name: token.name,
         token: token.token, // Plaintext - only shown once!
         prefix: token.prefix,
-        createdAt: token.createdAt instanceof Date ? token.createdAt.toISOString() : String(token.createdAt),
+        createdAt:
+          token.createdAt instanceof Date ? token.createdAt.toISOString() : String(token.createdAt),
         expiresAt: token.expiresAt
           ? token.expiresAt instanceof Date
             ? token.expiresAt.toISOString()

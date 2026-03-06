@@ -25,6 +25,7 @@ export const Layout = view(({ children }: LayoutProps) => {
   // Load notifications on mount (for badge count)
   useEffect(() => {
     notificationService.loadNotifications({ limit: 100, offset: 0 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Check active routes
@@ -34,7 +35,7 @@ export const Layout = view(({ children }: LayoutProps) => {
   const isNotificationsPage = location.pathname.startsWith('/notifications');
 
   // Calculate unread count
-  const unreadCount = notificationService.notifications.filter(n => n.status === 'unread').length;
+  const unreadCount = notificationService.notifications.filter((n) => n.status === 'unread').length;
 
   // Close menu when clicking outside
   useEffect(() => {

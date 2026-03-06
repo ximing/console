@@ -38,8 +38,14 @@ function convertNotificationToDto(notification: Notification): NotificationDto {
     content: notification.content,
     messageType: notification.messageType,
     status: notification.status,
-    createdAt: notification.createdAt instanceof Date ? notification.createdAt.toISOString() : notification.createdAt,
-    updatedAt: notification.updatedAt instanceof Date ? notification.updatedAt.toISOString() : notification.updatedAt,
+    createdAt:
+      notification.createdAt instanceof Date
+        ? notification.createdAt.toISOString()
+        : notification.createdAt,
+    updatedAt:
+      notification.updatedAt instanceof Date
+        ? notification.updatedAt.toISOString()
+        : notification.updatedAt,
   };
 }
 
@@ -202,7 +208,9 @@ export class NotificationController {
    * POST /api/v1/notifications/read-all - Mark all notifications as read
    */
   @Post('/read-all')
-  async markAllAsRead(@QueryParams() params: { channel?: string; ownership?: string; ownershipId?: string }) {
+  async markAllAsRead(
+    @QueryParams() params: { channel?: string; ownership?: string; ownershipId?: string }
+  ) {
     try {
       const filters: { channel?: string; ownership?: string; ownershipId?: string } = {};
 

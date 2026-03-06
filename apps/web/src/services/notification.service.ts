@@ -59,8 +59,8 @@ export class NotificationService extends Service {
         offset: newOffset,
       });
       // Append new notifications, avoiding duplicates
-      const existingIds = new Set(this.notifications.map(n => n.id));
-      const newNotifications = data.notifications.filter(n => !existingIds.has(n.id));
+      const existingIds = new Set(this.notifications.map((n) => n.id));
+      const newNotifications = data.notifications.filter((n) => !existingIds.has(n.id));
       // Since backend returns notifications in descending order by createdAt,
       // new notifications should be appended to the end (they are older)
       this.notifications = [...this.notifications, ...newNotifications];
@@ -80,9 +80,7 @@ export class NotificationService extends Service {
     try {
       const notification = await notificationApi.markAsRead(id);
       // Update local state
-      this.notifications = this.notifications.map(n =>
-        n.id === id ? notification : n
-      );
+      this.notifications = this.notifications.map((n) => (n.id === id ? notification : n));
       return true;
     } catch (err) {
       console.error('Mark as read error:', err);
@@ -97,7 +95,7 @@ export class NotificationService extends Service {
     try {
       await notificationApi.markAllAsRead();
       // Update local state
-      this.notifications = this.notifications.map(n => ({
+      this.notifications = this.notifications.map((n) => ({
         ...n,
         status: 'read',
       }));
@@ -115,7 +113,7 @@ export class NotificationService extends Service {
     try {
       await notificationApi.deleteNotification(id);
       // Remove from local state
-      this.notifications = this.notifications.filter(n => n.id !== id);
+      this.notifications = this.notifications.filter((n) => n.id !== id);
       this.total = Math.max(0, this.total - 1);
       return true;
     } catch (err) {
@@ -139,7 +137,7 @@ export class NotificationService extends Service {
    * Get unread count
    */
   get unreadCount(): number {
-    return this.notifications.filter(n => n.status === 'unread').length;
+    return this.notifications.filter((n) => n.status === 'unread').length;
   }
 
   /**

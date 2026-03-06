@@ -8,7 +8,7 @@
 // ✅ 好：API 层和业务层分离
 class UserApiService extends Service {
   async fetchUsers() {
-    return fetch("/api/users").then(r => r.json());
+    return fetch('/api/users').then((r) => r.json());
   }
 }
 
@@ -28,7 +28,7 @@ class UserService extends Service {
   users: User[] = [];
 
   async loadUsers() {
-    const response = await fetch("/api/users");
+    const response = await fetch('/api/users');
     this.users = await response.json();
   }
 }
@@ -115,15 +115,15 @@ const UserList = observer(() => {
 class AuthService extends Service {
   login() {
     // ...
-    this.emit("auth:login-success", user);
+    this.emit('auth:login-success', user);
   }
 }
 
 class AnalyticsService extends Service {
   constructor() {
     super();
-    this.on("auth:login-success", (user) => {
-      this.track("user_login", { userId: user.id });
+    this.on('auth:login-success', (user) => {
+      this.track('user_login', { userId: user.id });
     });
   }
 }
@@ -135,7 +135,7 @@ class AuthService extends Service {
 
   login() {
     // ...
-    this.analytics.track("user_login", { userId: user.id });
+    this.analytics.track('user_login', { userId: user.id });
   }
 }
 ```

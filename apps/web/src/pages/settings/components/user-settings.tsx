@@ -177,9 +177,7 @@ export const UserSettings = view(() => {
                 disabled
                 className="w-full px-4 py-2 border border-gray-300 dark:border-dark-600 rounded-lg bg-gray-100 dark:bg-dark-900 text-gray-500 dark:text-gray-400 cursor-not-allowed"
               />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                邮箱地址不可修改
-              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">邮箱地址不可修改</p>
             </div>
           </div>
 

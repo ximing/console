@@ -51,7 +51,10 @@ export class TaskService {
   /**
    * Create a new task
    */
-  async createTask(userId: string, taskData: Omit<NewTask, 'id' | 'createdBy' | 'createdAt' | 'updatedAt'>): Promise<Task> {
+  async createTask(
+    userId: string,
+    taskData: Omit<NewTask, 'id' | 'createdBy' | 'createdAt' | 'updatedAt'>
+  ): Promise<Task> {
     const db = getDatabase();
     const id = generateUid();
 
@@ -73,7 +76,12 @@ export class TaskService {
   async updateTask(
     id: string,
     userId: string,
-    updateData: Partial<Pick<Task, 'name' | 'triggerType' | 'cronExpression' | 'enabled' | 'actionId' | 'actionConfig'>>
+    updateData: Partial<
+      Pick<
+        Task,
+        'name' | 'triggerType' | 'cronExpression' | 'enabled' | 'actionId' | 'actionConfig'
+      >
+    >
   ): Promise<Task | null> {
     const db = getDatabase();
 
@@ -153,7 +161,10 @@ export class TaskService {
       if (!handler) {
         const result: ActionResult = {
           success: false,
-          error: { message: `Action handler "${task.actionId}" not found`, code: 'ACTION_NOT_FOUND' },
+          error: {
+            message: `Action handler "${task.actionId}" not found`,
+            code: 'ACTION_NOT_FOUND',
+          },
         };
 
         await db.insert(executionLogs).values({
