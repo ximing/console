@@ -520,6 +520,43 @@ ipcMain.handle('get-app-version', () => {
   return app.getVersion();
 });
 
+// Notification payload type
+interface NotificationPayload {
+  id: string;
+  title: string;
+  body: string;
+}
+
+// IPC handler for showing system notifications
+ipcMain.handle('show-notification', (_event, payload: NotificationPayload) => {
+  if (!Notification.isSupported()) {
+    console.warn('System notifications not supported');
+    return { success: false, error: 'Notifications not supported' };
+  }
+
+  try {
+    const notification = new Notification({
+      title: payload.title,
+      body: payload.body,
+      silent: false,
+    });
+
+    notification.on('click', () => {
+      // Show main window and send notification click event to renderer
+      showMainWindow();
+      mainWindow?.webContents.send('notification-clicked', {
+        id: payload.id,
+      });
+    });
+
+    notification.show();
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to show notification:', error);
+    return { success: false, error: String(error) };
+  }
+});
+
 app.whenReady().then(() => {
   createWindow();
   createTray();
