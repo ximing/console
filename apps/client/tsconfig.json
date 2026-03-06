@@ -1,5 +1,5 @@
 {
-  "extends": "@aimo/typescript-config/base.json",
+  "extends": "@aimo-console/typescript-config/base.json",
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",

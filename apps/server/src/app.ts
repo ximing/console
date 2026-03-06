@@ -19,6 +19,7 @@ import { initIOC } from './ioc.js';
 import { authHandler } from './middlewares/auth-handler.js';
 import { errorHandler } from './middlewares/error-handler.js';
 import { SchedulerService } from './services/scheduler.service.js';
+import { SocketIOService } from './services/socket-io.service.js';
 import { logger } from './utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -115,6 +116,10 @@ export async function createApp() {
   const server = app.listen(config.port, () => {
     logger.info(`Server is running on port ${config.port}`);
   });
+
+  // Initialize Socket.IO
+  const socketService = Container.get(SocketIOService);
+  socketService.initialize(server);
 
   // Graceful shutdown handler
   const shutdownHandler = async (signal: string) => {
