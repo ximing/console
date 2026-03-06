@@ -3,7 +3,7 @@ import type { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'a
 import { navigate } from './navigation';
 import { getRuntimeEnv } from '../electron/isElectron';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/';
+const API_BASE_URL =  '/';
 
 /**
  * Create axios instance with default config

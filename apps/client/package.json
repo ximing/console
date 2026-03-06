@@ -34,7 +34,7 @@
     "@aimo-console/eslint-config": "workspace:*",
     "@aimo-console/typescript-config": "workspace:*",
     "@fiahfy/icns": "^0.0.7",
-    "@types/node": "^22.13.4",
+    "@types/node": "24.10.1",
     "electron": "^40.6.0",
     "electron-builder": "^26.0.12",
     "eslint": "^9.39.1",
