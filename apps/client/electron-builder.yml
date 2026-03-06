@@ -1,9 +1,9 @@
 # Electron Builder Configuration
 # https://www.electron.build/configuration/configuration
 
-appId: com.aimo.app
-productName: AIMO
-copyright: Copyright © 2026 AIMO
+appId: com.mingx.console.app
+productName: Console
+copyright: Copyright © 2026 Console
 
 # Disable ASAR to fix "Not allowed to load local resource" error
 # When loading files from ASAR with crossorigin attributes, browsers block the request
@@ -63,8 +63,8 @@ nsis:
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: always
   createStartMenuShortcut: true
-  shortcutName: AIMO
-  uninstallDisplayName: AIMO
+  shortcutName: Console
+  uninstallDisplayName: Console
 
 # Linux Configuration
 linux:
@@ -77,13 +77,13 @@ linux:
         - x64
   category: Office
   icon: build/icon.png
-  maintainer: AIMO
-  vendor: AIMO
-  synopsis: AIMO Desktop Client
+  maintainer: Console
+  vendor: Console
+  synopsis: Console Desktop Client
   description: AI-powered note-taking and knowledge management
   desktop:
     entry:
-      Name: AIMO
+      Name: Console
       Comment: AI-powered note-taking application
       Categories: Office;Productivity;
 
@@ -100,5 +100,5 @@ electronUpdaterCompatibility: '>=6.0.0'
 publish:
   provider: github
   owner: ximing
-  repo: aimo
+  repo: console
   releaseType: release
