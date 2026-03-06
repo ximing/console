@@ -29,7 +29,7 @@ export const ApiTokenSettings = view(() => {
     setIsCreating(true);
     try {
       const token = await apiTokenService.createToken({ name: tokenName.trim() });
-      setNewToken(token.token);
+      setNewToken(token.token || '');
       setTokenName('');
     } catch (err) {
       // Error already handled in service

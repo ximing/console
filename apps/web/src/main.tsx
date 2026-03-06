@@ -11,7 +11,7 @@ import { UserService } from './services/user.service';
 import { UserModelService } from './services/user-model.service';
 import { TaskService } from './services/task.service';
 import { NotificationService } from './services/notification.service';
-
+import { ApiTokenService } from './services/api-token.service';
 /**
  * Register services globally
  * These are accessible throughout the entire application
@@ -24,6 +24,7 @@ register(UserService);
 register(UserModelService);
 register(TaskService);
 register(NotificationService);
+register(ApiTokenService);
 // Initialize theme before rendering
 resolve(ThemeService).loadTheme();
 

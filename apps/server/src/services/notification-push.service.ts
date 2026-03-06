@@ -1,6 +1,6 @@
 import { Service } from 'typedi';
 import { NotificationService } from './notification.service.js';
-import { SocketIOService } from './socket-io.service.js';
+import { SocketIOService, PushEventType } from './socket-io.service.js';
 import { logger } from '../utils/logger.js';
 
 import type { Notification } from '../db/schema/notifications.js';
@@ -61,20 +61,15 @@ export class NotificationPushService {
   pushNotificationToUser(userId: string, notification: Notification): void {
     const payload = this.toPushPayload(notification);
 
-    // Check if user is connected
-    if (!this.socketIOService.isUserConnected(userId)) {
-      logger.debug(`User ${userId} is not connected, skipping push`);
-      return;
-    }
-
-    // Send notification via Socket.IO
-    this.socketIOService.sendNotificationToUser(userId, 'notification', payload);
+    // Use the new room-based sendToUser method
+    this.socketIOService.sendToUser(userId, PushEventType.NOTIFICATION, payload);
 
     logger.info(`Pushed notification ${notification.id} to user ${userId}`);
   }
 
   /**
    * Create notification and push to user
+   * This is the main entry point for creating notifications with push
    */
   async createAndPushNotification(
     userId: string,
@@ -101,14 +96,8 @@ export class NotificationPushService {
   pushNotificationUpdate(userId: string, notification: Notification): void {
     const payload = this.toPushPayload(notification);
 
-    // Check if user is connected
-    if (!this.socketIOService.isUserConnected(userId)) {
-      logger.debug(`User ${userId} is not connected, skipping push`);
-      return;
-    }
-
-    // Send notification update via Socket.IO
-    this.socketIOService.sendNotificationToUser(userId, 'notification:update', payload);
+    // Use the new room-based sendToUser method
+    this.socketIOService.sendToUser(userId, PushEventType.NOTIFICATION_UPDATE, payload);
 
     logger.info(`Pushed notification update ${notification.id} to user ${userId}`);
   }

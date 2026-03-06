@@ -119,7 +119,8 @@ export async function createApp() {
 
   // Initialize Socket.IO
   const socketService = Container.get(SocketIOService);
-  socketService.initialize(server);
+  await socketService.initialize(server);
+  logger.info('Socket.IO service initialized');
 
   // Graceful shutdown handler
   const shutdownHandler = async (signal: string) => {

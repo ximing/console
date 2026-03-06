@@ -1,9 +1,34 @@
 import { Service } from '@rabjs/react';
 import { io, Socket } from 'socket.io-client';
-import type { NotificationChannel, NotificationOwnership, NotificationStatus } from '@aimo-console/dto';
+import type {
+  NotificationChannel,
+  NotificationOwnership,
+  NotificationStatus,
+  NotificationDto,
+} from '@aimo-console/dto';
 import { authService } from './auth.service';
 import { notificationService } from './notification.service';
 import { isElectron } from '../electron/isElectron';
+
+/**
+ * Push event types supported by the client
+ * Using const instead of enum for compatibility with erasableSyntaxOnly
+ */
+export const PushEventType = {
+  NOTIFICATION: 'notification',
+  NOTIFICATION_UPDATE: 'notification:update',
+} as const;
+
+export type PushEventType = (typeof PushEventType)[keyof typeof PushEventType];
+
+/**
+ * Generic push payload from server
+ */
+export interface PushPayload<T = unknown> {
+  type: PushEventType;
+  data: T;
+  timestamp: string;
+}
 
 /**
  * Notification push payload received from server
@@ -21,14 +46,23 @@ export interface NotificationPushPayload {
 }
 
 /**
+ * Event handler type for push events
+ */
+export type PushEventHandler<T = unknown> = (data: T) => void;
+
+/**
  * Socket.IO Client Service
- * Handles real-time notification push on the web client
+ * Handles real-time push events on the web client
+ * Supports multiple event types (notifications, updates, etc.)
  */
 export class SocketIOService extends Service {
   private socket: Socket | null = null;
   private notificationPermission: NotificationPermission = 'default';
 
-  // Callback for notification events (for external listeners)
+  // Event handlers map (extensible system)
+  private eventHandlers: Map<PushEventType, Set<PushEventHandler>> = new Map();
+
+  // Legacy callbacks for backward compatibility
   onNotification?: (notification: NotificationPushPayload) => void;
   onNotificationUpdate?: (notification: NotificationPushPayload) => void;
 
@@ -40,9 +74,31 @@ export class SocketIOService extends Service {
 
   /**
    * Get the API base URL for Socket.IO connection
+   * Uses relative URL to work with Vite proxy in dev and direct server in prod
    */
   private getSocketIOUrl(): string {
+    // Use environment variable if set
+    if (import.meta.env.VITE_SOCKET_IO_URL) {
+      return import.meta.env.VITE_SOCKET_IO_URL;
+    }
+
+    // In development, use relative URL (goes through Vite proxy)
+    // In production, use the current host
+    if (typeof window !== 'undefined') {
+      const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+      const host = window.location.host;
+      return `${protocol}//${host}`;
+    }
+
     return '';
+  }
+
+  /**
+   * Get the user room name for the current user
+   */
+  private getUserRoom(): string {
+    const userId = authService.user?.id;
+    return userId ? `user:${userId}` : '';
   }
 
   /**
@@ -89,10 +145,13 @@ export class SocketIOService extends Service {
 
     // Already connected
     if (this.socket?.connected) {
+      console.log('Socket.IO already connected');
       return;
     }
 
     const socketUrl = this.getSocketIOUrl();
+    console.log('Connecting to Socket.IO at:', socketUrl);
+    console.log('Using token:', authService.token ? `${authService.token.substring(0, 20)}...` : 'none');
 
     this.socket = io(socketUrl, {
       path: '/socket.io',
@@ -107,6 +166,13 @@ export class SocketIOService extends Service {
 
     this.socket.on('connect', () => {
       console.log('Socket.IO connected:', this.socket?.id);
+
+      // Join user-specific room for multi-tab support
+      const userRoom = this.getUserRoom();
+      if (userRoom) {
+        this.socket?.emit('join-room', userRoom);
+        console.log('Joined room:', userRoom);
+      }
     });
 
     this.socket.on('disconnect', (reason) => {
@@ -117,16 +183,75 @@ export class SocketIOService extends Service {
       console.error('Socket.IO connection error:', error.message);
     });
 
-    // Listen for notification events
-    this.socket.on('notification', (payload: NotificationPushPayload) => {
-      console.log('Received notification:', payload);
-      this.handleNotification(payload);
+    this.socket.io.on('error', (error) => {
+      console.error('Socket.IO error:', error);
     });
 
-    this.socket.on('notification:update', (payload: NotificationPushPayload) => {
-      console.log('Received notification update:', payload);
-      this.handleNotificationUpdate(payload);
+    this.socket.io.on('reconnect_attempt', (attemptNumber) => {
+      console.log('Socket.IO reconnect attempt:', attemptNumber);
     });
+
+    this.socket.io.on('reconnect_failed', () => {
+      console.error('Socket.IO reconnect failed');
+    });
+
+    // Listen for notification events using the new extensible system
+    this.setupNotificationListeners();
+  }
+
+  /**
+   * Set up notification event listeners
+   */
+  private setupNotificationListeners(): void {
+    if (!this.socket) return;
+
+    // Listen for notification events
+    this.socket.on(PushEventType.NOTIFICATION, (payload: PushPayload<NotificationPushPayload>) => {
+      console.log('Received notification:', payload);
+      this.handleNotification(payload.data);
+    });
+
+    // Listen for notification update events
+    this.socket.on(
+      PushEventType.NOTIFICATION_UPDATE,
+      (payload: PushPayload<NotificationPushPayload>) => {
+        console.log('Received notification update:', payload);
+        this.handleNotificationUpdate(payload.data);
+      }
+    );
+
+    // Future: add more event listeners here as needed
+    // this.socket.on(PushEventType.MEMO_SHARED, (payload) => { ... });
+    // this.socket.on(PushEventType.MEMO_COMMENT, (payload) => { ... });
+  }
+
+  /**
+   * Register an event handler for a specific push event type
+   * This allows extensibility for future event types
+   */
+  registerHandler<T = unknown>(eventType: PushEventType, handler: PushEventHandler<T>): () => void {
+    if (!this.eventHandlers.has(eventType)) {
+      this.eventHandlers.set(eventType, new Set());
+    }
+
+    this.eventHandlers.get(eventType)!.add(handler as PushEventHandler);
+
+    // Return unsubscribe function
+    return () => {
+      this.eventHandlers.get(eventType)?.delete(handler as PushEventHandler);
+    };
+  }
+
+  /**
+   * Emit an event to the server
+   */
+  emitSocketEvent(event: string, data: unknown): void {
+    if (!this.socket?.connected) {
+      console.warn('Cannot emit event: socket not connected');
+      return;
+    }
+
+    this.socket.emit(event, data);
   }
 
   /**
@@ -140,11 +265,29 @@ export class SocketIOService extends Service {
   }
 
   /**
+   * Convert NotificationPushPayload to NotificationDto
+   */
+  private convertToDto(payload: NotificationPushPayload): NotificationDto {
+    return {
+      id: payload.id,
+      channel: payload.channel,
+      ownership: payload.ownership,
+      ownershipId: payload.ownershipId,
+      content: payload.content,
+      messageType: payload.messageType as NotificationDto['messageType'],
+      status: payload.status,
+      createdAt: payload.createdAt,
+      updatedAt: payload.createdAt, // Use createdAt as fallback for updatedAt
+    };
+  }
+
+  /**
    * Handle incoming notification
    */
   private handleNotification(payload: NotificationPushPayload): void {
+    const dto = this.convertToDto(payload);
     // Add to notification service
-    notificationService.notifications = [payload, ...notificationService.notifications];
+    notificationService.notifications = [dto, ...notificationService.notifications];
     notificationService.total += 1;
 
     // Trigger callback
@@ -158,9 +301,10 @@ export class SocketIOService extends Service {
    * Handle notification update
    */
   private handleNotificationUpdate(payload: NotificationPushPayload): void {
+    const dto = this.convertToDto(payload);
     // Update in notification service
     notificationService.notifications = notificationService.notifications.map((n) =>
-      n.id === payload.id ? payload : n
+      n.id === payload.id ? dto : n
     );
 
     // Trigger callback

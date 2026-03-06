@@ -24,6 +24,19 @@ function RootRoute() {
   return <Navigate to="/auth" replace />;
 }
 
+// 内部组件，用于初始化认证状态
+function AuthInitializer() {
+  const authService = useService(AuthService);
+
+  useEffect(() => {
+    // 在组件挂载时检查认证状态
+    // 这会验证 token 并连接 Socket.IO
+    authService.checkAuth();
+  }, []);
+
+  return null;
+}
+
 // 内部组件，用于初始化 navigate 函数
 function AppContent() {
   const navigate = useNavigate();
@@ -41,6 +54,7 @@ function App() {
 
   return (
     <Router>
+      <AuthInitializer />
       <AppContent />
       <ToastContainer />
       <Routes>

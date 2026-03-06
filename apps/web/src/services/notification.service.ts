@@ -151,3 +151,6 @@ export class NotificationService extends Service {
     this.error = null;
   }
 }
+
+// Export singleton instance
+export const notificationService = new NotificationService();
