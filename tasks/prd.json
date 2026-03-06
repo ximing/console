@@ -1,112 +1,135 @@
 {
   "project": "AIMO",
-  "branchName": "ralph/electron-client-integration",
-  "description": "Electron 客户端集成与消息推送 - 新增 Electron 桌面客户端，实现本地/生产环境差异化配置，集成 Socket.IO 实现实时通知推送",
+  "branchName": "ralph/token-management",
+  "description": "用户API Token管理与通知创建接口 - 在设置中增加Token管理能力，支持生成鉴权Token，增加创建通知的API接口",
   "userStories": [
     {
       "id": "US-001",
-      "title": "服务端集成 Socket.IO",
-      "description": "作为开发者，我需要在服务端集成 Socket.IO，这样可以实现实时消息推送功能。",
+      "title": "创建用户Token数据库表",
+      "description": "作为开发者，我需要在数据库中存储用户的API Token，以便后续进行用户级别鉴权。",
       "acceptanceCriteria": [
-        "在 apps/server 中安装 socket.io 依赖",
-        "创建 Socket.IO 配置和初始化逻辑",
-        "在 Express 服务器上附加 Socket.IO handler",
-        "实现基于 JWT 的 Socket.IO 认证",
-        "提供获取已连接用户的方法",
+        "在 apps/server/src/db/migrations 中创建迁移文件",
+        "创建 user_api_tokens 表，包含: id, userId, name, token, prefix, createdAt, expiresAt, lastUsedAt",
+        "userId 关联 users 表",
+        "token 字段存储哈希值",
+        "prefix 字段存储Token前缀用于显示",
         "Typecheck passes"
       ],
       "priority": 1,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-002",
-      "title": "实现通知消息推送服务",
-      "description": "作为开发者，我需要创建通知推送服务，当有新通知时通过 Socket.IO 推送给对应用户。",
+      "title": "添加Token管理Service层",
+      "description": "作为开发者，我需要实现Token的生成、存储、验证和删除逻辑。",
       "acceptanceCriteria": [
-        "创建 NotificationService 处理通知推送逻辑",
-        "在用户创建/收到通知时触发 Socket.IO 推送",
-        "推送消息包含通知内容摘要",
-        "用户 ID 与 socket ID 的映射管理",
+        "创建 ApiTokenService",
+        "实现 generateToken(userId, name) - 生成Token并返回明文",
+        "实现 hashToken(token) - 使用SHA-256哈希存储",
+        "实现 validateToken(token) - 验证Token并返回关联的userId",
+        "实现 deleteToken(id, userId) - 删除指定Token",
+        "实现 listTokens(userId) - 列出用户的Token",
+        "实现 updateLastUsed(id) - 更新最后使用时间",
         "Typecheck passes"
       ],
       "priority": 2,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-003",
-      "title": "Electron 客户端环境配置",
-      "description": "作为开发者，我需要配置 Electron 客户端在不同环境下连接不同的后端地址。",
+      "title": "添加Token生成API接口",
+      "description": "作为用户，我想要生成API Token以便通过API访问系统功能。",
       "acceptanceCriteria": [
-        "Electron 客户端通过环境变量区分开发/生产环境",
-        "开发环境 API 地址为 http://localhost:3000，Web 资源为 http://localhost:5173",
-        "生产环境 API 地址为 https://console.aimo.plus，Web 资源为 https://console.aimo.plus",
-        "生产环境打包时自动使用生产环境配置",
+        "添加 POST /api/v1/user/api-tokens 接口",
+        "请求体: { name: string }",
+        "响应: { id, name, token, prefix, createdAt }",
+        "返回的token仅显示一次，后续无法查看",
+        "需要用户登录认证",
         "Typecheck passes"
       ],
       "priority": 3,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-004",
-      "title": "更新 GitHub Actions 构建流程",
-      "description": "作为开发者，我需要 GitHub Actions 能够自动构建 Electron 客户端。",
+      "title": "添加Token列表API接口",
+      "description": "作为用户，我想要查看我已创建的API Token列表。",
       "acceptanceCriteria": [
-        "创建 .github/workflows/build-electron.yml 文件",
-        "工作流在 main 分支或 tag 时触发构建",
-        "构建产物为可分发的安装包（exe/dmg）",
-        "构建产物上传到 Release",
+        "添加 GET /api/v1/user/api-tokens 接口",
+        "响应: { tokens: [{ id, name, prefix, createdAt, expiresAt, lastUsedAt }] }",
+        "不返回token的明文或哈希值",
+        "需要用户登录认证",
         "Typecheck passes"
       ],
       "priority": 4,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-005",
-      "title": "Web 项目区分 Electron 环境",
-      "description": "作为开发者，我需要在 Web 项目中创建环境检测工具函数，用于判断是否运行在 Electron 环境中。",
+      "title": "删除Token API接口",
+      "description": "作为用户，我想要撤销（删除）不再需要的API Token。",
       "acceptanceCriteria": [
-        "在 apps/web 中创建环境检测工具函数 isElectron()",
-        "提供获取环境标识的方法 getRuntimeEnv(): 'electron' | 'web'",
-        "在 API 请求中根据环境添加对应的 header 或标识",
+        "添加 DELETE /api/v1/user/api-tokens/:id 接口",
+        "只能删除属于当前用户的Token",
+        "返回删除成功状态",
+        "需要用户登录认证",
         "Typecheck passes"
       ],
       "priority": 5,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-006",
-      "title": "Web 端接收并处理通知推送",
-      "description": "作为用户，我希望在 Web 端能够实时收到通知推送，使用浏览器 Notification API 显示。",
+      "title": "BA认证拦截器增强",
+      "description": "作为开发者，我需要增强BA认证拦截器，支持用户Token验证。",
       "acceptanceCriteria": [
-        "在 apps/web 中创建 Socket.IO 客户端服务",
-        "用户登录后自动建立 Socket.IO 连接",
-        "收到通知时调用浏览器 Notification API 显示通知",
-        "用户未授权通知时降级为页面内提示",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "修改 baAuthInterceptor 支持两种模式",
+        "优先验证用户Token，失败后再验证全局Token",
+        "验证成功时将userId附加到request",
+        "验证用户Token时自动更新 lastUsedAt",
+        "Typecheck passes"
       ],
       "priority": 6,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-007",
-      "title": "Electron 端接收并处理通知推送",
-      "description": "作为用户，我希望在 Electron 客户端能够实时收到通知推送，使用系统通知显示。",
+      "title": "创建通知API接口",
+      "description": "作为用户，我想要通过API创建通知事件。",
       "acceptanceCriteria": [
-        "在 apps/client 中创建 Socket.IO 客户端服务",
-        "用户登录后自动建立 Socket.IO 连接",
-        "收到通知时调用 Electron 的 Notification API 显示系统通知",
-        "支持点击通知跳转到对应页面",
+        "在 NotificationBAController 添加 POST /api/v1/ba/notifications 接口",
+        "请求体使用现有 CreateNotificationDto",
+        "复用现有 NotificationService.createNotification()",
+        "使用Bearer Token进行用户级别鉴权",
+        "返回创建的NotificationDto",
         "Typecheck passes"
       ],
       "priority": 7,
-      "passes": true,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "前端设置页面Token管理UI",
+      "description": "作为用户，我想要在设置页面管理我的API Token。",
+      "acceptanceCriteria": [
+        "在设置页面添加API Token管理区块",
+        "显示生成新Token按钮",
+        "点击生成时弹出输入框让用户输入Token名称",
+        "创建成功后Modal显示Token",
+        "列表显示所有已创建的Token",
+        "每个Token显示删除按钮",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 8,
+      "passes": false,
       "notes": ""
     }
   ]
