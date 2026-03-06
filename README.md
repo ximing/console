@@ -95,7 +95,7 @@ cp .env.example .env
 # 5. 启动开发服务器
 pnpm dev
 
-# 应用将在 http://localhost:3000 启动
+# 应用将在 http://localhost:3002 启动
 ```
 
 ### 常用命令
@@ -117,7 +117,7 @@ pnpm format        # 代码格式化
 docker pull ghcr.io/ximing/aimo:stable
 
 docker run -d \
-  -p 3000:3000 \
+  -p 3002:3002 \
   --name aimo \
   --env-file .env \
   -v $(pwd)/data:/app/data \

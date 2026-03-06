@@ -50,7 +50,7 @@ cp .env.example .env
 
 ```env
 NODE_ENV=production
-PORT=3000
+PORT=3002
 JWT_SECRET=your-production-secret-key
 OPENAI_API_KEY=your-openai-api-key
 ```
@@ -141,7 +141,7 @@ docker inspect aimo:latest
 
 ```env
 NODE_ENV=development
-PORT=3000
+PORT=3002
 JWT_SECRET=dev-secret-key
 OPENAI_API_KEY=dev-api-key
 ```
@@ -150,7 +150,7 @@ OPENAI_API_KEY=dev-api-key
 
 ```env
 NODE_ENV=production
-PORT=3000
+PORT=3002
 JWT_SECRET=your-secure-production-secret-key
 OPENAI_API_KEY=your-production-api-key
 ```
@@ -172,7 +172,7 @@ docker build -t aimo:latest .
 
 # 运行容器
 docker run -d \
-  -p 3000:3000 \
+  -p 3002:3002 \
   --env-file .env \
   --name aimo-app \
   aimo:latest
@@ -282,12 +282,12 @@ spec:
         - name: aimo
           image: ghcr.io/your-org/aimo:latest
           ports:
-            - containerPort: 3000
+            - containerPort: 3002
           env:
             - name: NODE_ENV
               value: 'production'
             - name: PORT
-              value: '3000'
+              value: '3002'
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
@@ -301,13 +301,13 @@ spec:
           livenessProbe:
             httpGet:
               path: /
-              port: 3000
+              port: 3002
             initialDelaySeconds: 5
             periodSeconds: 30
           readinessProbe:
             httpGet:
               path: /
-              port: 3000
+              port: 3002
             initialDelaySeconds: 5
             periodSeconds: 10
 ```
@@ -331,13 +331,13 @@ docker stats aimo-app
 
 ```bash
 # 测试 Web 应用（应返回 HTML）
-curl http://localhost:3000
+curl http://localhost:3002
 
 # 测试 API 端点
-curl http://localhost:3000/api/v1/health
+curl http://localhost:3002/api/v1/health
 
 # 测试搜索 API
-curl -X GET "http://localhost:3000/api/v1/memos/search?query=test"
+curl -X GET "http://localhost:3002/api/v1/memos/search?query=test"
 ```
 
 ### 3. 性能监控
@@ -389,7 +389,7 @@ cat .env
 
 ### 问题 3：应用返回 404
 
-**症状**：访问 `http://localhost:3000` 返回 404
+**症状**：访问 `http://localhost:3002` 返回 404
 
 **解决方案**：
 
@@ -418,7 +418,7 @@ docker logs -f aimo-app
 docker exec aimo-app env | grep OPENAI
 
 # 尝试连接到本地 API
-curl -v http://localhost:3000/api/v1/memos
+curl -v http://localhost:3002/api/v1/memos
 ```
 
 ### 问题 5：高内存使用

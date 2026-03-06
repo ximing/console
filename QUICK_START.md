@@ -37,7 +37,7 @@ docker build -t aimo:latest .
 
 # 运行容器
 docker run -d \
-  -p 3000:3000 \
+  -p 3002:3002 \
   --env-file .env \
   --name aimo-app \
   aimo:latest
@@ -71,7 +71,7 @@ OPENAI_API_KEY=sk-...
 
 # 可选配置
 NODE_ENV=production
-PORT=3000
+PORT=3002
 ```
 
 ## 验证部署
@@ -80,10 +80,10 @@ PORT=3000
 
 ```bash
 # 访问应用
-curl http://localhost:3000
+curl http://localhost:3002
 
 # 测试 API
-curl http://localhost:3000/api/v1/memos
+curl http://localhost:3002/api/v1/memos
 
 # 查看容器状态
 docker ps | grep aimo
@@ -135,7 +135,7 @@ aimo/
                              │
                     ┌────────▼────────┐
                     │  Running App    │
-                    │  Port: 3000     │
+                    │  Port: 3002     │
                     │  Health Check   │
                     └─────────────────┘
 ```
@@ -174,7 +174,7 @@ docker logs aimo-app
 docker inspect aimo-app | grep -A 20 Env
 
 # 检查端口占用
-lsof -i :3000
+lsof -i :3002
 ```
 
 ### 应用返回 404

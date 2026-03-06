@@ -58,14 +58,14 @@ COPY --from=builder /app/packages/logger/lib/ ./packages/logger/lib/
 
 # Create .env file with default values if not provided
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV PORT=3002
 
 # Expose port
-EXPOSE 3000
+EXPOSE 3002
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3000', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
+    CMD node -e "require('http').get('http://localhost:3002', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
 
 # Start server
 CMD ["node", "apps/server/dist/index.js"]

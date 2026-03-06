@@ -171,7 +171,7 @@ export const { trace, debug, info, warn, error, flush, close } = logger;
 import { logger, info, warn, error } from '@/utils/logger';
 
 // 方式1: 使用 logger 实例
-logger.info('服务启动成功', { port: 3000 });
+logger.info('服务启动成功', { port: 3002 });
 logger.error('请求处理失败', { error: err.message });
 
 // 方式2: 使用便捷方法

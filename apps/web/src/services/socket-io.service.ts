@@ -285,6 +285,8 @@ export class SocketIOService extends Service {
    * Handle incoming notification
    */
   private handleNotification(payload: NotificationPushPayload): void {
+    console.log('handleNotification called with:', payload.id, payload.content);
+
     const dto = this.convertToDto(payload);
     // Add to notification service
     notificationService.notifications = [dto, ...notificationService.notifications];
@@ -315,6 +317,8 @@ export class SocketIOService extends Service {
    * Show browser notification
    */
   private showBrowserNotification(payload: NotificationPushPayload): void {
+    console.log('Showing notification, permission:', this.notificationPermission, 'isElectron:', isElectron());
+
     // Use Electron's Notification API if running in Electron
     if (isElectron()) {
       this.showElectronNotification(payload);
@@ -323,8 +327,19 @@ export class SocketIOService extends Service {
 
     // Use browser Notification API for web
     if (this.notificationPermission !== 'granted') {
+      // Try to request permission if not denied
+      if (this.notificationPermission === 'default') {
+        console.log('Requesting notification permission...');
+        this.requestNotificationPermission().then((granted) => {
+          if (granted) {
+            console.log('Notification permission granted, showing notification');
+            this.showBrowserNotification(payload);
+          }
+        });
+        return;
+      }
       // Fallback: show in-page notification via toast or console
-      console.log('Notification:', payload.content);
+      console.log('Notification (no permission):', payload.content);
       return;
     }
 
@@ -356,18 +371,22 @@ export class SocketIOService extends Service {
    * Show Electron system notification
    */
   private async showElectronNotification(payload: NotificationPushPayload): Promise<void> {
+    console.log('Attempting to show Electron notification, electronAPI exists:', !!window.electronAPI);
+
     if (!window.electronAPI?.showNotification) {
-      console.warn('Electron notification API not available');
+      console.warn('Electron notification API not available, electronAPI:', window.electronAPI);
       return;
     }
 
     try {
+      console.log('Showing Electron notification:', payload.id, payload.content);
       const result = await window.electronAPI.showNotification({
         id: payload.id,
         title: 'AIMO 通知',
         body: payload.content,
       });
 
+      console.log('Electron notification result:', result);
       if (!result.success) {
         console.error('Failed to show Electron notification:', result.error);
       }
