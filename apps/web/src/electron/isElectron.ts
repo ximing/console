@@ -1,4 +1,9 @@
 /**
+ * Runtime environment types
+ */
+export type RuntimeEnv = 'electron' | 'web';
+
+/**
  * Detect if the app is running in Electron environment
  * Checks for the presence of 'Electron' in the user agent string
  * or the presence of electronAPI (exposed by preload script)
@@ -11,6 +16,14 @@ export function isElectron(): boolean {
   const hasElectronAPI = typeof window !== 'undefined' && !!window.electronAPI;
 
   return hasElectronInUA || hasElectronAPI;
+}
+
+/**
+ * Get the current runtime environment
+ * Returns 'electron' if running in Electron, 'web' otherwise
+ */
+export function getRuntimeEnv(): RuntimeEnv {
+  return isElectron() ? 'electron' : 'web';
 }
 
 /**
