@@ -171,8 +171,8 @@ curl http://localhost:3000/api/v1/user/info \
 ```
 
 **检查前端**:
-- 访问: http://localhost:5173
-- 登录后访问: http://localhost:5173/settings/user
+- 访问: http://localhost:5273
+- 登录后访问: http://localhost:5273/settings/user
 
 ## 调试技巧
 

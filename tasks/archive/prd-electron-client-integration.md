@@ -20,7 +20,7 @@
 
 **Acceptance Criteria:**
 - [ ] Electron 客户端配置开发环境 API 地址为 http://localhost:3000
-- [ ] Electron 客户端开发时加载 Web 资源为 http://localhost:5173
+- [ ] Electron 客户端开发时加载 Web 资源为 http://localhost:5273
 - [ ] Electron 客户端通过环境变量或配置文件区分开发/生产环境
 - [ ] Typecheck passes
 

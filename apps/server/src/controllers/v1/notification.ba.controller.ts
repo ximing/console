@@ -2,11 +2,14 @@ import {
   JsonController,
   Get,
   Post,
+  Body,
   Param,
   QueryParams,
   UseBefore,
+  Req,
 } from 'routing-controllers';
 import { Service } from 'typedi';
+import type { Request } from 'express';
 
 import { ErrorCode } from '../../constants/error-codes.js';
 import { NotificationService } from '../../services/notification.service.js';
@@ -18,6 +21,7 @@ import type {
   NotificationDto,
   NotificationListDto,
   QueryNotificationDto,
+  CreateNotificationDto,
 } from '@aimo-console/dto';
 import type { Notification } from '../../db/schema/notifications.js';
 
@@ -42,6 +46,52 @@ function convertNotificationToDto(notification: Notification): NotificationDto {
 @JsonController('/api/v1/ba/notifications')
 export class NotificationBAController {
   constructor(private notificationService: NotificationService) {}
+
+  /**
+   * POST /api/v1/ba/notifications - Create a new notification (BA Auth with User Token)
+   *
+   * When using user API token, the userId is attached to request from the auth interceptor.
+   * This allows creating notifications on behalf of the user.
+   */
+  @Post('/')
+  @UseBefore(baAuthInterceptor)
+  async createNotification(@Req() request: Request, @Body() createData: CreateNotificationDto) {
+    try {
+      // Get userId from request (attached by baAuthInterceptor)
+      const userId = (request as Request & { userId?: string }).userId;
+
+      if (!userId) {
+        return ResponseUtility.error(ErrorCode.UNAUTHORIZED, 'User authentication required');
+      }
+
+      // Validate required fields
+      if (!createData.channel) {
+        return ResponseUtility.error(ErrorCode.PARAMS_ERROR, 'Channel is required');
+      }
+      if (!createData.ownership) {
+        return ResponseUtility.error(ErrorCode.PARAMS_ERROR, 'Ownership is required');
+      }
+      if (!createData.ownershipId) {
+        return ResponseUtility.error(ErrorCode.PARAMS_ERROR, 'Ownership ID is required');
+      }
+      if (!createData.content) {
+        return ResponseUtility.error(ErrorCode.PARAMS_ERROR, 'Content is required');
+      }
+
+      const notification = await this.notificationService.createNotification({
+        channel: createData.channel,
+        ownership: createData.ownership,
+        ownershipId: createData.ownershipId,
+        content: createData.content,
+        messageType: createData.messageType,
+      });
+
+      return ResponseUtility.success(convertNotificationToDto(notification));
+    } catch (error) {
+      logger.error('Create notification error:', error);
+      return ResponseUtility.error(ErrorCode.DB_ERROR);
+    }
+  }
 
   /**
    * GET /api/v1/ba/notifications - Query notifications with filters (BA Auth)

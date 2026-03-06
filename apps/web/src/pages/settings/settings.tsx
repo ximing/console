@@ -3,7 +3,8 @@ import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router'
 import { Layout } from '../../components/layout';
 import { UserSettings } from './components/user-settings';
 import { ModelSettings } from './components/model-settings';
-import { User, Settings as SettingsIcon, Bot } from 'lucide-react';
+import { ApiTokenSettings } from './components/api-token-settings';
+import { User, Settings as SettingsIcon, Bot, Key } from 'lucide-react';
 
 const menuItems = [
   {
@@ -18,13 +19,12 @@ const menuItems = [
     icon: Bot,
     path: '/settings/models',
   },
-  // 可以在这里添加更多菜单项
-  // {
-  //   id: 'security',
-  //   label: '安全设置',
-  //   icon: Shield,
-  //   path: '/settings/security',
-  // },
+  {
+    id: 'api-tokens',
+    label: 'API Token',
+    icon: Key,
+    path: '/settings/api-tokens',
+  },
 ];
 
 export const SettingsPage = view(() => {
@@ -77,8 +77,7 @@ export const SettingsPage = view(() => {
             <Route path="/" element={<Navigate to="/settings/user" replace />} />
             <Route path="/user" element={<UserSettings />} />
             <Route path="/models" element={<ModelSettings />} />
-            {/* 可以在这里添加更多路由 */}
-            {/* <Route path="/security" element={<SecuritySettings />} /> */}
+            <Route path="/api-tokens" element={<ApiTokenSettings />} />
           </Routes>
         </div>
       </div>
