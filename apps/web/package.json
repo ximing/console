@@ -25,7 +25,8 @@
     "react-dom": "^19.2.0",
     "react-infinite-scroll-component": "^6.1.1",
     "react-markdown": "^10.1.0",
-    "react-router": "^7.13.0"
+    "react-router": "^7.13.0",
+    "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
     "@aimo-console/typescript-config": "workspace:*",
