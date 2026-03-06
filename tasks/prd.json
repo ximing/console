@@ -1,120 +1,112 @@
 {
   "project": "AIMO",
-  "branchName": "ralph/llm-settings",
-  "description": "大模型设置功能 - 用户可配置多个大模型服务，支持 OpenAI、DeepSeek、OpenRouter 等兼容 OpenAI API 的服务",
+  "branchName": "ralph/electron-client-integration",
+  "description": "Electron 客户端集成与消息推送 - 新增 Electron 桌面客户端，实现本地/生产环境差异化配置，集成 Socket.IO 实现实时通知推送",
   "userStories": [
     {
       "id": "US-001",
-      "title": "创建大模型配置数据库表",
-      "description": "作为开发者，我需要创建数据库表来存储用户的大模型配置，以便数据能够持久化。",
+      "title": "服务端集成 Socket.IO",
+      "description": "作为开发者，我需要在服务端集成 Socket.IO，这样可以实现实时消息推送功能。",
       "acceptanceCriteria": [
-        "创建 user_models 表，包含字段：id、userId、name、provider、apiBaseUrl、apiKey、modelName、isDefault、createdAt、updatedAt",
-        "provider 字段存储模型提供方标识（如 openai、deepseek、openrouter）",
-        "apiBaseUrl 字段可选，用于配置自定义 API 地址",
-        "isDefault 字段标识默认使用的模型",
-        "每个用户可以配置多个模型",
+        "在 apps/server 中安装 socket.io 依赖",
+        "创建 Socket.IO 配置和初始化逻辑",
+        "在 Express 服务器上附加 Socket.IO handler",
+        "实现基于 JWT 的 Socket.IO 认证",
+        "提供获取已连接用户的方法",
         "Typecheck passes"
       ],
       "priority": 1,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-002",
-      "title": "后端 - 添加模型配置 CRUD 接口",
-      "description": "作为开发者，我需要提供后端 API 来管理用户的大模型配置。",
+      "title": "实现通知消息推送服务",
+      "description": "作为开发者，我需要创建通知推送服务，当有新通知时通过 Socket.IO 推送给对应用户。",
       "acceptanceCriteria": [
-        "POST /api/v1/user-models - 创建模型配置",
-        "GET /api/v1/user-models - 获取用户所有模型配置",
-        "GET /api/v1/user-models/:id - 获取单个模型配置详情",
-        "PUT /api/v1/user-models/:id - 更新模型配置",
-        "DELETE /api/v1/user-models/:id - 删除模型配置",
-        "接口需要用户登录认证",
+        "创建 NotificationService 处理通知推送逻辑",
+        "在用户创建/收到通知时触发 Socket.IO 推送",
+        "推送消息包含通知内容摘要",
+        "用户 ID 与 socket ID 的映射管理",
         "Typecheck passes"
       ],
       "priority": 2,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-003",
-      "title": "后端 - 统一模型调用服务",
-      "description": "作为开发者，我需要提供一个统一的大模型调用服务，调用方只需传入模型提供方和模型名称即可。",
+      "title": "Electron 客户端环境配置",
+      "description": "作为开发者，我需要配置 Electron 客户端在不同环境下连接不同的后端地址。",
       "acceptanceCriteria": [
-        "创建 LLMService，提供统一的 chat 方法",
-        "chat 方法接收参数：provider、model、messages",
-        "根据 provider 查找用户配置的模型（包含 apiKey 和 apiBaseUrl）",
-        "使用 OpenAI 兼容格式调用对应 API",
-        "返回标准的 chat completion 响应",
-        "处理 API 调用错误并返回友好错误信息",
+        "Electron 客户端通过环境变量区分开发/生产环境",
+        "开发环境 API 地址为 http://localhost:3000，Web 资源为 http://localhost:5173",
+        "生产环境 API 地址为 https://console.aimo.plus，Web 资源为 https://console.aimo.plus",
+        "生产环境打包时自动使用生产环境配置",
         "Typecheck passes"
       ],
       "priority": 3,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-004",
-      "title": "前端 - 设置页面添加大模型配置入口",
-      "description": "作为用户，我需要在设置页面能够访问大模型配置功能。",
+      "title": "更新 GitHub Actions 构建流程",
+      "description": "作为开发者，我需要 GitHub Actions 能够自动构建 Electron 客户端。",
       "acceptanceCriteria": [
-        "在设置页面添加大模型设置入口/标签页",
-        "显示已配置的模型列表",
-        "显示添加模型按钮",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "创建 .github/workflows/build-electron.yml 文件",
+        "工作流在 main 分支或 tag 时触发构建",
+        "构建产物为可分发的安装包（exe/dmg）",
+        "构建产物上传到 Release",
+        "Typecheck passes"
       ],
       "priority": 4,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-005",
-      "title": "前端 - 添加/编辑模型配置表单",
-      "description": "作为用户，我需要填写模型配置信息，包括模型名称、提供方、API Key 等。",
+      "title": "Web 项目区分 Electron 环境",
+      "description": "作为开发者，我需要在 Web 项目中创建环境检测工具函数，用于判断是否运行在 Electron 环境中。",
       "acceptanceCriteria": [
-        "表单字段：模型名称（显示用）、模型提供方（下拉选择）、API Base URL（可选）、API Key、模型名称（实际调用用）",
-        "提供方下拉选项：OpenAI、DeepSeek、OpenRouter、其他（兼容 OpenAI）",
-        "API Key 字段为密码类型",
-        "支持设置为默认模型",
-        "表单验证：模型名称和 API Key 必填",
-        "保存成功后自动刷新列表",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "在 apps/web 中创建环境检测工具函数 isElectron()",
+        "提供获取环境标识的方法 getRuntimeEnv(): 'electron' | 'web'",
+        "在 API 请求中根据环境添加对应的 header 或标识",
+        "Typecheck passes"
       ],
       "priority": 5,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-006",
-      "title": "前端 - 模型列表展示与操作",
-      "description": "作为用户，我需要查看已配置的模型列表，并对模型进行编辑、删除、设为默认等操作。",
+      "title": "Web 端接收并处理通知推送",
+      "description": "作为用户，我希望在 Web 端能够实时收到通知推送，使用浏览器 Notification API 显示。",
       "acceptanceCriteria": [
-        "列表展示每个模型的：名称、提供方、模型名称、默认标识",
-        "每个模型有编辑、删除按钮",
-        "提供设为默认操作",
-        "默认模型有明显的标识",
-        "删除前有确认弹窗",
+        "在 apps/web 中创建 Socket.IO 客户端服务",
+        "用户登录后自动建立 Socket.IO 连接",
+        "收到通知时调用浏览器 Notification API 显示通知",
+        "用户未授权通知时降级为页面内提示",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 6,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-007",
-      "title": "前端 - API 调用封装",
-      "description": "作为前端开发者，我需要封装 API 调用方法供其他模块使用。",
+      "title": "Electron 端接收并处理通知推送",
+      "description": "作为用户，我希望在 Electron 客户端能够实时收到通知推送，使用系统通知显示。",
       "acceptanceCriteria": [
-        "在 api/ 目录添加 user-model.api.ts",
-        "提供 createModel、getModels、updateModel、deleteModel 方法",
-        "使用 axios 进行请求",
+        "在 apps/client 中创建 Socket.IO 客户端服务",
+        "用户登录后自动建立 Socket.IO 连接",
+        "收到通知时调用 Electron 的 Notification API 显示系统通知",
+        "支持点击通知跳转到对应页面",
         "Typecheck passes"
       ],
       "priority": 7,
-      "passes": true,
+      "passes": false,
       "notes": ""
     }
   ]
