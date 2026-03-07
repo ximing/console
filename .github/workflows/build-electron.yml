@@ -18,7 +18,7 @@ env:
   PNPM_VERSION: 10.22.0
   VITE_DEV_SERVER_URL: ${{ vars.VITE_DEV_SERVER_URL }}
   NODE_ENV: production
-  
+
 jobs:
   # Build DTO package first
   build-packages:

@@ -160,30 +160,33 @@ export function setupIPCHandlers(
   });
 
   // Notification handler
-  ipcMain.handle('show-notification', (_event: IpcMainInvokeEvent, payload: NotificationPayload) => {
-    if (!Notification.isSupported()) {
-      return { success: false, error: 'Notifications not supported' };
+  ipcMain.handle(
+    'show-notification',
+    (_event: IpcMainInvokeEvent, payload: NotificationPayload) => {
+      if (!Notification.isSupported()) {
+        return { success: false, error: 'Notifications not supported' };
+      }
+
+      try {
+        const notification = new Notification({
+          title: payload.title,
+          body: payload.body,
+          silent: false,
+        });
+
+        notification.on('click', () => {
+          windowManager.show();
+          windowManager.getWebContents()?.send('notification-clicked', { id: payload.id });
+        });
+
+        notification.show();
+        return { success: true };
+      } catch (error) {
+        logger.error('Failed to show notification:', { error: String(error) });
+        return { success: false, error: String(error) };
+      }
     }
-
-    try {
-      const notification = new Notification({
-        title: payload.title,
-        body: payload.body,
-        silent: false,
-      });
-
-      notification.on('click', () => {
-        windowManager.show();
-        windowManager.getWebContents()?.send('notification-clicked', { id: payload.id });
-      });
-
-      notification.show();
-      return { success: true };
-    } catch (error) {
-      logger.error('Failed to show notification:', { error: String(error) });
-      return { success: false, error: String(error) };
-    }
-  });
+  );
 
   // Socket status
   ipcMain.handle('get-socket-status', () => {
@@ -204,12 +207,15 @@ export function setupIPCHandlers(
     }
   });
 
-  ipcMain.handle('get-log-count', (_event: IpcMainInvokeEvent, params: Omit<LogQueryParams, 'offset' | 'limit'>) => {
-    try {
-      return { count: getLogCount(params) };
-    } catch (error) {
-      logger.error('Failed to get log count:', { error: String(error) });
-      return { count: 0, error: String(error) };
+  ipcMain.handle(
+    'get-log-count',
+    (_event: IpcMainInvokeEvent, params: Omit<LogQueryParams, 'offset' | 'limit'>) => {
+      try {
+        return { count: getLogCount(params) };
+      } catch (error) {
+        logger.error('Failed to get log count:', { error: String(error) });
+        return { count: 0, error: String(error) };
+      }
     }
-  });
+  );
 }

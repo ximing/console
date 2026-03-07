@@ -27,7 +27,11 @@ export const AuthPage = view(() => {
           {/* Logo */}
           <div className="text-center mb-6">
             <img src={logoLight} alt="Console Logo" className="h-12 w-12 mx-auto dark:hidden" />
-            <img src={logoDark} alt="Console Logo" className="h-12 w-12 mx-auto hidden dark:block" />
+            <img
+              src={logoDark}
+              alt="Console Logo"
+              className="h-12 w-12 mx-auto hidden dark:block"
+            />
           </div>
 
           {/* Header */}

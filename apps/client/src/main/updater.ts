@@ -11,7 +11,14 @@ autoUpdater.logger = {
   debug: (...args: unknown[]) => logger.debug('[AutoUpdater]', { args } as Record<string, unknown>),
 };
 
-type UpdateStatus = 'idle' | 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded' | 'error';
+type UpdateStatus =
+  | 'idle'
+  | 'checking'
+  | 'available'
+  | 'not-available'
+  | 'downloading'
+  | 'downloaded'
+  | 'error';
 
 interface StatusPayload {
   status: UpdateStatus;

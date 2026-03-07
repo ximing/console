@@ -76,7 +76,7 @@ export class MenuManager {
       {
         label: `检查更新 (v${app.getVersion()})`,
         click: async () => {
-          const hasUpdate = await this.updaterManager?.checkForUpdates() ?? false;
+          const hasUpdate = (await this.updaterManager?.checkForUpdates()) ?? false;
           if (!hasUpdate) {
             dialog.showMessageBox({
               type: 'info',
