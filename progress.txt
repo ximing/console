@@ -60,3 +60,11 @@
   - Use highlightKeyword function to wrap matching text with <mark> tags
   - Use case-insensitive regex for highlighting
   - Apply different background colors for light/dark mode
+
+## 2026-03-07 - US-008
+- What was implemented: Added confirmation dialog for clearing logs. Shows confirmation before clearing, explains it doesn't delete actual log files.
+- Files changed: apps/web/src/pages/settings/components/log-settings.tsx
+- **Learnings for future iterations:**
+  - Use showClearConfirm state to control dialog visibility
+  - Use fixed overlay with centered modal for confirmation dialogs
+  - Include both cancel and confirm actions in dialog
