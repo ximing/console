@@ -35,3 +35,12 @@
   - Uses getLevelColor() function to style log levels
   - Default limit is 100 logs
   - Logs are sorted by timestamp descending (newest first)
+
+## 2026-03-07 - US-005
+- What was implemented: Added infinite scroll to log viewer. Loads more logs automatically when scrolling to bottom. Shows loading state and "all loaded" message.
+- Files changed: apps/web/src/pages/settings/components/log-settings.tsx
+- **Learnings for future iterations:**
+  - Use useRef to reference the scroll container
+  - Add scroll event listener to detect when user scrolls to bottom
+  - Show loadingMore state during load more operations
+  - Display "已加载全部" message when all logs are loaded
