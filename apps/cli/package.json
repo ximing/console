@@ -1,0 +1,29 @@
+{
+  "name": "@aimo-console/cli",
+  "version": "0.0.1",
+  "private": true,
+  "license": "BSL-1.1",
+  "description": "AIMO CLI for operations and notifications",
+  "type": "module",
+  "bin": {
+    "aimo-cli": "./dist/index.js"
+  },
+  "scripts": {
+    "dev": "tsx ./src/index.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix"
+  },
+  "dependencies": {
+    "@aimo-console/dto": "workspace:*",
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "@aimo-console/eslint-config": "workspace:*",
+    "@aimo-console/typescript-config": "workspace:*",
+    "@types/node": "^22.13.4",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3"
+  }
+}
