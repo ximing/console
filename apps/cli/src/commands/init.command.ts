@@ -22,8 +22,10 @@ export const initCommand: CliCommand = {
       .option('-f, --force', 'Overwrite existing configuration file', false)
       .option('--domain <domain>', 'AIMO domain (e.g., https://console.aimo.plus)')
       .option('--token <token>', 'JWT token for authentication')
+      .option('-c, --config <path>', 'Path to config file (default: .aimo-cli.json)')
       .action(async (options) => {
-        const configPath = path.resolve(process.cwd(), CONFIG_FILE_NAME);
+        const configFileName = options.config || CONFIG_FILE_NAME;
+        const configPath = path.resolve(process.cwd(), configFileName);
 
         // Check if config file exists
         if (existsSync(configPath) && !options.force) {

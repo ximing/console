@@ -59,7 +59,7 @@
         "Typecheck 和 lint 通过"
       ],
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "notes": ""
     }
   ]
