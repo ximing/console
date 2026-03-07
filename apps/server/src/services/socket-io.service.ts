@@ -77,11 +77,32 @@ export class SocketIOService {
 
     // Authentication middleware
     this.io.use(async (socket: AuthenticatedSocket, next) => {
-      const token = socket.handshake.auth.token || socket.handshake.query.token;
+      // Try to get token from multiple sources:
+      // 1. socket.handshake.auth.token (from client auth option)
+      // 2. socket.handshake.query.token (from query string)
+      // 3. cookie (from withCredentials: true)
+      let token = (socket.handshake.auth.token as string) || (socket.handshake.query.token as string);
+
+      // If no token in auth/query, try to get from cookie
+      if (!token) {
+        const cookieHeader = socket.request.headers.cookie;
+        if (cookieHeader) {
+          // Parse cookie string to find aimo_token
+          const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
+            const [name, value] = cookie.trim().split('=');
+            if (name && value) {
+              acc[name] = value;
+            }
+            return acc;
+          }, {} as Record<string, string>);
+          token = cookies['aimo_token'];
+        }
+      }
 
       logger.info('Socket.IO connection attempt, token present:', !!token);
       logger.info('Socket.IO handshake auth:', socket.handshake.auth);
       logger.info('Socket.IO handshake query:', socket.handshake.query);
+      logger.info('Socket.IO cookie:', socket.request.headers.cookie ? 'present' : 'none');
 
       if (!token) {
         logger.warn('Socket.IO connection attempt without token');
@@ -90,7 +111,7 @@ export class SocketIOService {
 
       try {
         logger.info('Verifying JWT token...');
-        const decoded = jwt.verify(token as string, config.jwt.secret) as {
+        const decoded = jwt.verify(token, config.jwt.secret) as {
           id: string;
           email?: string;
           username?: string;

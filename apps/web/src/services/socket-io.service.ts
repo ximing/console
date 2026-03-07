@@ -138,7 +138,7 @@ export class SocketIOService extends Service {
    */
   connect(): void {
     // Check if user is authenticated
-    if (!authService.token) {
+    if (!authService.isAuthenticated) {
       console.warn('Cannot connect to Socket.IO: user not authenticated');
       return;
     }
@@ -151,16 +151,12 @@ export class SocketIOService extends Service {
 
     const socketUrl = this.getSocketIOUrl();
     console.log('Connecting to Socket.IO at:', socketUrl);
-    console.log(
-      'Using token:',
-      authService.token ? `${authService.token.substring(0, 20)}...` : 'none'
-    );
 
+    // Use withCredentials to send HTTP-only cookies for authentication
+    // Token is stored in HTTP-only cookie on the server
     this.socket = io(socketUrl, {
       path: '/socket.io',
-      auth: {
-        token: authService.token,
-      },
+      withCredentials: true,
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5,
