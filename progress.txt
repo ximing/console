@@ -44,3 +44,11 @@
   - Add scroll event listener to detect when user scrolls to bottom
   - Show loadingMore state during load more operations
   - Display "已加载全部" message when all logs are loaded
+
+## 2026-03-07 - US-006
+- What was implemented: Added URL parameter support for log level filter and search. Filter state persists in URL.
+- Files changed: apps/web/src/pages/settings/components/log-settings.tsx
+- **Learnings for future iterations:**
+  - Use useSearchParams from react-router for URL parameter management
+  - Update URL params on filter/search changes
+  - Initialize state from URL params on component mount
