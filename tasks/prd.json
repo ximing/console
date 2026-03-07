@@ -1,135 +1,65 @@
 {
-  "project": "AIMO",
-  "branchName": "ralph/token-management",
-  "description": "用户API Token管理与通知创建接口 - 在设置中增加Token管理能力，支持生成鉴权Token，增加创建通知的API接口",
+  "project": "AIMO CLI",
+  "branchName": "ralph/aimo-cli",
+  "description": "在 apps 目录下实现一个 Node.js CLI 程序，用于运维管理和批量操作通知。采用子命令形式便于后续扩展，第一个子命令 notify 用于调用 notification.controller.ts 创建通知。",
   "userStories": [
     {
       "id": "US-001",
-      "title": "创建用户Token数据库表",
-      "description": "作为开发者，我需要在数据库中存储用户的API Token，以便后续进行用户级别鉴权。",
+      "title": "CLI 程序基础结构搭建",
+      "description": "作为开发者，我需要一个基于子命令的 CLI 框架，方便后续扩展新命令。",
       "acceptanceCriteria": [
-        "在 apps/server/src/db/migrations 中创建迁移文件",
-        "创建 user_api_tokens 表，包含: id, userId, name, token, prefix, createdAt, expiresAt, lastUsedAt",
-        "userId 关联 users 表",
-        "token 字段存储哈希值",
-        "prefix 字段存储Token前缀用于显示",
-        "Typecheck passes"
+        "创建 CLI 入口文件，支持 --help 参数",
+        "实现子命令注册机制",
+        "添加版本号显示 (--version)",
+        "Typecheck 和 lint 通过"
       ],
       "priority": 1,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-002",
-      "title": "添加Token管理Service层",
-      "description": "作为开发者，我需要实现Token的生成、存储、验证和删除逻辑。",
+      "title": "init 子命令实现",
+      "description": "作为用户，我想通过 init 命令生成配置文件来管理默认的域名和 JWT token。",
       "acceptanceCriteria": [
-        "创建 ApiTokenService",
-        "实现 generateToken(userId, name) - 生成Token并返回明文",
-        "实现 hashToken(token) - 使用SHA-256哈希存储",
-        "实现 validateToken(token) - 验证Token并返回关联的userId",
-        "实现 deleteToken(id, userId) - 删除指定Token",
-        "实现 listTokens(userId) - 列出用户的Token",
-        "实现 updateLastUsed(id) - 更新最后使用时间",
-        "Typecheck passes"
+        "init 命令在当前目录生成配置文件 (.aimo-cli.json)",
+        "配置文件包含 domain 和 token 字段",
+        "支持覆盖已有配置文件",
+        "Typecheck 和 lint 通过"
       ],
       "priority": 2,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-003",
-      "title": "添加Token生成API接口",
-      "description": "作为用户，我想要生成API Token以便通过API访问系统功能。",
+      "title": "notify 子命令实现",
+      "description": "作为运维人员，我想通过命令行创建通知。",
       "acceptanceCriteria": [
-        "添加 POST /api/v1/user/api-tokens 接口",
-        "请求体: { name: string }",
-        "响应: { id, name, token, prefix, createdAt }",
-        "返回的token仅显示一次，后续无法查看",
-        "需要用户登录认证",
-        "Typecheck passes"
+        "notify 子命令支持以下参数：--channel/-c, --ownership/-o, --ownership-id, --content/-m, --message-type",
+        "通过 HTTP POST 调用 /api/v1/notifications 接口",
+        "成功创建后打印通知 ID 和状态",
+        "支持 --dry-run 预览参数不实际发送请求",
+        "Typecheck 和 lint 通过"
       ],
       "priority": 3,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-004",
-      "title": "添加Token列表API接口",
-      "description": "作为用户，我想要查看我已创建的API Token列表。",
+      "title": "配置优先级和读取逻辑",
+      "description": "作为用户，我希望配置有优先级，让我能灵活控制 CLI 的行为。",
       "acceptanceCriteria": [
-        "添加 GET /api/v1/user/api-tokens 接口",
-        "响应: { tokens: [{ id, name, prefix, createdAt, expiresAt, lastUsedAt }] }",
-        "不返回token的明文或哈希值",
-        "需要用户登录认证",
-        "Typecheck passes"
+        "优先级：环境变量 > 命令行参数 > 配置文件",
+        "环境变量 AIMO_CLI_DOMAIN 可覆盖域名",
+        "环境变量 AIMO_CLI_TOKEN 可覆盖 JWT token",
+        "配置文件路径可通过 --config 参数指定",
+        "缺少必需配置时报清晰的错误提示",
+        "Typecheck 和 lint 通过"
       ],
       "priority": 4,
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-005",
-      "title": "删除Token API接口",
-      "description": "作为用户，我想要撤销（删除）不再需要的API Token。",
-      "acceptanceCriteria": [
-        "添加 DELETE /api/v1/user/api-tokens/:id 接口",
-        "只能删除属于当前用户的Token",
-        "返回删除成功状态",
-        "需要用户登录认证",
-        "Typecheck passes"
-      ],
-      "priority": 5,
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-006",
-      "title": "BA认证拦截器增强",
-      "description": "作为开发者，我需要增强BA认证拦截器，支持用户Token验证。",
-      "acceptanceCriteria": [
-        "修改 baAuthInterceptor 支持两种模式",
-        "优先验证用户Token，失败后再验证全局Token",
-        "验证成功时将userId附加到request",
-        "验证用户Token时自动更新 lastUsedAt",
-        "Typecheck passes"
-      ],
-      "priority": 6,
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-007",
-      "title": "创建通知API接口",
-      "description": "作为用户，我想要通过API创建通知事件。",
-      "acceptanceCriteria": [
-        "在 NotificationBAController 添加 POST /api/v1/ba/notifications 接口",
-        "请求体使用现有 CreateNotificationDto",
-        "复用现有 NotificationService.createNotification()",
-        "使用Bearer Token进行用户级别鉴权",
-        "返回创建的NotificationDto",
-        "Typecheck passes"
-      ],
-      "priority": 7,
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-008",
-      "title": "前端设置页面Token管理UI",
-      "description": "作为用户，我想要在设置页面管理我的API Token。",
-      "acceptanceCriteria": [
-        "在设置页面添加API Token管理区块",
-        "显示生成新Token按钮",
-        "点击生成时弹出输入框让用户输入Token名称",
-        "创建成功后Modal显示Token",
-        "列表显示所有已创建的Token",
-        "每个Token显示删除按钮",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 8,
-      "passes": true,
+      "passes": false,
       "notes": ""
     }
   ]
