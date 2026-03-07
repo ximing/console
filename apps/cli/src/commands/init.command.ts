@@ -20,7 +20,7 @@ export const initCommand: CliCommand = {
       .command('init')
       .description('Generate .console-cli.json configuration file')
       .option('-f, --force', 'Overwrite existing configuration file', false)
-      .option('--domain <domain>', 'AIMO domain (e.g., https://console.aimo.plus)')
+      .option('--domain <domain>', 'console domain (e.g., https://console.aimo.plus)')
       .option('--token <token>', 'JWT token for authentication')
       .option('-c, --config <path>', 'Path to config file (default: .console-cli.json)')
       .action(async (options) => {
@@ -37,7 +37,7 @@ export const initCommand: CliCommand = {
         // Get domain from options or prompt user
         let domain = options.domain;
         if (!domain) {
-          console.log('Please provide your AIMO domain:');
+          console.log('Please provide your console domain:');
           console.log('Example: https://console.aimo.plus');
           domain = 'https://console.aimo.plus';
         }

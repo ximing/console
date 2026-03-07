@@ -118,7 +118,7 @@ function createWindow(): void {
     minWidth: 800,
     minHeight: 600,
     show: false,
-    title: 'AIMO',
+    title: 'Console',
     icon: iconPath,
     titleBarStyle: 'hidden',
     webPreferences: {
@@ -253,7 +253,7 @@ function createTray(): void {
   }
 
   // Set tooltip
-  tray.setToolTip('AIMO');
+  tray.setToolTip('Console');
 
   // Create context menu
   const contextMenu = Menu.buildFromTemplate([

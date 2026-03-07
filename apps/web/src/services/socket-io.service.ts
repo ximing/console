@@ -357,7 +357,7 @@ export class SocketIOService extends Service {
     }
 
     try {
-      const notification = new Notification('AIMO 通知', {
+      const notification = new Notification('Console 通知', {
         body: payload.content,
         icon: '/logo.png',
         tag: payload.id, // Prevent duplicate notifications
@@ -398,7 +398,7 @@ export class SocketIOService extends Service {
       console.log('Showing Electron notification:', payload.id, payload.content);
       const result = await window.electronAPI.showNotification({
         id: payload.id,
-        title: 'AIMO 通知',
+        title: 'Console 通知',
         body: payload.content,
       });
 

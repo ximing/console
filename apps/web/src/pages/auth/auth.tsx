@@ -26,8 +26,8 @@ export const AuthPage = view(() => {
         <div className="bg-white dark:bg-dark-800 rounded-2xl shadow-xl dark:shadow-2xl p-8 animate-fade-in">
           {/* Logo */}
           <div className="text-center mb-6">
-            <img src={logoLight} alt="Aimo Logo" className="h-12 w-12 mx-auto dark:hidden" />
-            <img src={logoDark} alt="Aimo Logo" className="h-12 w-12 mx-auto hidden dark:block" />
+            <img src={logoLight} alt="Console Logo" className="h-12 w-12 mx-auto dark:hidden" />
+            <img src={logoDark} alt="Console Logo" className="h-12 w-12 mx-auto hidden dark:block" />
           </div>
 
           {/* Header */}
@@ -36,7 +36,7 @@ export const AuthPage = view(() => {
               {isLogin ? 'Welcome Back' : 'Create Account'}
             </h1>
             <p className="text-gray-600 dark:text-dark-400">
-              {isLogin ? 'Sign in to continue to Aimo' : 'Sign up to get started with Aimo'}
+              {isLogin ? 'Sign in to continue to Console' : 'Sign up to get started with Console'}
             </p>
           </div>
 
@@ -59,7 +59,7 @@ export const AuthPage = view(() => {
 
         {/* Footer */}
         <p className="text-center text-sm text-gray-600 dark:text-dark-400 mt-8">
-          Aimo - Your personal memo assistant
+          Your personal memo assistant
         </p>
       </div>
     </div>

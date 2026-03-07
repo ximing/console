@@ -14,13 +14,13 @@ import { logger } from './utils/logger.js';
 
 async function bootstrap() {
   try {
-    logger.info(`🚀 AIMO Server v${SERVER_VERSION} starting...`);
+    logger.info(`🚀 Console Server v${SERVER_VERSION} starting...`);
     logger.info(`   Environment: ${process.env.NODE_ENV || 'development'}`);
 
     const { createApp } = await import('./app.js');
     await createApp();
 
-    logger.info(`✅ AIMO Server v${SERVER_VERSION} started successfully!\n`);
+    logger.info(`✅ Console Server v${SERVER_VERSION} started successfully!\n`);
   } catch (error) {
     logger.error('Failed to start server:', error);
     process.exit(1);
