@@ -3,7 +3,7 @@
 # Generate Electron icons from logo.png using ImageMagick
 # This script generates all required icon sizes for different platforms
 
-set -e
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
@@ -20,9 +20,9 @@ if [ ! -f "$LOGO_SOURCE" ]; then
     exit 1
 fi
 
-# Check if ImageMagick is available
-if ! command -v convert &> /dev/null; then
-    echo "❌ Error: ImageMagick is not installed"
+# Check if ImageMagick is available (v7 `magick` command)
+if ! command -v magick &> /dev/null; then
+    echo "❌ Error: ImageMagick (magick) is not installed"
     echo "Install with: brew install imagemagick (macOS) or apt-get install imagemagick (Linux)"
     exit 1
 fi
@@ -36,20 +36,20 @@ echo "📦 Generating PNG icons..."
 # Generate PNG icons for all sizes
 for size in 16 32 48 64 128 256 512; do
     output_file="$BUILD_DIR/icon_${size}.png"
-    convert "$LOGO_SOURCE" -resize "${size}x${size}" -background white -gravity center -extent "${size}x${size}" "$output_file"
+    magick "$LOGO_SOURCE" -resize "${size}x${size}" -background white -gravity center -extent "${size}x${size}" "$output_file"
     file_size=$(du -h "$output_file" | cut -f1)
     echo "  ✓ Generated icon_${size}.png (${size}x${size}) - $file_size"
 done
 
 # Generate main icon.png (512x512)
 echo "  Generating icon.png (512x512)..."
-convert "$LOGO_SOURCE" -resize 512x512 -background white -gravity center -extent 512x512 "$BUILD_DIR/icon.png"
+magick "$LOGO_SOURCE" -resize 512x512 -background white -gravity center -extent 512x512 "$BUILD_DIR/icon.png"
 echo "  ✓ Generated icon.png"
 
 echo ""
 echo "🪟 Generating Windows ICO..."
-# Generate Windows ICO (256x256 as source, will be resized by convert)
-convert "$LOGO_SOURCE" -define icon:auto-resize=256,128,96,64,48,32,16 "$BUILD_DIR/icon.ico"
+# Generate Windows ICO (256x256 as source, auto-resized by ImageMagick)
+magick "$LOGO_SOURCE" -define icon:auto-resize=256,128,96,64,48,32,16 "$BUILD_DIR/icon.ico"
 file_size=$(du -h "$BUILD_DIR/icon.ico" | cut -f1)
 echo "  ✓ Generated icon.ico - $file_size"
 
@@ -67,10 +67,10 @@ if command -v sips &> /dev/null; then
     # Generate all required sizes for ICNS
     for size in 16 32 64 128 256 512 1024; do
         # Regular and 2x versions
-        convert "$LOGO_SOURCE" -resize "${size}x${size}" -background white -gravity center -extent "${size}x${size}" "$iconset_dir/icon_${size}x${size}.png"
+        magick "$LOGO_SOURCE" -resize "${size}x${size}" -background white -gravity center -extent "${size}x${size}" "$iconset_dir/icon_${size}x${size}.png"
         
         if [ $size -le 512 ]; then
-            convert "$LOGO_SOURCE" -resize "$((size*2))x$((size*2))" -background white -gravity center -extent "$((size*2))x$((size*2))" "$iconset_dir/icon_${size}x${size}@2x.png"
+            magick "$LOGO_SOURCE" -resize "$((size*2))x$((size*2))" -background white -gravity center -extent "$((size*2))x$((size*2))" "$iconset_dir/icon_${size}x${size}@2x.png"
         fi
     done
     
@@ -81,14 +81,14 @@ if command -v sips &> /dev/null; then
 else
     # Fallback: Create a basic ICNS using ImageMagick
     # Note: This creates a minimal ICNS file
-    convert "$LOGO_SOURCE" -resize 512x512 "$BUILD_DIR/icon.icns"
+    magick "$LOGO_SOURCE" -resize 512x512 "$BUILD_DIR/icon.icns"
     echo "  ⚠ Generated basic icon.icns (install Xcode tools for full support: xcode-select --install)"
 fi
 
 echo ""
 echo "📄 Generating SVG..."
 # SVG format (for scalability)
-convert "$LOGO_SOURCE" -quality 100 "$BUILD_DIR/icon.svg" 2>/dev/null || {
+magick "$LOGO_SOURCE" -quality 100 "$BUILD_DIR/icon.svg" 2>/dev/null || {
     echo "  ⚠ SVG generation skipped (use vector source for better results)"
 }
 
