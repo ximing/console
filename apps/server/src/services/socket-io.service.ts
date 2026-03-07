@@ -81,20 +81,24 @@ export class SocketIOService {
       // 1. socket.handshake.auth.token (from client auth option)
       // 2. socket.handshake.query.token (from query string)
       // 3. cookie (from withCredentials: true)
-      let token = (socket.handshake.auth.token as string) || (socket.handshake.query.token as string);
+      let token =
+        (socket.handshake.auth.token as string) || (socket.handshake.query.token as string);
 
       // If no token in auth/query, try to get from cookie
       if (!token) {
         const cookieHeader = socket.request.headers.cookie;
         if (cookieHeader) {
           // Parse cookie string to find aimo_token
-          const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
-            const [name, value] = cookie.trim().split('=');
-            if (name && value) {
-              acc[name] = value;
-            }
-            return acc;
-          }, {} as Record<string, string>);
+          const cookies = cookieHeader.split(';').reduce(
+            (acc, cookie) => {
+              const [name, value] = cookie.trim().split('=');
+              if (name && value) {
+                acc[name] = value;
+              }
+              return acc;
+            },
+            {} as Record<string, string>
+          );
           token = cookies['aimo_token'];
         }
       }

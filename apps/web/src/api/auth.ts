@@ -28,7 +28,9 @@ export const login = (data: LoginDto) => {
  * Get auth configuration
  */
 export const getAuthConfig = () => {
-  return request.get<unknown, ApiResponseDto<{ allowRegistration: boolean }>>('/api/v1/auth/config');
+  return request.get<unknown, ApiResponseDto<{ allowRegistration: boolean }>>(
+    '/api/v1/auth/config'
+  );
 };
 
 /**

@@ -129,6 +129,98 @@ export class NotificationController {
   }
 
   /**
+   * GET /api/v1/notifications/unread-count - Get unread notification count
+   */
+  @Get('/unread-count')
+  async getUnreadCount(
+    @QueryParams() params: { channel?: string; ownership?: string; ownershipId?: string }
+  ) {
+    try {
+      const filters: { channel?: string; ownership?: string; ownershipId?: string } = {};
+
+      if (params.channel) {
+        filters.channel = params.channel;
+      }
+      if (params.ownership) {
+        filters.ownership = params.ownership;
+      }
+      if (params.ownershipId) {
+        filters.ownershipId = params.ownershipId;
+      }
+
+      const count = await this.notificationService.getUnreadCount(
+        filters.channel && filters.ownership && filters.ownershipId
+          ? {
+              channel: filters.channel as any,
+              ownership: filters.ownership as any,
+              ownershipId: filters.ownershipId,
+            }
+          : undefined
+      );
+
+      return ResponseUtility.success({ count });
+    } catch (error) {
+      logger.error('Get unread count error:', error);
+      return ResponseUtility.error(ErrorCode.DB_ERROR);
+    }
+  }
+  /**
+   * POST /api/v1/notifications/read-all - Mark all notifications as read
+   */
+  @Post('/read-all')
+  async markAllAsRead(
+    @QueryParams() params: { channel?: string; ownership?: string; ownershipId?: string }
+  ) {
+    try {
+      const filters: { channel?: string; ownership?: string; ownershipId?: string } = {};
+
+      if (params.channel) {
+        filters.channel = params.channel;
+      }
+      if (params.ownership) {
+        filters.ownership = params.ownership;
+      }
+      if (params.ownershipId) {
+        filters.ownershipId = params.ownershipId;
+      }
+
+      const count = await this.notificationService.markAllAsRead(
+        filters.channel && filters.ownership && filters.ownershipId
+          ? {
+              channel: filters.channel as any,
+              ownership: filters.ownership as any,
+              ownershipId: filters.ownershipId,
+            }
+          : undefined
+      );
+
+      return ResponseUtility.success({ markedCount: count });
+    } catch (error) {
+      logger.error('Mark all as read error:', error);
+      return ResponseUtility.error(ErrorCode.DB_ERROR);
+    }
+  }
+
+  /**
+   * POST /api/v1/notifications/:id/read - Mark notification as read
+   */
+  @Post('/:id/read')
+  async markAsRead(@Param('id') id: string) {
+    try {
+      const notification = await this.notificationService.markAsRead(id);
+
+      if (!notification) {
+        return ResponseUtility.error(ErrorCode.NOT_FOUND, 'Notification not found');
+      }
+
+      return ResponseUtility.success(convertNotificationToDto(notification));
+    } catch (error) {
+      logger.error('Mark as read error:', error);
+      return ResponseUtility.error(ErrorCode.DB_ERROR);
+    }
+  }
+
+  /**
    * GET /api/v1/notifications/:id - Get notification details
    */
   @Get('/:id')
@@ -181,99 +273,6 @@ export class NotificationController {
       return ResponseUtility.success({ deleted: true });
     } catch (error) {
       logger.error('Delete notification error:', error);
-      return ResponseUtility.error(ErrorCode.DB_ERROR);
-    }
-  }
-
-  /**
-   * POST /api/v1/notifications/:id/read - Mark notification as read
-   */
-  @Post('/:id/read')
-  async markAsRead(@Param('id') id: string) {
-    try {
-      const notification = await this.notificationService.markAsRead(id);
-
-      if (!notification) {
-        return ResponseUtility.error(ErrorCode.NOT_FOUND, 'Notification not found');
-      }
-
-      return ResponseUtility.success(convertNotificationToDto(notification));
-    } catch (error) {
-      logger.error('Mark as read error:', error);
-      return ResponseUtility.error(ErrorCode.DB_ERROR);
-    }
-  }
-
-  /**
-   * POST /api/v1/notifications/read-all - Mark all notifications as read
-   */
-  @Post('/read-all')
-  async markAllAsRead(
-    @QueryParams() params: { channel?: string; ownership?: string; ownershipId?: string }
-  ) {
-    try {
-      const filters: { channel?: string; ownership?: string; ownershipId?: string } = {};
-
-      if (params.channel) {
-        filters.channel = params.channel;
-      }
-      if (params.ownership) {
-        filters.ownership = params.ownership;
-      }
-      if (params.ownershipId) {
-        filters.ownershipId = params.ownershipId;
-      }
-
-      const count = await this.notificationService.markAllAsRead(
-        filters.channel && filters.ownership && filters.ownershipId
-          ? {
-              channel: filters.channel as any,
-              ownership: filters.ownership as any,
-              ownershipId: filters.ownershipId,
-            }
-          : undefined
-      );
-
-      return ResponseUtility.success({ markedCount: count });
-    } catch (error) {
-      logger.error('Mark all as read error:', error);
-      return ResponseUtility.error(ErrorCode.DB_ERROR);
-    }
-  }
-
-  /**
-   * GET /api/v1/notifications/unread-count - Get unread notification count
-   */
-  @Get('/unread-count')
-  async getUnreadCount(
-    @QueryParams() params: { channel?: string; ownership?: string; ownershipId?: string }
-  ) {
-    try {
-      const filters: { channel?: string; ownership?: string; ownershipId?: string } = {};
-
-      if (params.channel) {
-        filters.channel = params.channel;
-      }
-      if (params.ownership) {
-        filters.ownership = params.ownership;
-      }
-      if (params.ownershipId) {
-        filters.ownershipId = params.ownershipId;
-      }
-
-      const count = await this.notificationService.getUnreadCount(
-        filters.channel && filters.ownership && filters.ownershipId
-          ? {
-              channel: filters.channel as any,
-              ownership: filters.ownership as any,
-              ownershipId: filters.ownershipId,
-            }
-          : undefined
-      );
-
-      return ResponseUtility.success({ count });
-    } catch (error) {
-      logger.error('Get unread count error:', error);
       return ResponseUtility.error(ErrorCode.DB_ERROR);
     }
   }
