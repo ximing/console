@@ -99,6 +99,33 @@ export interface UpdateInfo {
   releaseNotes?: string;
 }
 
+// Log types
+export interface LogQueryParams {
+  offset?: number;
+  limit?: number;
+  level?: string;
+  search?: string;
+}
+
+export interface LogEntry {
+  timestamp: string;
+  level: string;
+  message: string;
+  projectName?: string;
+  [key: string]: unknown;
+}
+
+export interface LogResponse {
+  logs: LogEntry[];
+  total: number;
+  error?: string;
+}
+
+export interface LogCountResponse {
+  count: number;
+  error?: string;
+}
+
 declare global {
   interface Window {
     electronAPI?: {
@@ -121,6 +148,9 @@ declare global {
       }) => Promise<{ success: boolean; error?: string }>;
       onNotificationClick?: (callback: (data: { id: string }) => void) => void;
       removeNotificationClickListener?: (callback: (data: { id: string }) => void) => void;
+      // Log APIs
+      getLogs?: (params: LogQueryParams) => Promise<LogResponse>;
+      getLogCount?: (params: Omit<LogQueryParams, 'offset' | 'limit'>) => Promise<LogCountResponse>;
     };
   }
 }

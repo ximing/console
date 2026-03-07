@@ -18,3 +18,12 @@
 - **Learnings for future iterations:**
   - Preload uses contextBridge.exposeInMainWorld to expose APIs to renderer
   - Type definitions need to be added in both the implementation and the Window global type
+
+## 2026-03-07 - US-003
+- What was implemented: Added log menu item to settings page (only in Electron environment). Created LogSettings component with log viewer.
+- Files changed: apps/web/src/pages/settings/settings.tsx, apps/web/src/pages/settings/components/log-settings.tsx, apps/web/src/electron/isElectron.ts
+- **Learnings for future iterations:**
+  - Use isElectron() to check if running in Electron environment
+  - Settings menu items are defined in menuItems array with id, label, icon, and path
+  - Routes are defined using react-router Routes component
+  - Electron types should be added to isElectron.ts for web app

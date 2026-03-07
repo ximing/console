@@ -4,7 +4,9 @@ import { Layout } from '../../components/layout';
 import { UserSettings } from './components/user-settings';
 import { ModelSettings } from './components/model-settings';
 import { ApiTokenSettings } from './components/api-token-settings';
-import { User, Settings as SettingsIcon, Bot, Key } from 'lucide-react';
+import { LogSettings } from './components/log-settings';
+import { User, Settings as SettingsIcon, Bot, Key, FileText } from 'lucide-react';
+import { isElectron } from '../../electron/isElectron';
 
 const menuItems = [
   {
@@ -26,6 +28,16 @@ const menuItems = [
     path: '/settings/api-tokens',
   },
 ];
+
+// Add log menu item only in Electron environment
+if (isElectron()) {
+  menuItems.push({
+    id: 'logs',
+    label: '日志',
+    icon: FileText,
+    path: '/settings/logs',
+  });
+}
 
 export const SettingsPage = view(() => {
   const location = useLocation();
@@ -78,6 +90,7 @@ export const SettingsPage = view(() => {
             <Route path="/user" element={<UserSettings />} />
             <Route path="/models" element={<ModelSettings />} />
             <Route path="/api-tokens" element={<ApiTokenSettings />} />
+            <Route path="/logs" element={<LogSettings />} />
           </Routes>
         </div>
       </div>
