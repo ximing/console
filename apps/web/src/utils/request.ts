@@ -67,6 +67,7 @@ request.interceptors.response.use(
 
       switch (status) {
         case 401: {
+          console.error('Unauthorized:', data?.msg || data?.message || 'Access denied');
           // Unauthorized - clear auth data and redirect to login
           localStorage.removeItem('aimo_token');
           localStorage.removeItem('aimo_user');
