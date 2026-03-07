@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@x-console/dto": "workspace:*",
+    "@x-console/logger": "workspace:*",
     "electron-store": "^10.0.0",
     "electron-updater": "^6.7.3"
   },

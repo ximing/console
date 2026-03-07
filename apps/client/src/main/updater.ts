@@ -1,8 +1,15 @@
 import { dialog, Notification } from 'electron';
 import { autoUpdater, type UpdateInfo } from 'electron-updater';
+import { logger } from './logger';
 import { WindowManager } from './window';
 
-autoUpdater.logger = console;
+// Use our logger for autoUpdater
+autoUpdater.logger = {
+  info: (...args: unknown[]) => logger.info('[AutoUpdater]', { args } as Record<string, unknown>),
+  warn: (...args: unknown[]) => logger.warn('[AutoUpdater]', { args } as Record<string, unknown>),
+  error: (...args: unknown[]) => logger.error('[AutoUpdater]', { args } as Record<string, unknown>),
+  debug: (...args: unknown[]) => logger.debug('[AutoUpdater]', { args } as Record<string, unknown>),
+};
 
 type UpdateStatus = 'idle' | 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded' | 'error';
 
@@ -99,7 +106,7 @@ export class AutoUpdaterManager {
 
     // Initial check
     this.checkForUpdates().catch((error) => {
-      console.warn('Failed to check for updates:', error);
+      logger.warn('Failed to check for updates:', error);
     });
   }
 

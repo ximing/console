@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import net from 'node:net';
 import { Notification, nativeImage, dialog } from 'electron';
+import { logger } from './logger';
 import { WindowManager } from './window';
 
 interface DialogOptions {
@@ -27,7 +28,7 @@ export class SocketServer {
     this.socketPath = process.env.VITE_SOCKET_PATH || '';
 
     if (!this.socketPath) {
-      console.log('[Socket] No socket path configured, skipping server start');
+      logger.info('[Socket] No socket path configured, skipping server start');
       return;
     }
 
@@ -36,7 +37,7 @@ export class SocketServer {
       try {
         fs.unlinkSync(this.socketPath);
       } catch (error) {
-        console.warn('[Socket] Failed to remove old socket:', error);
+        logger.warn('[Socket] Failed to remove old socket:', { error: String(error) });
       }
     }
 
@@ -56,16 +57,16 @@ export class SocketServer {
       });
 
       client.on('error', (error) => {
-        console.error('[Socket] Client error:', error.message);
+        logger.error('[Socket] Client error:', error.message);
       });
     });
 
     this.server.on('error', (error) => {
-      console.error('[Socket] Server error:', error.message);
+      logger.error('[Socket] Server error:', error.message);
     });
 
     this.server.listen(this.socketPath, () => {
-      console.log('[Socket] Server listening on:', this.socketPath);
+      logger.info('[Socket] Server listening on:', this.socketPath);
     });
   }
 
@@ -140,7 +141,7 @@ export class SocketServer {
 
   private handleCommand(data: Buffer, client: net.Socket): void {
     const line = data.toString().trim();
-    console.log('[Socket] Received command:', line);
+    logger.debug('[Socket] Received command:', line);
 
     const options = this.parseCommand(line);
 
@@ -155,7 +156,7 @@ export class SocketServer {
       return;
     }
 
-    console.log('[Socket] Parsed options:', options);
+    logger.debug('[Socket] Parsed options:', { options } as Record<string, unknown>);
 
     if (options.command === 'notify') {
       this.showNotification(options);

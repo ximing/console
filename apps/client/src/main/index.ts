@@ -1,6 +1,7 @@
 import { app } from 'electron';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { logger } from './logger';
 import { WindowManager } from './window';
 import { TrayManager } from './tray';
 import { MenuManager } from './menu';
@@ -72,7 +73,10 @@ export async function initializeApp(): Promise<void> {
   app.on('will-quit', () => {
     // Cleanup
     socketServer.stop();
+    logger.close();
   });
+
+  logger.info('Application initialized', { version: app.getVersion() });
 }
 
 app.whenReady().then(initializeApp);

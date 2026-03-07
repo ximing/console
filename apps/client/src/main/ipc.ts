@@ -1,4 +1,5 @@
 import { app, ipcMain, Notification, type IpcMainInvokeEvent } from 'electron';
+import { logger } from './logger';
 import { WindowManager } from './window';
 import { AutoUpdaterManager } from './updater';
 
@@ -14,7 +15,7 @@ export function setupIPCHandlers(
 ): void {
   // Logging
   ipcMain.handle('log-preload', (_event: IpcMainInvokeEvent, data: unknown) => {
-    console.log('[Preload] Debug info:', data);
+    logger.debug('[Preload] Debug info:', { data } as Record<string, unknown>);
     return { success: true };
   });
 
@@ -58,7 +59,7 @@ export function setupIPCHandlers(
       notification.show();
       return { success: true };
     } catch (error) {
-      console.error('Failed to show notification:', error);
+      logger.error('Failed to show notification:', { error: String(error) });
       return { success: false, error: String(error) };
     }
   });
