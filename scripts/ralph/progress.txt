@@ -657,6 +657,21 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - ESLint config uses @aimo-console/eslint-config/base.js
   - CLI runs via tsx for dev and tsc for build
 
+## 2026-03-07 10:45:00 - US-002 (AIMO CLI)
+- Implemented init command to generate .aimo-cli.json config file
+- Config file contains domain and token fields
+- Supports --force to overwrite existing config
+- Supports --domain and --token command line options
+- Typecheck and lint pass
+- Files changed:
+  - apps/cli/src/commands/init.command.ts
+  - tasks/prd.json (marked US-002 as complete)
+- **Learnings for future iterations:**
+  - Use node:fs and node:path for file operations in CLI
+  - Commander options can be used to accept command-line parameters
+  - Config file uses JSON format with pretty printing (JSON.stringify with null, 2)
+  - Check existsSync before writing to avoid accidentally overwriting
+
 ## 2026-03-06 21:50:00 - US-001 到 US-008 (Token管理完整实现)
 - 实现了用户API Token管理完整功能：
   - US-001: 创建user_api_tokens数据库表，使用Drizzle ORM
