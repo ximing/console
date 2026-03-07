@@ -12,8 +12,8 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 DEPLOY_TYPE="${1:-local}"
-CONTAINER_NAME="aimo-app"
-IMAGE_NAME="aimo:latest"
+CONTAINER_NAME="aimo-console-app"
+IMAGE_NAME="aimo-console:latest"
 PORT="${PORT:-3002}"
 
 echo -e "${BLUE}========================================${NC}"
@@ -107,7 +107,7 @@ deploy_docker_compose() {
     sleep 3
     
     # Check service status
-    if docker-compose -f docker-compose.prod.yml ps | grep -q "aimo-app"; then
+    if docker-compose -f docker-compose.prod.yml ps | grep -q "console-app"; then
         echo -e "${GREEN}✅ Services are running${NC}"
         docker-compose -f docker-compose.prod.yml ps
         echo -e "Access application at: ${YELLOW}http://localhost:${PORT}${NC}"

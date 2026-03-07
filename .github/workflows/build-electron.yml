@@ -16,7 +16,9 @@ permissions:
 env:
   NODE_VERSION: 20
   PNPM_VERSION: 10.22.0
-
+  VITE_DEV_SERVER_URL: ${{ vars.VITE_DEV_SERVER_URL }}
+  NODE_ENV: production
+  
 jobs:
   # Build DTO package first
   build-packages:
@@ -55,50 +57,6 @@ jobs:
           path: |
             packages/*/dist/**
             packages/*/package.json
-          retention-days: 1
-
-  # Build web app once and reuse
-  build-web:
-    runs-on: ubuntu-latest
-    needs: build-packages
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Use official npm registry
-        run: |
-          echo "registry=https://registry.npmjs.org/" > .npmrc
-          echo "@lancedb:registry=https://registry.npmjs.org/" >> .npmrc
-          echo "@lancedb:registry=https://registry.npmjs.org/" > apps/client/.npmrc
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Download packages artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: packages-dist
-          path: packages
-
-      - name: Build web app
-        run: ELECTRON=true pnpm --filter @aimo-console/web build
-
-      - name: Upload web app artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-dist
-          path: apps/client/dist
           retention-days: 1
 
   # Typecheck and lint client
@@ -144,7 +102,7 @@ jobs:
   # macOS Intel (x64) build
   build-macos-x64:
     runs-on: macos-14
-    needs: [build-packages, build-web, quality-checks]
+    needs: [build-packages, quality-checks]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -181,12 +139,6 @@ jobs:
       - name: Build Electron main process
         run: pnpm --filter @aimo-console/client run build:electron
 
-      - name: Download web app artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: web-dist
-          path: apps/client/dist
-
       - name: Build macOS x64
         run: |
           if [ -z "$CSC_LINK" ]; then
@@ -214,7 +166,7 @@ jobs:
   # macOS Apple Silicon (arm64) build
   build-macos-arm64:
     runs-on: macos-latest
-    needs: [build-packages, build-web, quality-checks]
+    needs: [build-packages, quality-checks]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -252,12 +204,6 @@ jobs:
       - name: Build Electron main process
         run: pnpm --filter @aimo-console/client run build:electron
 
-      - name: Download web app artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: web-dist
-          path: apps/client/dist
-
       - name: Build macOS arm64
         run: |
           if [ -z "$CSC_LINK" ]; then
@@ -285,7 +231,7 @@ jobs:
   # Windows x64 build
   build-windows:
     runs-on: windows-latest
-    needs: [build-packages, build-web, quality-checks]
+    needs: [build-packages, quality-checks]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -318,12 +264,6 @@ jobs:
 
       - name: Build Electron main process
         run: pnpm --filter @aimo-console/client run build:electron
-
-      - name: Download web app artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: web-dist
-          path: apps/client/dist
 
       - name: Build Windows
         run: pnpm --filter @aimo-console/client run dist:win
@@ -347,7 +287,7 @@ jobs:
   # Linux x64 build
   build-linux:
     runs-on: ubuntu-latest
-    needs: [build-packages, build-web, quality-checks]
+    needs: [build-packages, quality-checks]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -380,12 +320,6 @@ jobs:
 
       - name: Build Electron main process
         run: pnpm --filter @aimo-console/client run build:electron
-
-      - name: Download web app artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: web-dist
-          path: apps/client/dist
 
       - name: Build Linux
         run: pnpm --filter @aimo-console/client run dist:linux

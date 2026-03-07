@@ -4,7 +4,7 @@ services:
   # MinIO for avatar storage
   minio:
     image: minio/minio:latest
-    container_name: aimo-minio
+    container_name: console-minio
     ports:
       - '9000:9000' # MinIO API
       - '9001:9001' # MinIO Console
@@ -23,12 +23,12 @@ services:
   # MySQL database
   mysql:
     image: mysql:8.0
-    container_name: aimo-mysql
+    container_name: console-mysql
     ports:
       - '3306:3306'
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: aimo
+      MYSQL_DATABASE: console
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:

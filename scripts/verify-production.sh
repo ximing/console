@@ -91,13 +91,13 @@ if [ "$BUILD_CHECK" = "true" ]; then
     pnpm install --frozen-lockfile
     
     echo -e "Building DTO package..."
-    pnpm --filter @aimo/dto build
+    pnpm --filter @aimo-console/dto build
     
     echo -e "Building Web application..."
-    pnpm --filter @aimo/web build
+    pnpm --filter @aimo-console/web build
     
     echo -e "Building Server application..."
-    pnpm --filter @aimo/server build
+    pnpm --filter @aimo-console/server build
     
     # Verify build artifacts
     echo -e "\n${YELLOW}7. Verifying build artifacts...${NC}"
@@ -119,11 +119,11 @@ fi
 # Optional: Docker image build (only if DOCKER_BUILD=true)
 if [ "$DOCKER_BUILD" = "true" ]; then
     echo -e "\n${YELLOW}8. Building Docker image...${NC}"
-    docker build -t aimo:latest .
+    docker build -t console:latest .
     
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}✅ Docker image built successfully${NC}"
-        docker images | grep aimo:latest
+        docker images | grep console:latest
     else
         echo -e "${RED}❌ Docker image build failed${NC}"
         exit 1

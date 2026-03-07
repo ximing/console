@@ -7,7 +7,7 @@ import { commandRegistry } from './commands/index.js';
 const program = new Command();
 
 program
-  .name('aimo-cli')
+  .name('console-cli')
   .description('AIMO CLI for operations and notifications')
   .version('0.0.1');
 

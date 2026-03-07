@@ -6,29 +6,27 @@ import { resolve } from 'path';
 // Environment configuration for Electron
 const isProduction = process.env.NODE_ENV === 'production';
 
-// Vite Dev Server URL for the web app (when running in development)
-const VITE_DEV_SERVER_URL = isProduction ? 'https://console.aimo.plus' : 'http://localhost:5273';
-
 // Production API URL
 const API_PROD_URL = 'https://console.aimo.plus';
 
 // Development API URL
-const API_DEV_URL = process.env.AIMO_API_DEV_URL ?? 'http://localhost:3002';
+const API_DEV_URL = isProduction ? API_PROD_URL : 'http://localhost:3002';
+const SOCKET_PATH = isProduction ? '/tmp/console.sock' : '/tmp/dev-console.sock';
 
 export default defineConfig({
   define: {
-    // Inject environment variables at build time
-    'process.env.VITE_DEV_SERVER_URL': JSON.stringify(VITE_DEV_SERVER_URL),
+    'process.env.VITE_DEV_SERVER_URL': JSON.stringify(API_DEV_URL),
     'process.env.VITE_API_BASE_URL': JSON.stringify(isProduction ? API_PROD_URL : API_DEV_URL),
     'process.env.VITE_IS_ELECTRON': JSON.stringify(true),
     'process.env.VITE_IS_PRODUCTION': JSON.stringify(isProduction),
+    'process.env.VITE_SOCKET_PATH': JSON.stringify(SOCKET_PATH),
   },
   plugins: [
     electron({
       main: {
         entry: 'src/main/index.ts',
         onstart({ startup }) {
-          process.env.VITE_DEV_SERVER_URL = VITE_DEV_SERVER_URL;
+          process.env.VITE_DEV_SERVER_URL = API_DEV_URL;
           startup();
         },
         vite: {

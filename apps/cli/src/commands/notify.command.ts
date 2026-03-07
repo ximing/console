@@ -5,7 +5,7 @@ import { Command } from 'commander';
 
 import type { CliCommand } from './index.js';
 
-const CONFIG_FILE_NAME = '.aimo-cli.json';
+const CONFIG_FILE_NAME = '.console-cli.json';
 
 interface CliConfig {
   domain: string;
@@ -95,7 +95,7 @@ export const notifyCommand: CliCommand = {
       .option('--dry-run', 'Preview notification without sending', false)
       .option('--domain <domain>', 'Override domain from config')
       .option('--token <token>', 'Override token from config')
-      .option('--config <path>', 'Path to config file (default: .aimo-cli.json)')
+      .option('--config <path>', 'Path to config file (default: .console-cli.json)')
       .action(async (options) => {
         const config = getConfig(options);
 
@@ -103,7 +103,7 @@ export const notifyCommand: CliCommand = {
           console.error('Error: Missing configuration');
           console.log('Please provide configuration via one of:');
           console.log('  - Environment variables: AIMO_CLI_DOMAIN, AIMO_CLI_TOKEN');
-          console.log('  - Config file: .aimo-cli.json (run "aimo-cli init" first)');
+          console.log('  - Config file: .console-cli.json (run "console-cli init" first)');
           console.log('  - Command options: --domain, --token');
           process.exit(1);
         }
