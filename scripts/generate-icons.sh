@@ -36,14 +36,14 @@ echo "📦 Generating PNG icons..."
 # Generate PNG icons for all sizes
 for size in 16 32 48 64 128 256 512; do
     output_file="$BUILD_DIR/icon_${size}.png"
-    magick "$LOGO_SOURCE" -resize "${size}x${size}" -background white -gravity center -extent "${size}x${size}" "$output_file"
+    magick "$LOGO_SOURCE" -resize "${size}x${size}" -background none -gravity center -extent "${size}x${size}" "$output_file"
     file_size=$(du -h "$output_file" | cut -f1)
     echo "  ✓ Generated icon_${size}.png (${size}x${size}) - $file_size"
 done
 
 # Generate main icon.png (512x512)
 echo "  Generating icon.png (512x512)..."
-magick "$LOGO_SOURCE" -resize 512x512 -background white -gravity center -extent 512x512 "$BUILD_DIR/icon.png"
+magick "$LOGO_SOURCE" -resize 512x512 -background none -gravity center -extent 512x512 "$BUILD_DIR/icon.png"
 echo "  ✓ Generated icon.png"
 
 echo ""
@@ -67,10 +67,10 @@ if command -v sips &> /dev/null; then
     # Generate all required sizes for ICNS
     for size in 16 32 64 128 256 512 1024; do
         # Regular and 2x versions
-        magick "$LOGO_SOURCE" -resize "${size}x${size}" -background white -gravity center -extent "${size}x${size}" "$iconset_dir/icon_${size}x${size}.png"
+        magick "$LOGO_SOURCE" -resize "${size}x${size}" -background none -gravity center -extent "${size}x${size}" "$iconset_dir/icon_${size}x${size}.png"
         
         if [ $size -le 512 ]; then
-            magick "$LOGO_SOURCE" -resize "$((size*2))x$((size*2))" -background white -gravity center -extent "$((size*2))x$((size*2))" "$iconset_dir/icon_${size}x${size}@2x.png"
+            magick "$LOGO_SOURCE" -resize "$((size*2))x$((size*2))" -background none -gravity center -extent "$((size*2))x$((size*2))" "$iconset_dir/icon_${size}x${size}@2x.png"
         fi
     done
     
