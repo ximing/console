@@ -204,4 +204,36 @@ export class NotificationService {
 
     return true;
   }
+
+  /**
+   * Get unread notification count
+   */
+  async getUnreadCount(filters?: {
+    channel?: NotificationChannel;
+    ownership?: NotificationOwnership;
+    ownershipId?: string;
+  }): Promise<number> {
+    const db = getDatabase();
+    const conditions: SQL[] = [];
+
+    // Always filter to unread status
+    conditions.push(eq(notifications.status, 'unread'));
+
+    if (filters?.channel) {
+      conditions.push(eq(notifications.channel, filters.channel));
+    }
+    if (filters?.ownership) {
+      conditions.push(eq(notifications.ownership, filters.ownership));
+    }
+    if (filters?.ownershipId) {
+      conditions.push(eq(notifications.ownershipId, filters.ownershipId));
+    }
+
+    const countResult = await db
+      .select({ count: count() })
+      .from(notifications)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+    return countResult[0]?.count ?? 0;
+  }
 }
