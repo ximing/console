@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { JsonController, Post, Body, Res } from 'routing-controllers';
+import { JsonController, Post, Get, Body, Res } from 'routing-controllers';
 import { Service } from 'typedi';
 
 import { config } from '../../config/config.js';
@@ -21,9 +21,18 @@ export class AuthV1Controller {
     private storageService: StorageService
   ) {}
 
+  @Get('/config')
+  getConfig() {
+    return ResponseUtility.success({ allowRegistration: config.allowRegistration });
+  }
+
   @Post('/register')
   async register(@Body() userData: RegisterDto, @Res() response: Response) {
     try {
+      // Check if registration is allowed
+      if (!config.allowRegistration) {
+        return ResponseUtility.error(ErrorCode.FORBIDDEN, 'Registration is not allowed');
+      }
       // Validate required fields
       if (!userData.email || !userData.password || !userData.username) {
         return ResponseUtility.error(
@@ -95,6 +104,20 @@ export class AuthV1Controller {
       }
       return ResponseUtility.error(ErrorCode.DB_ERROR);
     }
+  }
+
+  @Post('/logout')
+  async logout(@Res() response: Response) {
+    // Clear the cookie
+    response.cookie('aimo_token', '', {
+      httpOnly: true,
+      secure: config.env === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 0, // Expire immediately
+    });
+
+    return ResponseUtility.success(null);
   }
 
   @Post('/login')

@@ -6,13 +6,16 @@ import { config } from '../config/config.js';
 import { UserService } from '../services/user.service.js';
 import { logger } from '../utils/logger.js';
 
-import type { UserInfoDto } from '@x-console/dto';
-
 // Paths that require authentication
-const PROTECTED_PATHS = ['/api', '/home', '/ai-explore', '/gallery', '/settings'];
+// const PROTECTED_PATHS = ['/api', '/home', '/tasks', '/gallery', '/settings'];
 
 // Paths that don't require authentication even if they match protected prefixes
-const AUTH_EXCLUDED_PATHS = ['/api/v1/auth/login', '/api/v1/auth/register', '/api/v1/ba'];
+const AUTH_EXCLUDED_PATHS = [
+  '/api/v1/auth/login',
+  '/api/v1/auth/register',
+  '/api/v1/auth/config',
+  '/api/v1/ba',
+];
 
 /**
  * Check if the request path requires authentication
@@ -23,7 +26,7 @@ const requiresAuth = (path: string): boolean => {
     return false;
   }
   // Then check if path requires authentication
-  return PROTECTED_PATHS.some((prefix) => path.startsWith(prefix));
+  return true;
 };
 
 /**

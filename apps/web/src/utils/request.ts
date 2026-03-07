@@ -19,16 +19,10 @@ const request: AxiosInstance = axios.create({
 
 /**
  * Request interceptor
- * Add token to headers if available and serialize Date objects to timestamps
+ * Add runtime environment header and serialize Date objects to timestamps
  */
 request.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Get token from localStorage
-    const token = localStorage.getItem('aimo_token');
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
     // Add runtime environment header for server-side detection
     if (config.headers) {
       config.headers['X-Runtime-Env'] = getRuntimeEnv();
