@@ -45,6 +45,36 @@ const notificationClickCallbackMap = new Map<
   (event: IpcRendererEvent, data: { id: string }) => void
 >();
 
+// Log query params type
+export interface LogQueryParams {
+  offset?: number;
+  limit?: number;
+  level?: string;
+  search?: string;
+}
+
+// Log entry type
+export interface LogEntry {
+  timestamp: string;
+  level: string;
+  message: string;
+  projectName?: string;
+  [key: string]: unknown;
+}
+
+// Log response type
+export interface LogResponse {
+  logs: LogEntry[];
+  total: number;
+  error?: string;
+}
+
+// Log count response type
+export interface LogCountResponse {
+  count: number;
+  error?: string;
+}
+
 // Log platform info for debugging
 console.log('Preload script loaded, platform:', process.platform);
 // Also send to main process via IPC for better visibility
@@ -135,6 +165,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
       notificationClickCallbackMap.delete(callback);
     }
   },
+
+  // Log APIs
+  getLogs: (params: LogQueryParams) => ipcRenderer.invoke('get-logs', params),
+  getLogCount: (params: Omit<LogQueryParams, 'offset' | 'limit'>) =>
+    ipcRenderer.invoke('get-log-count', params),
 });
 
 // --------- Type definitions for Renderer process ---------
@@ -162,6 +197,9 @@ declare global {
       }) => Promise<{ success: boolean; error?: string }>;
       onNotificationClick: (callback: (data: { id: string }) => void) => void;
       removeNotificationClickListener: (callback: (data: { id: string }) => void) => void;
+      // Log APIs
+      getLogs: (params: LogQueryParams) => Promise<LogResponse>;
+      getLogCount: (params: Omit<LogQueryParams, 'offset' | 'limit'>) => Promise<LogCountResponse>;
     };
   }
 }
