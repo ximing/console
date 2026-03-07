@@ -506,7 +506,7 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
 - Added user connection tracking (socket ID to user ID mapping)
 - Provided methods: getConnectedUsers, getConnectedUserIds, getUserSocketIds, isUserConnected
 - Attached Socket.IO to Express HTTP server in app.ts
-- Fixed workspace package references in apps/client (changed @aimo/* to @aimo-console/*)
+- Fixed workspace package references in apps/client (changed @aimo/* to @x-console/*)
 - Typecheck passes
 - Files changed:
   - apps/server/package.json (added socket.io dependency)
@@ -562,7 +562,7 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - Build output for Electron goes to apps/client/dist via web app's outDir config
 
 ## 2026-03-06 18:30:00 - US-004, US-005 (Electron Client Integration)
-- Fixed GitHub Actions workflow package references (@aimo/* → @aimo-console/*)
+- Fixed GitHub Actions workflow package references (@aimo/* → @x-console/*)
 - Added getRuntimeEnv() function to isElectron.ts returning 'electron' | 'web'
 - Added X-Runtime-Env header to API requests for server-side environment detection
 - Typecheck and lint pass
@@ -652,9 +652,9 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - apps/cli/src/commands/notify.command.ts (new)
   - tasks/prd.json (marked US-001 as complete)
 - **Learnings for future iterations:**
-  - CLI apps are added to apps/ directory with workspace package name @aimo-console/cli
+  - CLI apps are added to apps/ directory with workspace package name @x-console/cli
   - Use commander for CLI subcommand handling
-  - ESLint config uses @aimo-console/eslint-config/base.js
+  - ESLint config uses @x-console/eslint-config/base.js
   - CLI runs via tsx for dev and tsc for build
 
 ## 2026-03-07 10:45:00 - US-002 (AIMO CLI)

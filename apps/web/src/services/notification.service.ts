@@ -1,6 +1,6 @@
 import { Service } from '@rabjs/react';
 import { notificationApi } from '../api/notification';
-import type { NotificationDto, QueryNotificationDto } from '@aimo-console/dto';
+import type { NotificationDto, QueryNotificationDto } from '@x-console/dto';
 
 /**
  * Notification Service

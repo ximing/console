@@ -16,7 +16,7 @@ import { StorageService } from '../../services/storage.service.js';
 import { logger } from '../../utils/logger.js';
 import { ResponseUtil as ResponseUtility } from '../../utils/response.js';
 
-import type { UserInfoDto, UpdateUserDto } from '@aimo-console/dto';
+import type { UserInfoDto, UpdateUserDto } from '@x-console/dto';
 
 // Configure multer for memory storage
 const upload = multer({

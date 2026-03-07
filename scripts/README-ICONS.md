@@ -35,9 +35,9 @@ pnpm build:web
 pnpm build:client
 
 # 4. 打包安装程序
-pnpm --filter @aimo-console/client dist:mac   # macOS
-pnpm --filter @aimo-console/client dist:win   # Windows
-pnpm --filter @aimo-console/client dist:linux # Linux
+pnpm --filter @x-console/client dist:mac   # macOS
+pnpm --filter @x-console/client dist:win   # Windows
+pnpm --filter @x-console/client dist:linux # Linux
 ```
 
 ## 🎯 核心命令解析

@@ -125,10 +125,10 @@ dialog --title "自定义" --message "使用自定义图标" --icon /Users/ximin
 #!/bin/bash
 
 # 发送通知
-echo 'notify --title "备份完成" --message "数据已成功备份"' | nc -U /tmp/aimo-console.sock
+echo 'notify --title "备份完成" --message "数据已成功备份"' | nc -U /tmp/x-console.sock
 
 # 等待用户确认
-RESULT=$(echo 'dialog --title "确认" --message "是否继续？" --buttons "否,是"' | nc -U /tmp/aimo-console.sock)
+RESULT=$(echo 'dialog --title "确认" --message "是否继续？" --buttons "否,是"' | nc -U /tmp/x-console.sock)
 echo $RESULT
 
 # 解析结果

@@ -1,4 +1,4 @@
-import type { NotificationDto, NotificationListDto, QueryNotificationDto } from '@aimo-console/dto';
+import type { NotificationDto, NotificationListDto, QueryNotificationDto } from '@x-console/dto';
 import request from '../utils/request';
 
 interface ApiResponse<T> {

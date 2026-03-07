@@ -10,7 +10,7 @@ import type {
 import { LLMService } from '../services/llm.service.js';
 import { NotificationService } from '../services/notification.service.js';
 
-import type { NotificationChannel, NotificationOwnership } from '@aimo-console/dto';
+import type { NotificationChannel, NotificationOwnership } from '@x-console/dto';
 
 /**
  * Meal nutrition action configuration

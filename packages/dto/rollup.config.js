@@ -1,4 +1,4 @@
-import { createRollupConfig } from '@aimo-console/rollup-config';
+import { createRollupConfig } from '@x-console/rollup-config';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 

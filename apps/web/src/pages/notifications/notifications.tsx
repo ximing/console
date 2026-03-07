@@ -4,7 +4,7 @@ import { Layout } from '../../components/layout';
 import { NotificationService } from '../../services/notification.service';
 import { ToastService } from '../../services/toast.service';
 import { Bell, Check, CheckCheck, Trash2, Loader2 } from 'lucide-react';
-import type { NotificationDto } from '@aimo-console/dto';
+import type { NotificationDto } from '@x-console/dto';
 
 type StatusFilter = 'all' | 'unread' | 'read';
 

@@ -3,7 +3,7 @@ import type {
   CreateUserModelDto,
   UpdateUserModelDto,
   UserModelListDto,
-} from '@aimo-console/dto';
+} from '@x-console/dto';
 import request from '../utils/request';
 
 interface ApiResponse<T> {

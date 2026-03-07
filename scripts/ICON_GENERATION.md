@@ -98,12 +98,12 @@ linux:
 
    ```bash
    # 生成所有平台
-   pnpm --filter @aimo-console/client dist:all
+   pnpm --filter @x-console/client dist:all
 
    # 或指定平台
-   pnpm --filter @aimo-console/client dist:mac
-   pnpm --filter @aimo-console/client dist:win
-   pnpm --filter @aimo-console/client dist:linux
+   pnpm --filter @x-console/client dist:mac
+   pnpm --filter @x-console/client dist:win
+   pnpm --filter @x-console/client dist:linux
    ```
 
 ## 故障排查

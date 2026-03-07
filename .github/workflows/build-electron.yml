@@ -48,7 +48,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build DTO package
-        run: pnpm --filter @aimo-console/dto build
+        run: pnpm --filter @x-console/dto build
 
       - name: Upload packages artifacts
         uses: actions/upload-artifact@v4
@@ -94,10 +94,10 @@ jobs:
           path: packages
 
       - name: Type check client
-        run: pnpm --filter @aimo-console/client typecheck
+        run: pnpm --filter @x-console/client typecheck
 
       - name: Lint client
-        run: pnpm --filter @aimo-console/client lint
+        run: pnpm --filter @x-console/client lint
 
   # macOS Intel (x64) build
   build-macos-x64:
@@ -137,7 +137,7 @@ jobs:
         run: cd apps/client && pnpm exec electron-builder install-app-deps --arch=x64
 
       - name: Build Electron main process
-        run: pnpm --filter @aimo-console/client run build:electron
+        run: pnpm --filter @x-console/client run build:electron
 
       - name: Build macOS x64
         run: |
@@ -145,7 +145,7 @@ jobs:
             unset CSC_LINK
             unset CSC_KEY_PASSWORD
           fi
-          pnpm --filter @aimo-console/client run dist:mac -- --x64
+          pnpm --filter @x-console/client run dist:mac -- --x64
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_LINK: ${{ secrets.CSC_LINK }}
@@ -202,7 +202,7 @@ jobs:
         run: cd apps/client && pnpm exec electron-builder install-app-deps --arch=arm64
 
       - name: Build Electron main process
-        run: pnpm --filter @aimo-console/client run build:electron
+        run: pnpm --filter @x-console/client run build:electron
 
       - name: Build macOS arm64
         run: |
@@ -210,7 +210,7 @@ jobs:
             unset CSC_LINK
             unset CSC_KEY_PASSWORD
           fi
-          pnpm --filter @aimo-console/client run dist:mac -- --arm64
+          pnpm --filter @x-console/client run dist:mac -- --arm64
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_LINK: ${{ secrets.CSC_LINK }}
@@ -263,10 +263,10 @@ jobs:
           path: packages
 
       - name: Build Electron main process
-        run: pnpm --filter @aimo-console/client run build:electron
+        run: pnpm --filter @x-console/client run build:electron
 
       - name: Build Windows
-        run: pnpm --filter @aimo-console/client run dist:win
+        run: pnpm --filter @x-console/client run dist:win
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
@@ -319,10 +319,10 @@ jobs:
           path: packages
 
       - name: Build Electron main process
-        run: pnpm --filter @aimo-console/client run build:electron
+        run: pnpm --filter @x-console/client run build:electron
 
       - name: Build Linux
-        run: pnpm --filter @aimo-console/client run dist:linux
+        run: pnpm --filter @x-console/client run dist:linux
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_OWNER: ${{ github.repository_owner }}
@@ -365,7 +365,7 @@ jobs:
           draft: ${{ contains(github.ref_name, '-alpha') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-rc') }}
           prerelease: ${{ contains(github.ref_name, '-alpha') || contains(github.ref_name, '-beta') }}
           generate_release_notes: true
-          name: AIMO ${{ github.ref_name }}
+          name: Console ${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

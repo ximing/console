@@ -1,5 +1,5 @@
 {
-  "name": "@aimo-console/server",
+  "name": "@x-console/server",
   "version": "0.6.0",
   "private": true,
   "license": "BSL-1.1",
@@ -22,8 +22,8 @@
   },
   "type": "module",
   "dependencies": {
-    "@aimo-console/dto": "workspace:*",
-    "@aimo-console/logger": "workspace:*",
+    "@x-console/dto": "workspace:*",
+    "@x-console/logger": "workspace:*",
     "@aws-sdk/client-s3": "^3.986.0",
     "@aws-sdk/s3-request-presigner": "^3.987.0",
     "@langchain/core": "^1.1.26",
@@ -63,8 +63,8 @@
     "zod": "^3.22.0"
   },
   "devDependencies": {
-    "@aimo-console/eslint-config": "workspace:*",
-    "@aimo-console/typescript-config": "workspace:*",
+    "@x-console/eslint-config": "workspace:*",
+    "@x-console/typescript-config": "workspace:*",
     "@types/archiver": "^6.0.0",
     "@types/bcrypt": "^5.0.0",
     "@types/body-parser": "^1.19.5",

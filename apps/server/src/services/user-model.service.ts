@@ -7,7 +7,7 @@ import { generateUid } from '../utils/id.js';
 import { logger } from '../utils/logger.js';
 
 import type { UserModel, NewUserModel } from '../db/schema/user-models.js';
-import type { CreateUserModelDto, UpdateUserModelDto } from '@aimo-console/dto';
+import type { CreateUserModelDto, UpdateUserModelDto } from '@x-console/dto';
 
 @Service()
 export class UserModelService {

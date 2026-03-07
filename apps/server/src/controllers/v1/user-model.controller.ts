@@ -23,7 +23,7 @@ import type {
   UserModelDto,
   UserModelListDto,
   UserInfoDto,
-} from '@aimo-console/dto';
+} from '@x-console/dto';
 import type { UserModel } from '../../db/schema/user-models.js';
 
 /**

@@ -20,7 +20,7 @@ import type {
   CreateUserModelDto,
   UpdateUserModelDto,
   LLMProvider,
-} from '@aimo-console/dto';
+} from '@x-console/dto';
 
 const providerOptions: { value: LLMProvider; label: string }[] = [
   { value: 'openai', label: 'OpenAI' },

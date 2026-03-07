@@ -8,7 +8,7 @@ import { config } from '../config/config.js';
 import { logger } from '../utils/logger.js';
 import { RedisService } from './redis.service.js';
 
-import type { UserInfoDto } from '@aimo-console/dto';
+import type { UserInfoDto } from '@x-console/dto';
 
 /**
  * Push event types supported by the system

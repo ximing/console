@@ -8,7 +8,7 @@ import type {
   NotificationChannel,
   NotificationOwnership,
   NotificationStatus,
-} from '@aimo-console/dto';
+} from '@x-console/dto';
 
 /**
  * Notification push payload sent to clients

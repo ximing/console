@@ -9,7 +9,7 @@ import { UserService } from '../../services/user.service.js';
 import { logger } from '../../utils/logger.js';
 import { ResponseUtil as ResponseUtility } from '../../utils/response.js';
 
-import type { RegisterDto, LoginDto, LoginResponseDto } from '@aimo-console/dto';
+import type { RegisterDto, LoginDto, LoginResponseDto } from '@x-console/dto';
 import type { Response } from 'express';
 
 @Service()

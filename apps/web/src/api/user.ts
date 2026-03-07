@@ -1,4 +1,4 @@
-import type { UserInfoDto } from '@aimo-console/dto';
+import type { UserInfoDto } from '@x-console/dto';
 import request from '../utils/request';
 
 interface ApiResponse<T> {

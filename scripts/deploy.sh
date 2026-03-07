@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Deployment Script for AIMO Application
+# Deployment Script for Console Application
 # Supports local Docker and docker-compose deployment
 
 set -e
@@ -12,12 +12,12 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 DEPLOY_TYPE="${1:-local}"
-CONTAINER_NAME="aimo-console-app"
-IMAGE_NAME="aimo-console:latest"
+CONTAINER_NAME="x-console-app"
+IMAGE_NAME="x-console:latest"
 PORT="${PORT:-3002}"
 
 echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}AIMO Deployment Script${NC}"
+echo -e "${BLUE}Console Deployment Script${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo -e "Deployment Type: ${YELLOW}${DEPLOY_TYPE}${NC}"
 echo ""

@@ -4,7 +4,7 @@ import type {
   LoginResponseDto,
   UserInfoDto,
   ApiResponseDto,
-} from '@aimo-console/dto';
+} from '@x-console/dto';
 import request from '../utils/request';
 
 /**

@@ -31,7 +31,7 @@ ruleType: Always
 
 ### 共享代码
 
-- **DTO 包**: @aimo-console/dto (workspace:\*) - 共享数据传输对象
+- **DTO 包**: @x-console/dto (workspace:\*) - 共享数据传输对象
   - 认证相关 DTO
   - 用户相关 DTO
   - 笔记/备忘录 DTO
@@ -124,7 +124,7 @@ apps/web/
 
 - 使用 axios 进行 HTTP 请求
 - 在 src/api 目录中定义 API 请求模块
-- 请求函数应返回类型化的数据（使用 @aimo-console/dto 中的 DTO）
+- 请求函数应返回类型化的数据（使用 @x-console/dto 中的 DTO）
 
 #### 开发脚本
 

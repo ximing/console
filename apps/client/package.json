@@ -1,14 +1,14 @@
 {
-  "name": "@aimo-console/client",
+  "name": "@x-console/client",
   "version": "0.0.7",
   "private": true,
   "license": "BSL-1.1",
   "type": "module",
   "main": "dist/main/index.js",
-  "homepage": "https://github.com/ximing/aimo",
+  "homepage": "https://github.com/ximing/console",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ximing/aimo.git"
+    "url": "https://github.com/ximing/console.git"
   },
   "scripts": {
     "dev": "vite",
@@ -26,13 +26,13 @@
     "dist:linux": "electron-builder --linux"
   },
   "dependencies": {
-    "@aimo-console/dto": "workspace:*",
+    "@x-console/dto": "workspace:*",
     "electron-store": "^10.0.0",
     "electron-updater": "^6.7.3"
   },
   "devDependencies": {
-    "@aimo-console/eslint-config": "workspace:*",
-    "@aimo-console/typescript-config": "workspace:*",
+    "@x-console/eslint-config": "workspace:*",
+    "@x-console/typescript-config": "workspace:*",
     "@fiahfy/icns": "^0.0.7",
     "@types/node": "24.10.1",
     "electron": "^40.6.0",

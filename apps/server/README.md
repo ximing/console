@@ -95,7 +95,7 @@ cd apps/server
 pnpm migrate
 
 # Or from project root
-pnpm --filter @aimo-console/server migrate
+pnpm --filter @x-console/server migrate
 ```
 
 ## Development
@@ -250,7 +250,7 @@ await withTransaction(async (tx) => {
 
 ### Type Errors
 
-1. Rebuild DTO package: `pnpm --filter @aimo-console/dto build`
+1. Rebuild DTO package: `pnpm --filter @x-console/dto build`
 2. Run typecheck: `pnpm typecheck`
 3. Clear Turbo cache: `pnpm clean`
 

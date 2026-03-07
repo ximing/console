@@ -59,17 +59,17 @@ importers:
 
   apps/cli:
     dependencies:
-      '@aimo-console/dto':
+      '@x-console/dto':
         specifier: workspace:*
         version: link:../../packages/dto
       commander:
         specifier: ^12.1.0
         version: 12.1.0
     devDependencies:
-      '@aimo-console/eslint-config':
+      '@x-console/eslint-config':
         specifier: workspace:*
         version: link:../../config/eslint-config
-      '@aimo-console/typescript-config':
+      '@x-console/typescript-config':
         specifier: workspace:*
         version: link:../../config/config-typescript
       '@types/node':
@@ -84,7 +84,7 @@ importers:
 
   apps/client:
     dependencies:
-      '@aimo-console/dto':
+      '@x-console/dto':
         specifier: workspace:*
         version: link:../../packages/dto
       electron-store:
@@ -94,10 +94,10 @@ importers:
         specifier: ^6.7.3
         version: 6.8.3
     devDependencies:
-      '@aimo-console/eslint-config':
+      '@x-console/eslint-config':
         specifier: workspace:*
         version: link:../../config/eslint-config
-      '@aimo-console/typescript-config':
+      '@x-console/typescript-config':
         specifier: workspace:*
         version: link:../../config/config-typescript
       '@fiahfy/icns':
@@ -151,10 +151,10 @@ importers:
 
   apps/server:
     dependencies:
-      '@aimo-console/dto':
+      '@x-console/dto':
         specifier: workspace:*
         version: link:../../packages/dto
-      '@aimo-console/logger':
+      '@x-console/logger':
         specifier: workspace:*
         version: link:../../packages/logger
       '@aws-sdk/client-s3':
@@ -269,10 +269,10 @@ importers:
         specifier: ^3.22.0
         version: 3.25.76
     devDependencies:
-      '@aimo-console/eslint-config':
+      '@x-console/eslint-config':
         specifier: workspace:*
         version: link:../../config/eslint-config
-      '@aimo-console/typescript-config':
+      '@x-console/typescript-config':
         specifier: workspace:*
         version: link:../../config/config-typescript
       '@types/archiver':
@@ -344,7 +344,7 @@ importers:
 
   apps/web:
     dependencies:
-      '@aimo-console/dto':
+      '@x-console/dto':
         specifier: workspace:*
         version: link:../../packages/dto
       '@headlessui/react':
@@ -387,7 +387,7 @@ importers:
         specifier: ^4.8.3
         version: 4.8.3
     devDependencies:
-      '@aimo-console/typescript-config':
+      '@x-console/typescript-config':
         specifier: workspace:*
         version: link:../../config/config-typescript
       '@eslint/js':
@@ -530,16 +530,16 @@ importers:
         specifier: 2.8.1
         version: 2.8.1
     devDependencies:
-      '@aimo-console/eslint-config':
+      '@x-console/eslint-config':
         specifier: workspace:*
         version: link:../../config/eslint-config
-      '@aimo-console/jest-presets':
+      '@x-console/jest-presets':
         specifier: workspace:*
         version: link:../../config/jest-presets
-      '@aimo-console/rollup-config':
+      '@x-console/rollup-config':
         specifier: workspace:*
         version: link:../../config/rollup-config
-      '@aimo-console/typescript-config':
+      '@x-console/typescript-config':
         specifier: workspace:*
         version: link:../../config/config-typescript
       '@types/jest':
@@ -564,10 +564,10 @@ importers:
         specifier: ^4.7.1
         version: 4.7.1(winston@3.19.0)
     devDependencies:
-      '@aimo-console/eslint-config':
+      '@x-console/eslint-config':
         specifier: workspace:*
         version: link:../../config/eslint-config
-      '@aimo-console/typescript-config':
+      '@x-console/typescript-config':
         specifier: workspace:*
         version: link:../../config/config-typescript
       '@types/jest':

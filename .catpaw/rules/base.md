@@ -92,11 +92,11 @@ console/
 - **框架**: React 19
 - **构建**: Vite
 - **语言**: TypeScript
-- **共享代码**: @aimo-console/dto
+- **共享代码**: @x-console/dto
 
 ### 共享层
 
-- **DTO 包**: @aimo-console/dto (认证、用户、笔记、响应)
+- **DTO 包**: @x-console/dto (认证、用户、笔记、响应)
 - **配置**: 共享的 TypeScript、ESLint、Jest 配置
 - **打包**: Rollup 用于库构建
 
@@ -123,7 +123,7 @@ console/
 **服务端所有日志输出必须使用统一的 logger，禁止直接使用 console.log/console.error 等。**
 
 <constraint>
-所有日志输出必须通过 `@aimo-console/logger` 包实现，禁止使用 console.log、console.error 等原生方法
+所有日志输出必须通过 `@x-console/logger` 包实现，禁止使用 console.log、console.error 等原生方法
 </constraint>
 
 ### 日志模块位置
@@ -131,12 +131,12 @@ console/
 **文件**: `apps/server/src/utils/logger.ts`
 
 ```typescript
-import { Log } from '@aimo-console/logger';
+import { Log } from '@x-console/logger';
 
 const logDir = process.env.AIMO_LOG_DIR || path.join(process.cwd(), 'logs');
 
 export const logger = new Log({
-  projectName: 'aimo-server',
+  projectName: 'console-server',
   level: (process.env.AIMO_LOG_LEVEL as 'trace' | 'debug' | 'info' | 'warn' | 'error') || 'info',
   logDir,
   enableTerminal: true,
