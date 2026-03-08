@@ -2,6 +2,7 @@
 - Tool registry pattern: Define tools with id, name, nameEn, description, keywords, and category
 - Use AI with confidence scores (>= 0.5 threshold) for tool matching
 - Controllers use ResponseUtil for consistent response format
+- AI tools identified by category: 'ai' in tool-registry.ts
 
 ## 2026-03-08T16:30:00Z - US-001
 - Implemented global hotkey registration (Option+Space for macOS, Alt+Space for Windows/Linux)
@@ -232,4 +233,41 @@
   - Frontend uses generic executeTool function for all tools - no special handling needed
   - Backend already implemented these tools - marked as passes: false but complete
   - Both tools support different text lengths (max 10000 chars enforced in controller)
+  - CommandPalette only renders in Electron (isElectron() check), browser verification not applicable
+
+---
+
+## 2026-03-09T02:30:00Z - US-016
+- Created CommandPaletteSettings component in apps/web/src/pages/settings/components/command-palette-settings.tsx
+- Uses UserModelService to get available models from AI settings
+- Saves selected model to localStorage with key 'command-palette-model-id'
+- Added menu item and route for command palette settings in settings.tsx
+- Updated API (apps/web/src/api/tool.ts) to accept optional modelId parameter
+- Updated AIRouteService to accept modelId and create ChatOpenAI with user-configured model
+- Updated ToolExecutionService to accept modelId and use user-configured model for AI tools
+- Updated CommandPalette component to read modelId from localStorage and pass to API calls
+- Backend falls back to default model when user-configured model fails
+- Fixed syntax error in tool-execution.service.ts (malformed error string)
+- Typecheck passes for both web and server
+- **Learnings for future iterations:**
+  - User-configured model stored in localStorage with key 'command-palette-model-id'
+  - Backend services use createModelWithConfig() to create ChatOpenAI with user model settings
+  - Pass modelId through the entire chain: frontend → API → service
+  - Use getApiConfig() to handle different LLM providers (openai, deepseek, openrouter, other)
+
+## 2026-03-09T03:30:00Z - US-017
+- Added login status display at bottom of CommandPalette component
+- Shows "已登录" (green checkmark) or "未登录（AI 工具需要登录）" (orange warning)
+- Added inline login form in modal overlay with email/password fields
+- Login prompt shown when: (1) selecting AI tool while not logged in, (2) executing AI tool returns auth error (401)
+- After successful login, automatically retries the tool execution
+- Added logout button in status bar
+- Added category field to Tool interface in api/tool.ts
+- Backend auth check already implemented in tool-execution.controller.ts (returns 401 with "AI 工具需要登录后使用")
+- Typecheck passes
+- **Learnings for future iterations:**
+  - AI tools identified by category: 'ai' in tool-registry.ts
+  - Backend returns error code 401 with message when user not logged in
+  - Use authService.isAuthenticated to check login status
+  - AuthService.login() handles login with auto-retry after successful login
   - CommandPalette only renders in Electron (isElectron() check), browser verification not applicable

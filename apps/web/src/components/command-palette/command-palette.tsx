@@ -3,6 +3,9 @@ import { isElectron } from '../../electron/isElectron';
 import { routeTool, executeTool, type Tool, type ToolExecutionResponse } from '../../api/tool';
 import { MarkdownRenderer } from '../../utils/markdown';
 import { renderMarkdownToHtml } from '../../utils/markdown-html';
+import { authService } from '../../services/auth.service';
+
+const STORAGE_KEY = 'command-palette-model-id';
 
 /**
  * CommandPalette component - a modal command palette similar to uTools
@@ -17,10 +20,28 @@ export function CommandPalette() {
   const [toolResult, setToolResult] = useState<ToolExecutionResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [modelId, setModelId] = useState<string>('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [loginError, setLoginError] = useState('');
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const toolInputRef = useRef<HTMLTextAreaElement>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Load model preference from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      setModelId(saved);
+    }
+
+    // Check login status
+    setIsLoggedIn(authService.isAuthenticated);
+  }, []);
 
   // Focus input when modal opens
   useEffect(() => {
@@ -69,7 +90,7 @@ export function CommandPalette() {
 
     debounceTimerRef.current = setTimeout(async () => {
       try {
-        const tools = await routeTool(inputValue);
+        const tools = await routeTool(inputValue, modelId || undefined);
         setMatchedTools(tools);
       } catch (error) {
         console.error('Failed to route tool:', error);
@@ -106,6 +127,9 @@ export function CommandPalette() {
     return () => {
       window.electronAPI?.removeCommandPaletteToggleListener?.(toggleHandler);
     };
+
+    // Refresh login status when palette opens
+    setIsLoggedIn(authService.isAuthenticated);
   }, [isOpen]);
 
   // Handle backdrop click
@@ -122,6 +146,12 @@ export function CommandPalette() {
 
   // Handle tool selection
   const handleToolSelect = (tool: Tool) => {
+    // Check if AI tool requires login
+    if (tool.category === 'ai' && !isLoggedIn) {
+      setShowLoginPrompt(true);
+      return;
+    }
+
     setSelectedTool(tool);
     setToolInput('');
     setToolResult(null);
@@ -141,9 +171,10 @@ export function CommandPalette() {
     setToolResult(null);
 
     try {
-      const executeData: { toolId: string; input: string; options?: Record<string, unknown> } = {
+      const executeData: { toolId: string; input: string; options?: Record<string, unknown>; modelId?: string } = {
         toolId: selectedTool.id,
         input: toolInput,
+        modelId: modelId || undefined,
       };
 
       // For uuid-generate, parse input as count or use default
@@ -154,6 +185,12 @@ export function CommandPalette() {
       }
 
       const result = await executeTool(executeData);
+
+      // Check if AI tool requires login
+      if (!result.success && result.error?.includes('需要登录')) {
+        setShowLoginPrompt(true);
+      }
+
       setToolResult(result);
     } catch (error) {
       setToolResult({
@@ -188,6 +225,45 @@ export function CommandPalette() {
     } catch (error) {
       console.error('Failed to copy:', error);
     }
+  };
+
+  // Handle login from command palette
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!loginEmail.trim() || !loginPassword.trim()) return;
+
+    setIsLoggingIn(true);
+    setLoginError('');
+
+    try {
+      const result = await authService.login({
+        email: loginEmail.trim(),
+        password: loginPassword,
+      });
+
+      if (result.success) {
+        setIsLoggedIn(true);
+        setShowLoginPrompt(false);
+        setLoginEmail('');
+        setLoginPassword('');
+        // Retry tool execution if we were trying to use an AI tool
+        if (selectedTool) {
+          handleExecuteTool();
+        }
+      } else {
+        setLoginError(result.message || '登录失败');
+      }
+    } catch (error) {
+      setLoginError(error instanceof Error ? error.message : '登录失败');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  // Handle logout
+  const handleLogout = async () => {
+    await authService.logout();
+    setIsLoggedIn(false);
   };
 
   // Don't render in browser environment
@@ -361,7 +437,107 @@ export function CommandPalette() {
             </div>
           )}
         </div>
+
+        {/* Login status bar */}
+        <div className="flex items-center justify-between px-4 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+          {isLoggedIn ? (
+            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+              <svg className="w-4 h-4 mr-1 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              已登录
+            </div>
+          ) : (
+            <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+              <svg className="w-4 h-4 mr-1 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              未登录（AI 工具需要登录）
+            </div>
+          )}
+          {isLoggedIn ? (
+            <button
+              onClick={handleLogout}
+              className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              退出登录
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowLoginPrompt(true)}
+              className="text-xs text-blue-500 hover:text-blue-600"
+            >
+              登录
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Login prompt modal */}
+      {showLoginPrompt && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
+          <div className="w-full max-w-[400px] mx-4 p-4 bg-white dark:bg-gray-800 rounded-lg">
+            <div className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+              登录以使用 AI 工具
+            </div>
+            <form onSubmit={handleLogin}>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">
+                    邮箱
+                  </label>
+                  <input
+                    type="email"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    placeholder="your@email.com"
+                    className="w-full px-3 py-2 text-sm bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:border-blue-500 dark:text-gray-100 dark:placeholder-gray-500"
+                    disabled={isLoggingIn}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">
+                    密码
+                  </label>
+                  <input
+                    type="password"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full px-3 py-2 text-sm bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:border-blue-500 dark:text-gray-100 dark:placeholder-gray-500"
+                    disabled={isLoggingIn}
+                  />
+                </div>
+                {loginError && (
+                  <div className="text-sm text-red-600 dark:text-red-400">
+                    {loginError}
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-end mt-4 space-x-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowLoginPrompt(false);
+                    setLoginError('');
+                  }}
+                  className="px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                  disabled={isLoggingIn}
+                >
+                  取消
+                </button>
+                <button
+                  type="submit"
+                  disabled={!loginEmail.trim() || !loginPassword.trim() || isLoggingIn}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoggingIn ? '登录中...' : '登录'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
