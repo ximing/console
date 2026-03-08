@@ -1,4 +1,7 @@
 ## Codebase Patterns
+- Tool registry pattern: Define tools with id, name, nameEn, description, keywords, and category
+- Use AI with confidence scores (>= 0.5 threshold) for tool matching
+- Controllers use ResponseUtil for consistent response format
 
 ## 2026-03-08T16:30:00Z - US-001
 - Implemented global hotkey registration (Option+Space for macOS, Alt+Space for Windows/Linux)
@@ -25,4 +28,23 @@
   - Component listens to onCommandPaletteToggle IPC event exposed in preload
   - Use useRef and useEffect for auto-focus on input
   - Use callback-based IPC listener pattern with cleanup in useEffect
+---
+
+## 2026-03-08T18:00:00Z - US-003
+- Created POST /api/ai-route endpoint for AI-powered tool routing
+- Created ToolRegistry with 15 predefined tools (text processing, developer tools, AI tools)
+- Created AIRouteService using LangChain ChatOpenAI for intelligent matching
+- AI matches user input to tools using keyword matching with confidence scores (0-1)
+- Returns up to 3 matched tools sorted by confidence
+- Uses system default model (gpt-4o-mini) from config
+- Files changed:
+  - apps/server/src/services/tool-registry.ts (new)
+  - apps/server/src/services/ai-route.service.ts (new)
+  - apps/server/src/controllers/v1/ai-route.controller.ts (new)
+  - apps/server/src/controllers/index.ts (modified)
+- **Learnings for future iterations:**
+  - Use AI with confidence threshold (0.5) to filter low-quality matches
+  - Define tools with keywords for better matching
+  - Category field (text/developer/ai) useful for filtering AI tools by login status
+  - Controller pattern: validate input, call service, return ResponseUtil.success/error
 ---
