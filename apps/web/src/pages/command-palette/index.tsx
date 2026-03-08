@@ -34,6 +34,15 @@ export function CommandPalettePage() {
   const [isRecognizing, setIsRecognizing] = useState(false);
   const [commandError, setCommandError] = useState<string | null>(null);
 
+  // Derived tool for display - use selectedTool or create from recognizedIntent
+  const displayTool: Tool | null = selectedTool || (recognizedIntent && toolResult ? {
+    id: recognizedIntent.intentId,
+    name: recognizedIntent.intentName,
+    nameEn: recognizedIntent.intentName,
+    description: '',
+    confidence: recognizedIntent.confidence,
+  } : null);
+
   const inputRef = useRef<HTMLInputElement>(null);
   const toolInputRef = useRef<HTMLTextAreaElement>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -141,7 +150,9 @@ export function CommandPalettePage() {
 
     setIsRecognizing(true);
     try {
+      console.log('[CommandPalette] Calling recognizeIntent with:', inputValue);
       const result = await recognizeIntent(inputValue, modelId || undefined);
+      console.log('[CommandPalette] Intent recognition result:', result);
 
       // Handle command errors
       if (result.isCommand && result.commandError) {
@@ -173,25 +184,61 @@ export function CommandPalettePage() {
 
       if (highConfidenceIntents.length > 1) {
         // Multiple high confidence intents - show selection UI
+        console.log('[CommandPalette] Multiple intents detected:', highConfidenceIntents.length);
         setRecognizedIntent(highConfidenceIntents[0]);
         setAlternativeIntents(highConfidenceIntents.slice(1));
         setShowIntentSelection(true);
         setShowIntentConfirm(false);
         setMatchedTools([]);
       } else if (result.intent) {
+        console.log('[CommandPalette] Intent recognized:', result.intent.intentId, 'confidence:', result.intent.confidence, 'isHighConfidence:', result.intent.isHighConfidence);
         setRecognizedIntent(result.intent);
         setAlternativeIntents([]);
 
         if (result.intent.isHighConfidence) {
           // High confidence - auto execute
+          console.log('[CommandPalette] Auto-executing high confidence intent');
           setShowIntentSelection(false);
           setShowIntentConfirm(false);
           setMatchedTools([]);
 
           // Auto execute the intent
           if (result.intent.intentId.includes('ai-') && !isLoggedIn) {
+            console.log('[CommandPalette] AI tool requires login');
             setShowLoginPrompt(true);
           } else {
+            console.log('[CommandPalette] Executing intent:', {
+              intentId: result.intent.intentId,
+              rawInput: result.intent.rawInput,
+              extractedParams: result.intent.extractedParams
+            });
+          console.log('[CommandPalette] Full intent object:', JSON.stringify(result.intent, null, 2));
+
+            // Special case: list all tools - show in tool list instead of executing
+            if (result.intent.intentId === '__list_tools__') {
+              console.log('[CommandPalette] Listing all tools');
+              const tools = result.intent.extractedParams.tools as Array<{
+                id: string;
+                name: string;
+                nameEn: string;
+                description: string;
+                category: string;
+              }>;
+              setShowIntentSelection(false);
+              setShowIntentConfirm(false);
+              setMatchedTools(tools.map(t => ({
+                id: t.id,
+                name: t.name,
+                nameEn: t.nameEn,
+                description: t.description,
+                confidence: 1.0,
+                category: t.category as 'text' | 'developer' | 'ai',
+              })));
+              setRecognizedIntent(null);
+              setIsRecognizing(false);
+              return;
+            }
+
             setIsLoading(true);
             try {
               const execResult = await executeIntent(
@@ -200,6 +247,8 @@ export function CommandPalettePage() {
                 result.intent.extractedParams,
                 modelId || undefined
               );
+
+              console.log('[CommandPalette] Execution result:', JSON.stringify(execResult, null, 2));
 
               if (!execResult.success && (execResult.error?.includes('需要登录') || execResult.error?.includes('登录'))) {
                 setShowLoginPrompt(true);
@@ -222,6 +271,7 @@ export function CommandPalettePage() {
           setMatchedTools([]);
         }
       } else {
+        console.log('[CommandPalette] No intent recognized, falling back to tool list');
         // No intent recognized, fallback to tool list
         setRecognizedIntent(null);
         setShowIntentConfirm(false);
@@ -232,7 +282,7 @@ export function CommandPalettePage() {
         setMatchedTools(tools.slice(0, 10));
       }
     } catch (error) {
-      console.error('Failed to recognize intent:', error);
+      console.error('[CommandPalette] Failed to recognize intent:', error);
       setRecognizedIntent(null);
       setShowIntentConfirm(false);
       setShowIntentSelection(false);
@@ -335,7 +385,7 @@ export function CommandPalettePage() {
     if (!selectedTool) return;
 
     // For uuid-generate, allow execution without input (default to 1 UUID)
-    const isUuidGenerate = selectedTool.id === 'uuid-generate';
+    const isUuidGenerate = displayTool?.id === 'uuid-generate';
     if (!isUuidGenerate && !toolInput.trim()) return;
 
     setIsLoading(true);
@@ -343,7 +393,7 @@ export function CommandPalettePage() {
 
     try {
       const executeData: { toolId: string; input: string; options?: Record<string, unknown>; modelId?: string } = {
-        toolId: selectedTool.id,
+        toolId: selectedTool.id, // Only called when selectedTool is set (manual execution)
         input: toolInput,
         modelId: modelId || undefined,
       };
@@ -387,7 +437,7 @@ export function CommandPalettePage() {
 
     try {
       // For markdown-preview, copy HTML; otherwise copy plain text
-      const contentToCopy = selectedTool?.id === 'markdown-preview'
+      const contentToCopy = displayTool?.id === 'markdown-preview'
         ? renderMarkdownToHtml(toolResult.result)
         : toolResult.result;
       await navigator.clipboard.writeText(contentToCopy);
@@ -494,7 +544,7 @@ export function CommandPalettePage() {
 
       {/* Results area */}
       <div className="flex-1 overflow-y-auto">
-        {selectedTool ? (
+        {displayTool ? (
           // Tool execution view
           <div className="p-4">
             {/* Tool header */}
@@ -508,7 +558,7 @@ export function CommandPalettePage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
-                <span className="font-medium text-gray-900 dark:text-gray-100">{selectedTool.name}</span>
+                <span className="font-medium text-gray-900 dark:text-gray-100">{displayTool.name}</span>
               </div>
             </div>
 
@@ -518,9 +568,9 @@ export function CommandPalettePage() {
               value={toolInput}
               onChange={(e) => setToolInput(e.target.value)}
               onKeyDown={handleToolInputKeyDown}
-              placeholder={selectedTool.id === 'uuid-generate'
+              placeholder={displayTool?.id === 'uuid-generate'
                 ? '输入生成数量（默认1，最大100）...'
-                : `输入要处理的${selectedTool.name}内容...`}
+                : `输入要处理的${displayTool?.name}内容...`}
               className="w-full h-32 px-3 py-2 text-sm bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg resize-none outline-none focus:border-blue-500 dark:text-gray-100 dark:placeholder-gray-500"
               disabled={isLoading}
             />
@@ -529,7 +579,7 @@ export function CommandPalettePage() {
             <div className="mt-3 flex justify-end">
               <button
                 onClick={handleExecuteTool}
-                disabled={(selectedTool.id !== 'uuid-generate' && !toolInput.trim()) || isLoading}
+                disabled={(displayTool?.id !== 'uuid-generate' && !toolInput.trim()) || isLoading}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? '处理中...' : '执行'}
@@ -564,7 +614,7 @@ export function CommandPalettePage() {
                   </button>
                 </div>
                 {toolResult.success ? (
-                  selectedTool?.id === 'markdown-preview' ? (
+                  displayTool?.id === 'markdown-preview' ? (
                     <div className="p-3 text-sm bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-x-auto max-h-[300px] overflow-y-auto">
                       <MarkdownRenderer content={toolResult.result || ''} />
                     </div>

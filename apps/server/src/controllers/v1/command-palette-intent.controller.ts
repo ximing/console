@@ -82,6 +82,16 @@ export class CommandPaletteIntentController {
 
       // 3. Check if tool exists
       const tool = getToolById(body.intentId.trim());
+
+      // Special case: list all tools
+      if (body.intentId.trim() === '__list_tools__') {
+        return ResponseUtility.success({
+          toolId: '__list_tools__',
+          toolName: '列出所有工具',
+          result: JSON.stringify(body.params?.tools || [], null, 2),
+        });
+      }
+
       if (!tool) {
         return ResponseUtility.error(ErrorCode.PARAMS_ERROR, `未知的工具: ${body.intentId}`);
       }
@@ -96,10 +106,21 @@ export class CommandPaletteIntentController {
       // 5. Get userId
       const userId = userDto?.id;
 
-      // 6. Execute the tool with the provided params
+      // 6. Determine the input to use - prefer extracted param if available
+      let toolInput = body.input.trim();
+      if (body.params && Object.keys(body.params).length > 0) {
+        // Get the first param value as input
+        const firstParamKey = Object.keys(body.params)[0];
+        const firstParamValue = body.params[firstParamKey];
+        if (typeof firstParamValue === 'string') {
+          toolInput = firstParamValue;
+        }
+      }
+
+      // 7. Execute the tool with the provided params
       const result = await this.toolExecutionService.execute({
         toolId: body.intentId.trim(),
-        input: body.input.trim(),
+        input: toolInput,
         options: body.params,
         modelId: body.modelId,
         userId: userId,
