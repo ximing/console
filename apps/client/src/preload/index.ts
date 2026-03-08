@@ -45,6 +45,12 @@ const notificationClickCallbackMap = new Map<
   (event: IpcRendererEvent, data: { id: string }) => void
 >();
 
+// Command palette toggle callback map
+const commandPaletteToggleCallbackMap = new Map<
+  CommandPaletteToggleCallback,
+  (event: IpcRendererEvent) => void
+>();
+
 // Log query params type
 export interface LogQueryParams {
   offset?: number;
@@ -74,6 +80,9 @@ export interface LogCountResponse {
   count: number;
   error?: string;
 }
+
+// Command palette callback type
+type CommandPaletteToggleCallback = () => void;
 
 // Log platform info for debugging
 console.log('Preload script loaded, platform:', process.platform);
@@ -170,6 +179,24 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getLogs: (params: LogQueryParams) => ipcRenderer.invoke('get-logs', params),
   getLogCount: (params: Omit<LogQueryParams, 'offset' | 'limit'>) =>
     ipcRenderer.invoke('get-log-count', params),
+
+  // Command palette APIs
+  showCommandPalette: () => ipcRenderer.invoke('show-command-palette'),
+  getCommandPaletteShortcut: () => ipcRenderer.invoke('get-command-palette-shortcut'),
+  onCommandPaletteToggle: (callback: CommandPaletteToggleCallback) => {
+    const wrappedCallback = () => {
+      callback();
+    };
+    commandPaletteToggleCallbackMap.set(callback, wrappedCallback);
+    ipcRenderer.on('toggle-command-palette', wrappedCallback);
+  },
+  removeCommandPaletteToggleListener: (callback: CommandPaletteToggleCallback) => {
+    const wrappedCallback = commandPaletteToggleCallbackMap.get(callback);
+    if (wrappedCallback) {
+      ipcRenderer.removeListener('toggle-command-palette', wrappedCallback);
+      commandPaletteToggleCallbackMap.delete(callback);
+    }
+  },
 });
 
 // --------- Type definitions for Renderer process ---------
@@ -200,6 +227,11 @@ declare global {
       // Log APIs
       getLogs: (params: LogQueryParams) => Promise<LogResponse>;
       getLogCount: (params: Omit<LogQueryParams, 'offset' | 'limit'>) => Promise<LogCountResponse>;
+      // Command palette APIs
+      showCommandPalette: () => Promise<{ success: boolean; error?: string }>;
+      getCommandPaletteShortcut: () => Promise<string>;
+      onCommandPaletteToggle: (callback: () => void) => void;
+      removeCommandPaletteToggleListener: (callback: () => void) => void;
     };
   }
 }

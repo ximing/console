@@ -8,6 +8,7 @@ import { MenuManager } from './menu';
 import { AutoUpdaterManager } from './updater';
 import { setupIPCHandlers } from './ipc';
 import { SocketServer } from './socket';
+import { CommandPaletteHotkey } from './command-palette-hotkey';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,6 +32,7 @@ export async function initializeApp(): Promise<void> {
   const menuManager = new MenuManager(windowManager);
   const updaterManager = new AutoUpdaterManager();
   const socketServer = new SocketServer();
+  const commandPaletteHotkey = new CommandPaletteHotkey(windowManager);
 
   // Connect managers that need each other
   menuManager.setUpdaterManager(updaterManager);
@@ -41,6 +43,9 @@ export async function initializeApp(): Promise<void> {
 
   // Initialize managers
   windowManager.create();
+
+  // Register command palette hotkey after window is ready
+  commandPaletteHotkey.register();
 
   // Delay other initializations to let window load first
   setTimeout(() => {
@@ -72,6 +77,7 @@ export async function initializeApp(): Promise<void> {
 
   app.on('will-quit', () => {
     // Cleanup
+    commandPaletteHotkey.unregisterAll();
     socketServer.stop();
     logger.close();
   });

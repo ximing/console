@@ -218,4 +218,19 @@ export function setupIPCHandlers(
       }
     }
   );
+
+  // Command palette IPC
+  ipcMain.handle('show-command-palette', () => {
+    const window = windowManager.getWindow();
+    if (window) {
+      window.webContents.send('toggle-command-palette');
+      return { success: true };
+    }
+    return { success: false, error: 'Window not available' };
+  });
+
+  // Get command palette hotkey for display
+  ipcMain.handle('get-command-palette-shortcut', () => {
+    return process.platform === 'darwin' ? 'Option+Space' : 'Alt+Space';
+  });
 }
