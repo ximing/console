@@ -872,3 +872,23 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - Tree operations need to maintain sorted order after modifications
   - Force close tabs when deleting to prevent dirty state issues
 ---
+
+## 2026-03-09 00:50:00 - US-007 (GitHub Integration)
+- Implemented commitChanges method in GithubService:
+  - commitChanges(message, selectedPaths): commits specified files or all pending changes
+  - 1) getRef: gets current branch HEAD sha
+  - 2) getCommit: gets current commit's tree sha as base
+  - 3) createTree: builds new tree with changes (create/edit via blob, delete via sha: null)
+  - 4) createCommit: creates new commit with message
+  - 5) updateRef: updates branch ref to new commit
+- After commit success: removes from pendingChanges, marks tab isDirty = false
+- Typecheck and lint pass
+- Files changed:
+  - apps/web/src/pages/github/github.service.ts (updated)
+  - tasks/prd.json (marked US-007 as complete)
+- **Learnings for future iterations:**
+  - Git Tree API requires creating blobs for new/edited files before creating tree
+  - Delete operations use sha: null in tree entry to remove files
+  - Commit requires parent commit (current HEAD) in parents array
+  - Base tree sha from getCommit response needed as base_tree for createTree
+---
