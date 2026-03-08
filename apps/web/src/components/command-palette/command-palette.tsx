@@ -19,7 +19,7 @@ export function CommandPalette() {
 
   const inputRef = useRef<HTMLInputElement>(null);
   const toolInputRef = useRef<HTMLTextAreaElement>(null);
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Focus input when modal opens
   useEffect(() => {
@@ -130,16 +130,29 @@ export function CommandPalette() {
 
   // Handle tool execution
   const handleExecuteTool = async () => {
-    if (!selectedTool || !toolInput.trim()) return;
+    if (!selectedTool) return;
+
+    // For uuid-generate, allow execution without input (default to 1 UUID)
+    const isUuidGenerate = selectedTool.id === 'uuid-generate';
+    if (!isUuidGenerate && !toolInput.trim()) return;
 
     setIsLoading(true);
     setToolResult(null);
 
     try {
-      const result = await executeTool({
+      const executeData: { toolId: string; input: string; options?: Record<string, unknown> } = {
         toolId: selectedTool.id,
         input: toolInput,
-      });
+      };
+
+      // For uuid-generate, parse input as count or use default
+      if (isUuidGenerate) {
+        const count = toolInput.trim() ? parseInt(toolInput.trim(), 10) : 1;
+        executeData.options = { count: isNaN(count) ? 1 : Math.min(Math.max(count, 1), 100) };
+        executeData.input = ''; // UUID doesn't need input
+      }
+
+      const result = await executeTool(executeData);
       setToolResult(result);
     } catch (error) {
       setToolResult({
@@ -252,7 +265,9 @@ export function CommandPalette() {
                 value={toolInput}
                 onChange={(e) => setToolInput(e.target.value)}
                 onKeyDown={handleToolInputKeyDown}
-                placeholder={`输入要处理的${selectedTool.name}内容...`}
+                placeholder={selectedTool.id === 'uuid-generate'
+                  ? '输入生成数量（默认1，最大100）...'
+                  : `输入要处理的${selectedTool.name}内容...`}
                 className="w-full h-32 px-3 py-2 text-sm bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg resize-none outline-none focus:border-blue-500 dark:text-gray-100 dark:placeholder-gray-500"
                 disabled={isLoading}
               />
@@ -261,7 +276,7 @@ export function CommandPalette() {
               <div className="mt-3 flex justify-end">
                 <button
                   onClick={handleExecuteTool}
-                  disabled={!toolInput.trim() || isLoading}
+                  disabled={(selectedTool.id !== 'uuid-generate' && !toolInput.trim()) || isLoading}
                   className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? '处理中...' : '执行'}
@@ -298,7 +313,7 @@ export function CommandPalette() {
                   {toolResult.success ? (
                     selectedTool?.id === 'markdown-preview' ? (
                       <div className="p-3 text-sm bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-x-auto max-h-[300px] overflow-y-auto">
-                        <MarkdownRenderer content={toolResult.result} />
+                        <MarkdownRenderer content={toolResult.result || ''} />
                       </div>
                     ) : (
                       <pre className="p-3 text-xs bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-x-auto text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
