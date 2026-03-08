@@ -4,3 +4,31 @@
 - Controllers use ResponseUtil for consistent response format
 - AI tools identified by category: 'ai' in tool-registry.ts
 
+## 2026-03-08 - US-001
+- Implemented intent recognition API endpoint at /api/command-palette/intent
+- Created CommandPaletteIntentService for AI-powered intent recognition
+- Added parameter extraction from user input
+- High confidence threshold set to >= 0.8
+- Files changed:
+  - apps/server/src/services/command-palette-intent.service.ts (new)
+  - apps/server/src/controllers/v1/command-palette-intent.controller.ts (new)
+  - apps/server/src/controllers/index.ts (modified)
+- **Learnings for future iterations:**
+  - Follow the existing AIRouteService pattern for new AI services
+  - Use CONFIDENCE_HIGH = 0.8 and CONFIDENCE_MEDIUM = 0.7 constants for confidence thresholds
+  - Intent results include both primary intent and alternative intents for multi-intent scenarios
+  - Parameter extraction is done via AI prompt engineering in the system prompt
+---
+
+## 2026-03-08 - US-002
+- Implemented high confidence intent auto-execution endpoint at /api/command-palette/execute
+- Added POST /api/command-palette/execute that executes tools when confidence >= 0.8
+- Integrated with existing ToolExecutionService for tool execution
+- Added authentication check for AI tools
+- Files changed:
+  - apps/server/src/controllers/v1/command-palette-intent.controller.ts (modified)
+- **Learnings for future iterations:**
+  - Reuse existing ToolExecutionService for executing tools
+  - Check tool.category === 'ai' for authentication requirements
+  - The frontend will call /execute endpoint when isHighConfidence is true
+---
