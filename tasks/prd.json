@@ -203,7 +203,7 @@
         "Typecheck passes"
       ],
       "priority": 13,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -218,8 +218,8 @@
         "Typecheck passes"
       ],
       "priority": 14,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Backend implementation complete. AI summarize tool registered in tool-registry with keywords ['总结', 'summarize', '摘要', 'summary', '概括', '精简']. Uses LangChain AI with text summarization prompt. Auth check implemented in tool-execution.controller.ts."
     },
     {
       "id": "US-015",
@@ -233,8 +233,8 @@
         "Typecheck passes"
       ],
       "priority": 15,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Backend implementation complete. AI code explain tool registered in tool-registry with keywords ['代码', 'code', '解释', 'explain', '说明', '分析', '编程']. Uses LangChain AI with code explanation prompt. Supports multiple programming languages. Auth check implemented in tool-execution.controller.ts."
     },
     {
       "id": "US-016",
