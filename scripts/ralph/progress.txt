@@ -853,3 +853,22 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - Use Map for pendingChanges to track unsaved edits by path
   - Tab close returns boolean to indicate if close was successful (allows caller to prompt)
 ---
+
+## 2026-03-09 00:40:00 - US-006 (GitHub Integration)
+- Implemented create file/directory and delete file methods in GithubService:
+  - createFile(path): adds to pendingChanges { type: 'create', content: '' }, inserts node to fileTree, opens empty tab (isNew: true, isDirty: true)
+  - createDirectory(path): inserts directory node to fileTree only (no pendingChanges, Git doesn't support empty directories)
+  - deleteFile(path): adds to pendingChanges { type: 'delete', sha }, removes from fileTree, force closes tab
+  - Helper methods: addNodeToTree(), removeNodeFromTree() for tree manipulation
+- addNodeToTree() recursively finds/creates nodes by path, maintains sorted order (dirs first)
+- removeNodeFromTree() navigates to parent directory, removes file node
+- Typecheck and lint pass
+- Files changed:
+  - apps/web/src/pages/github/github.service.ts (updated)
+  - tasks/prd.json (marked US-006 as complete)
+- **Learnings for future iterations:**
+  - Git doesn't support empty directories, only track them in local tree
+  - When deleting, need to get sha from open tab before removing
+  - Tree operations need to maintain sorted order after modifications
+  - Force close tabs when deleting to prevent dirty state issues
+---

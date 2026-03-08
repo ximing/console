@@ -373,6 +373,120 @@ export class GithubService extends Service {
       });
     }
   }
+
+  /**
+   * Create a new file (local only, pending commit)
+   */
+  createFile(path: string): void {
+    // Add to pending changes
+    this.pendingChanges.set(path, {
+      type: 'create',
+      content: '',
+    });
+
+    // Add to file tree
+    this.addNodeToTree(this.fileTree, path, 'blob');
+
+    // Open empty tab
+    const newTab: OpenTab = {
+      path,
+      content: '',
+      isDirty: true,
+      isNew: true,
+    };
+    this.openTabs.push(newTab);
+    this.activeTabPath = path;
+  }
+
+  /**
+   * Create a new directory (local only)
+   */
+  createDirectory(path: string): void {
+    // Add to file tree only (Git doesn't support empty directories)
+    this.addNodeToTree(this.fileTree, path, 'tree');
+  }
+
+  /**
+   * Add a node to the file tree
+   */
+  private addNodeToTree(tree: FileTreeNode[], path: string, type: 'tree' | 'blob'): void {
+    const parts = path.split('/');
+    let current = tree;
+
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      const isLast = i === parts.length - 1;
+
+      let node = current.find((n) => n.name === part);
+
+      if (!node) {
+        node = {
+          name: part,
+          path: isLast ? path : parts.slice(0, i + 1).join('/'),
+          type: isLast ? type : 'tree',
+          children: isLast ? undefined : [],
+        };
+        current.push(node);
+      }
+
+      if (node.children) {
+        current = node.children;
+      }
+    }
+
+    // Sort after adding
+    current.sort((a, b) => {
+      if (a.type !== b.type) {
+        return a.type === 'tree' ? -1 : 1;
+      }
+      return a.name.localeCompare(b.name);
+    });
+  }
+
+  /**
+   * Delete a file (local only, pending commit)
+   */
+  deleteFile(path: string): void {
+    // Find the file to get its sha
+    const tab = this.openTabs.find((t) => t.path === path);
+
+    // Add to pending changes
+    this.pendingChanges.set(path, {
+      type: 'delete',
+      sha: tab?.sha,
+    });
+
+    // Remove from file tree
+    this.removeNodeFromTree(this.fileTree, path);
+
+    // Force close tab if open
+    this.forceCloseTab(path);
+  }
+
+  /**
+   * Remove a node from the file tree
+   */
+  private removeNodeFromTree(tree: FileTreeNode[], path: string): void {
+    const parts = path.split('/');
+    const fileName = parts.pop();
+    let current = tree;
+
+    // Navigate to parent directory
+    for (const part of parts) {
+      const node = current.find((n) => n.name === part && n.type === 'tree');
+      if (node?.children) {
+        current = node.children;
+      } else {
+        return;
+      }
+    }
+
+    // Remove the file
+    const index = current.findIndex((n) => n.name === fileName);
+    if (index !== -1) {
+      current.splice(index, 1);
+    }
+  }
 }
 
 // Export singleton instance
