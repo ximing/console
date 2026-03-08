@@ -745,3 +745,45 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - Timestamps use millisecond precision with { mode: 'date', fsp: 3 }
   - Export types: GithubRepo and NewGithubRepo alongside schema
 ---
+
+## 2026-03-08 23:55:00 - US-002 (GitHub Integration)
+- Implemented encryption service using AES-256-GCM:
+  - apps/server/src/services/encryption.service.ts (new)
+  - Validates ENCRYPTION_KEY env var (must be exactly 32 characters)
+  - Uses random 16-byte IV and 16-byte auth tag
+  - Encrypt returns base64(IV + ciphertext + authTag), decrypt reverses
+- Created GitHub repo DTOs in packages/dto/src/github-repo.ts:
+  - CreateGithubRepoDto, UpdateGithubRepoDto, GithubRepoDto, GithubRepoListDto, GithubRepoTokenDto
+- Created GithubRepoService with CRUD operations:
+  - createRepo(userId, data) - encrypts PAT before storage
+  - getRepos(userId) - returns repos without PAT
+  - getRepo(id, userId) - returns single repo without PAT (verifies ownership)
+  - getRepoToken(id, userId) - returns decrypted PAT
+  - updateRepo(id, userId, data) - re-encrypts PAT if provided
+  - deleteRepo(id, userId) - deletes repo record
+- Created GithubController with REST endpoints:
+  - GET /api/v1/github/repos - list repos
+  - POST /api/v1/github/repos - create repo (encrypts PAT)
+  - PUT /api/v1/github/repos/:id - update repo
+  - DELETE /api/v1/github/repos/:id - delete repo
+  - GET /api/v1/github/repos/:id/token - get decrypted PAT
+- Added ENCRYPTION_KEY to .env and .env.example
+- Build and lint pass
+- Files changed:
+  - apps/server/src/services/encryption.service.ts (new)
+  - apps/server/src/services/github-repo.service.ts (new)
+  - apps/server/src/controllers/v1/github.controller.ts (new)
+  - apps/server/src/controllers/index.ts (export GithubController)
+  - packages/dto/src/github-repo.ts (new)
+  - packages/dto/src/index.ts (export github-repo)
+  - apps/server/.env.example (added ENCRYPTION_KEY)
+  - apps/server/.env (added ENCRYPTION_KEY)
+  - tasks/prd.json (marked US-002 as complete)
+- **Learnings for future iterations:**
+  - Encryption key must be exactly 32 characters for AES-256
+  - Use base64 encoding to store binary ciphertext safely in database
+  - Store IV + ciphertext + authTag together for decryption
+  - Never return actual PAT in list/get endpoints - only return on dedicated token endpoint
+  - Services use getEncryptionService() to get singleton instance
+  - DTOs export plain TypeScript interfaces from packages/dto
+---

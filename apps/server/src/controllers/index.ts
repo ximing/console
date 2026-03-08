@@ -10,6 +10,7 @@ import { ToolExecutionController } from './v1/tool-execution.controller.js';
 import { UserModelController } from './v1/user-model.controller.js';
 import { ApiTokenController } from './v1/api-token.controller.js';
 import { CommandPaletteIntentController } from './v1/command-palette-intent.controller.js';
+import { GithubController } from './v1/github.controller.js';
 import { StaticController } from './static.controller.js';
 
 export const controllers = [
@@ -24,5 +25,6 @@ export const controllers = [
   UserModelController,
   ApiTokenController,
   CommandPaletteIntentController,
+  GithubController,
   StaticController,
 ];
