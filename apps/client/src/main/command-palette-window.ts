@@ -49,8 +49,8 @@ export class CommandPaletteWindowManager {
       },
     });
 
-    // Load the command palette route
-    this.window.loadURL(`${VITE_DEV_SERVER_URL}/command-palette`);
+    // Load the command palette route (use hash format for HashRouter in Electron)
+    this.window.loadURL(`${VITE_DEV_SERVER_URL}/#/command-palette`);
 
     this.window.once('ready-to-show', () => {
       logger.info('[CommandPaletteWindowManager] Window ready to show');
