@@ -11,7 +11,8 @@
 - 提供文件树浏览功能，展示仓库目录结构
 - 支持多 Tab 同时打开多个文件，每个 Tab 独立编辑
 - 支持在 CodeMirror 编辑器中查看和编辑文件内容
-- 支持批量提交修改（可勾选部分文件），使用 Git Tree API 实现原子提交
+- 支持通过右键菜单在文件树中创建新文件、删除文件
+- 支持批量提交修改（含新建/删除，可勾选部分文件），使用 Git Tree API 实现原子提交
 - PAT 在后端 MySQL 中以 AES-256-GCM 加密存储
 
 ## User Stories
@@ -57,14 +58,17 @@
   - `selectedBranch: string`
   - `branches: string[]`
   - `fileTree: FileTreeNode[]`
-  - `openTabs: OpenTab[]` — 已打开的 Tab 列表，每项包含 `{ path, content, sha, isDirty }`
+  - `openTabs: OpenTab[]` — 已打开的 Tab 列表，每项包含 `{ path, content, sha, isDirty, isNew }`（`isNew: true` 表示新建文件）
   - `activeTabPath: string | null` — 当前激活的 Tab 路径
-  - `pendingChanges: Map<string, string>` — 所有有修改的文件 path -> content（跨 Tab 共享）
-- [ ] 提供方法：`loadRepos()`、`selectRepo(repo)`、`selectBranch(branch)`、`loadFileTree()`、`openFile(path)`、`closeTab(path)`、`setActiveTab(path)`、`updateFile(path, content)`、`commitChanges(message, selectedPaths)`
+  - `pendingChanges: Map<string, PendingChange>` — 所有待提交变更，key 为 path，value 为 `{ type: 'edit' | 'create' | 'delete', content?: string, sha?: string }`
+- [ ] 提供方法：`loadRepos()`、`selectRepo(repo)`、`selectBranch(branch)`、`loadFileTree()`、`openFile(path)`、`closeTab(path)`、`setActiveTab(path)`、`updateFile(path, content)`、`createFile(path)`、`createDirectory(path)`、`deleteFile(path)`、`commitChanges(message, selectedPaths)`
 - [ ] `openFile(path)`：若 Tab 已存在则切换激活，否则调用 GitHub API 获取内容（`atob()` 解码），新增 Tab
+- [ ] `createFile(path)`：在 `pendingChanges` 中记录 `{ type: 'create', content: '' }`，在文件树内存中插入新文件节点，并新开一个空 Tab（`isNew: true`）
+- [ ] `createDirectory(path)`：在文件树内存中插入新目录节点（注意：Git 不支持空目录，该目录仅存在于内存中，需在其下创建至少一个文件才能提交）
+- [ ] `deleteFile(path)`：在 `pendingChanges` 中记录 `{ type: 'delete' }`，从文件树内存中移除节点，若该文件有打开的 Tab 则关闭
 - [ ] `closeTab(path)`：若该 Tab 有未提交修改（`isDirty: true`），不直接关闭，由调用方处理确认逻辑
 - [ ] `loadFileTree()` 使用 `@octokit/rest` 调用 `GET /repos/{owner}/{repo}/git/trees/{sha}?recursive=1`，在内存中构建树形结构
-- [ ] `commitChanges(message, selectedPaths)` 使用 Git Tree API 原子提交：`createTree` → `createCommit` → `updateRef`，仅提交 `selectedPaths` 中的文件
+- [ ] `commitChanges(message, selectedPaths)` 使用 Git Tree API 原子提交：`createTree` → `createCommit` → `updateRef`；对于 `delete` 类型的文件，在 tree 中传入 `sha: null` 以删除
 - [ ] Typecheck 通过
 
 ### US-005: 仓库管理面板组件（RepoManager）
@@ -92,7 +96,7 @@
 - [ ] Verify in browser using dev-browser skill
 
 ### US-007: 左侧文件树组件（FileTree）
-**Description:** As a user, I want to browse the repository file tree so that I can navigate to files I want to edit.
+**Description:** As a user, I want to browse the repository file tree and manage files via right-click menu so that I can navigate, create, and delete files.
 
 **Acceptance Criteria:**
 - [ ] 创建 `apps/web/src/pages/github/components/file-tree.tsx`
@@ -100,7 +104,12 @@
 - [ ] 文件图标和目录图标视觉区分
 - [ ] 点击文件触发 `openFile(path)`，加载文件内容到编辑器
 - [ ] 当前打开的文件高亮显示
-- [ ] 有未提交修改的文件显示修改标记（如小圆点）
+- [ ] 有未提交修改（`pendingChanges` 中存在）的文件显示修改标记（`M`）；新建文件显示 `+` 标记；待删除文件显示删除样式（文字删除线 + 红色）
+- [ ] 右键点击**目录**弹出上下文菜单，菜单项："新建文件"、"新建目录"
+  - 点击"新建文件"后弹出输入框让用户输入文件名，确认后调用 `createFile(dirPath + '/' + fileName)`
+  - 点击"新建目录"后弹出输入框让用户输入目录名，确认后调用 `createDirectory(dirPath + '/' + dirName)`
+- [ ] 右键点击**文件**弹出上下文菜单，菜单项："删除文件"
+  - 点击后弹出确认对话框（"确认删除 xxx？"），用户确认后调用 `deleteFile(path)`
 - [ ] 文件树宽度固定 240px
 - [ ] Typecheck 通过
 - [ ] Verify in browser using dev-browser skill
@@ -127,7 +136,7 @@
 **Acceptance Criteria:**
 - [ ] 创建 `apps/web/src/pages/github/components/commit-dialog.tsx`
 - [ ] 点击顶部"提交"按钮弹出对话框；若 `pendingChanges` 为空，按钮禁用
-- [ ] 对话框列出所有 `pendingChanges` 中的文件，每项有勾选框，默认全选
+- [ ] 对话框列出所有 `pendingChanges` 中的文件，每项有勾选框，默认全选；每项显示变更类型标记：`M`（编辑）、`+`（新建）、`-`（删除）
 - [ ] 对话框包含 commit message 输入框（必填），未填写时提交按钮禁用
 - [ ] 确认提交后调用 `commitChanges(message, selectedPaths)`，使用 Git Tree API 原子提交所有勾选文件
 - [ ] 提交期间显示 loading 状态，防止重复点击
@@ -179,14 +188,17 @@
 - FR-6: 系统必须根据文件扩展名自动为 CodeMirror 选择语言包
 - FR-7: 系统必须使用 Git Tree API（createTree → createCommit → updateRef）实现原子提交，一次 commit 包含所有勾选文件
 - FR-8: 系统必须在侧边栏显示 GitHub 图标，点击导航到 `/github` 页面
-- FR-9: 系统必须在 `pendingChanges` 中跟踪所有未提交的文件修改
+- FR-9: 系统必须在 `pendingChanges` 中跟踪所有未提交变更，变更类型包括 `edit`（编辑）、`create`（新建）、`delete`（删除）
+- FR-13: 用户可通过右键点击目录触发"新建文件"或"新建目录"；新建文件创建空文件并纳入 `pendingChanges`；新建目录仅在内存文件树中创建节点（Git 不支持空目录，须在其下新建文件后才可提交）
+- FR-14: 用户可通过右键点击文件触发"删除文件"，确认后标记为待删除并纳入 `pendingChanges`
+- FR-15: Git Tree API 提交时，`delete` 类型文件通过传入 `sha: null` 实现删除，`create` 类型文件通过传入新内容实现创建
 - FR-10: 系统必须支持多 Tab 同时打开多个文件，Tab 间独立编辑，`isDirty` 状态独立跟踪
 - FR-11: 关闭有未提交修改的 Tab 时，系统必须弹出确认对话框，用户确认后才关闭
 - FR-12: CommitDialog 必须支持用户勾选部分文件纳入本次提交
 
 ## Non-Goals
 
-- 不支持创建新文件或删除文件
+- 不支持重命名文件或移动文件
 - 不支持 Pull Request 创建或 Code Review
 - 不支持 Git blame、diff 视图
 - 不支持 GitHub OAuth 登录（仅 PAT）
@@ -226,7 +238,9 @@
 - **Git Tree API 原子提交流程**：
   1. `octokit.git.getRef` 获取当前分支 HEAD sha
   2. `octokit.git.getCommit` 获取 HEAD commit 的 tree sha
-  3. `octokit.git.createTree` 传入 base_tree + 所有修改文件（mode: `100644`, type: `blob`, content: 文件内容）
+  3. `octokit.git.createTree` 传入 base_tree + 所有变更文件：
+     - `edit`/`create`：`{ path, mode: '100644', type: 'blob', content: 文件内容 }`
+     - `delete`：`{ path, mode: '100644', type: 'blob', sha: null }`
   4. `octokit.git.createCommit` 创建新 commit（parents: [HEAD sha], tree: 新 tree sha）
   5. `octokit.git.updateRef` 将分支指向新 commit sha
 
@@ -238,5 +252,5 @@
 
 ## Open Questions
 
-- `ENCRYPTION_KEY` 的密钥管理方案是否需要轮换机制？
-- 文件树超大仓库（>10000 文件）是否需要懒加载优化？
+- `ENCRYPTION_KEY` 的密钥管理方案是否需要轮换机制？ 不需要
+- 文件树超大仓库（>10000 文件）是否需要懒加载优化？不需要
