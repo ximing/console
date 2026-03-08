@@ -4,7 +4,7 @@ import { view, useService } from '@rabjs/react';
 import { AuthService } from '../services/auth.service';
 import { ThemeService } from '../services/theme.service';
 import { NotificationService } from '../services/notification.service';
-import { Zap, Sun, Moon, LogOut, Settings, ListTodo, Bell } from 'lucide-react';
+import { Zap, Sun, Moon, LogOut, Settings, ListTodo, Bell, Github } from 'lucide-react';
 import logoUrl from '../assets/logo.png';
 import logoDarkUrl from '../assets/logo-dark.png';
 import { isElectron, isMacOS } from '../electron/isElectron';
@@ -45,6 +45,7 @@ export const Layout = view(({ children }: LayoutProps) => {
   const isSettingsPage = location.pathname.startsWith('/settings');
   const isTasksPage = location.pathname.startsWith('/tasks');
   const isNotificationsPage = location.pathname.startsWith('/notifications');
+  const isGithubPage = location.pathname.startsWith('/github');
 
   // Get unread count from service (updated via socket events)
   const unreadCount = notificationService.unreadCount;
@@ -169,6 +170,23 @@ export const Layout = view(({ children }: LayoutProps) => {
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}
+          </button>
+
+          {/* GitHub Navigation */}
+          <button
+            onClick={() => {
+              const search = location.search;
+              navigate(`/github${search}`);
+            }}
+            className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors ${
+              isGithubPage
+                ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-800'
+            }`}
+            title="GitHub"
+            aria-label="GitHub"
+          >
+            <Github className="w-6 h-6" />
           </button>
         </nav>
 

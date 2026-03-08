@@ -994,3 +994,28 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - Error handling shows original error message from service
   - Use Set for tracking selected paths
 ---
+
+## 2026-03-09 02:20:00 - US-013 (GitHub Integration)
+- Created GitHub page main component and routing:
+  - Created apps/web/src/pages/github/github.tsx with full layout
+  - Header: RepoSelector + CommitButton
+  - Left sidebar: FileTree (240px)
+  - Right: EditorArea
+  - Created apps/web/src/pages/github/index.tsx route entry
+  - Registered /github route in App.tsx
+  - Added Github icon to sidebar navigation in layout.tsx
+  - Shows RepoManager when no repo is configured
+  - Registered GithubService globally in main.tsx
+- Typecheck and lint pass
+- Files changed:
+  - apps/web/src/pages/github/github.tsx (new)
+  - apps/web/src/pages/github/index.tsx (new)
+  - apps/web/src/App.tsx (added route)
+  - apps/web/src/components/layout.tsx (added nav)
+  - apps/web/src/main.tsx (registered service)
+  - tasks/prd.json (marked US-013 as complete)
+- **Learnings for future iterations:**
+  - Use register() from @rabjs/react to register services globally
+  - Route paths use /* suffix for nested routes
+  - Sidebar nav uses isXxxPage checks with startsWith for sub-routes
+---
