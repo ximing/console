@@ -10,3 +10,19 @@
   - IPC between main and renderer uses contextBridge.exposeInMainWorld
   - Use callback maps in preload to properly manage event listener lifecycle
 ---
+
+## 2026-03-08T17:00:00Z - US-002
+- Created CommandPalette component in apps/web/src/components/command-palette/
+- Component listens to IPC toggle event from Electron main process
+- Panel centered with 600px width, max 70vh height
+- Semi-transparent backdrop (bg-black/50)
+- Auto-focused input with search icon
+- Closes on ESC key or backdrop click
+- Only renders in Electron environment (isElectron() check)
+- Added CommandPalette to App.tsx for global rendering
+- **Learnings for future iterations:**
+  - Use isElectron() from apps/web/src/electron/isElectron.ts to check environment
+  - Component listens to onCommandPaletteToggle IPC event exposed in preload
+  - Use useRef and useEffect for auto-focus on input
+  - Use callback-based IPC listener pattern with cleanup in useEffect
+---
