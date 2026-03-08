@@ -930,3 +930,25 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - File tree reloads when branch changes via selectBranch()
   - Protected branches are marked in the branch list
 ---
+
+## 2026-03-09 01:30:00 - US-010 (GitHub Integration)
+- Created FileTree component with file browser and right-click menu:
+  - Created apps/web/src/pages/github/components/file-tree.tsx
+  - Directory expand/collapse with chevron icons
+  - File/folder icons with visual differentiation
+  - Click file to open (calls openFile(path))
+  - Active file highlight with bg-primary
+  - Status markers: M (modified), + (new), - (deleted) with strikethrough for deleted
+  - Right-click on directory shows "新建文件" and "新建目录" menu
+  - Right-click on file shows "删除文件" menu with confirmation dialog
+  - Inline input for new file/directory names
+  - Fixed TypeScript errors: type-only import for FileTreeNode, removed unused Plus import
+- Typecheck and lint pass (2 pre-existing warnings in other files)
+- Files changed:
+  - apps/web/src/pages/github/components/file-tree.tsx (new)
+  - tasks/prd.json (marked US-010 as complete)
+- **Learnings for future iterations:**
+  - Use type-only imports when verbatimModuleSyntax is enabled (import { type X } from '...')
+  - Lucide icons need to be cleaned up - remove unused imports to avoid TS6133 errors
+  - Context menus need click-outside handler to close
+---
