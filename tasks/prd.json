@@ -1,0 +1,271 @@
+{
+  "project": "X-Console",
+  "branchName": "ralph/command-palette",
+  "description": "在 Electron 桌面客户端中实现类似 uTools 的命令面板工具，通过全局快捷键唤起，AI 判断使用哪个工具",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "注册全局快捷键和 IPC 通信",
+      "description": "作为开发者，我需要在 Electron 主进程中注册全局快捷键并与渲染进程通信。",
+      "acceptanceCriteria": [
+        "在主进程中注册 Option+Space (macOS) 和 Alt+Space (Windows/Linux) 全局快捷键",
+        "创建 IPC 通道用于显示/隐藏命令面板",
+        "在 preload 中暴露 IPC 方法供渲染进程调用",
+        "快捷键冲突时优雅处理",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "创建命令面板 UI 组件",
+      "description": "作为用户，我希望通过快捷键弹出命令面板进行操作。",
+      "acceptanceCriteria": [
+        "创建 CommandPalette 主组件",
+        "面板居中弹出，带半透明背景遮罩",
+        "面板宽度 600px，最大高度 70vh",
+        "输入框自动聚焦，带图标",
+        "Esc 或点击遮罩可关闭面板",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "实现 AI 路由后端端点",
+      "description": "作为开发者，我需要在后端实现 AI 路由端点，根据用户输入判断使用哪个工具。",
+      "acceptanceCriteria": [
+        "创建 POST /api/ai-route 端点",
+        "接收用户输入文本",
+        "调用 AI 返回匹配的工具列表",
+        "支持返回多个工具供用户选择",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "实现工具执行后端端点",
+      "description": "作为开发者，我需要实现工具执行端点，支持 AI 辅助类工具的执行。",
+      "acceptanceCriteria": [
+        "创建 POST /api/tool/execute 端点",
+        "接收 toolId、input、options 参数",
+        "返回执行结果",
+        "支持 AI 辅助工具（翻译、总结、代码解释）",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "实现文本处理工具 - JSON 格式化",
+      "description": "作为用户，我需要快速格式化 JSON 字符串。",
+      "acceptanceCriteria": [
+        "在前端实现 JSON 格式化工具函数",
+        "输入 JSON 字符串，输出格式化后的 JSON",
+        "JSON 解析错误时显示友好错误信息",
+        "支持一键复制结果",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "实现文本处理工具 - Base64 编码/解码",
+      "description": "作为用户，我需要 Base64 编码和解码功能。",
+      "acceptanceCriteria": [
+        "在前端实现 Base64 编码/解码工具函数",
+        "支持自动判断是编码还是解码需求",
+        "支持一键复制结果",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "实现文本处理工具 - URL 编码/解码",
+      "description": "作为用户，我需要 URL 编码和解码功能。",
+      "acceptanceCriteria": [
+        "在前端实现 URL 编码/解码工具函数",
+        "支持自动判断是编码还是解码需求",
+        "支持一键复制结果",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "实现文本处理工具 - Markdown 预览",
+      "description": "作为用户，我需要将 Markdown 渲染为 HTML 预览。",
+      "acceptanceCriteria": [
+        "在前端实现 Markdown 渲染工具函数",
+        "支持代码高亮",
+        "支持一键复制 HTML",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "实现开发工具 - UUID 生成",
+      "description": "作为开发者，我需要生成 UUID v4。",
+      "acceptanceCriteria": [
+        "在前端实现 UUID 生成工具",
+        "生成符合 RFC 4122 的 UUID v4",
+        "支持批量生成",
+        "支持一键复制结果",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "实现开发工具 - 颜色转换",
+      "description": "作为开发者，我需要颜色格式转换。",
+      "acceptanceCriteria": [
+        "在前端实现颜色转换工具函数",
+        "支持 HEX → RGB → HSL 相互转换",
+        "支持输入任一格式自动识别",
+        "支持一键复制结果",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "实现开发工具 - 时间戳转换",
+      "description": "作为开发者，我需要时间戳和日期时间互转。",
+      "acceptanceCriteria": [
+        "在前端实现时间戳转换工具函数",
+        "支持 Unix 时间戳 → 日期时间",
+        "支持日期时间 → Unix 时间戳",
+        "支持秒和毫秒两种格式",
+        "支持一键复制结果",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "实现开发工具 - Hash 计算",
+      "description": "作为开发者，我需要计算字符串的 Hash 值。",
+      "acceptanceCriteria": [
+        "在前端实现 Hash 计算工具函数",
+        "支持 MD5 计算",
+        "支持 SHA256 计算",
+        "支持一键复制结果",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "实现 AI 辅助工具 - 翻译",
+      "description": "作为用户，我需要 AI 翻译文本。",
+      "acceptanceCriteria": [
+        "在工具执行端点实现翻译功能",
+        "调用 AI 进行翻译",
+        "支持语言检测",
+        "需要验证用户登录状态",
+        "Typecheck passes"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "实现 AI 辅助工具 - 总结",
+      "description": "作为用户，我需要 AI 总结文本。",
+      "acceptanceCriteria": [
+        "在工具执行端点实现总结功能",
+        "调用 AI 进行文本总结",
+        "支持不同长度的文本",
+        "需要验证用户登录状态",
+        "Typecheck passes"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "实现 AI 辅助工具 - 代码解释",
+      "description": "作为开发者，我需要 AI 解释代码。",
+      "acceptanceCriteria": [
+        "在工具执行端点实现代码解释功能",
+        "调用 AI 解释输入的代码",
+        "支持多种编程语言",
+        "需要验证用户登录状态",
+        "Typecheck passes"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-016",
+      "title": "设置页配置 AI 模型",
+      "description": "作为用户，我需要在设置页配置命令面板使用的 AI 模型。",
+      "acceptanceCriteria": [
+        "在设置页添加命令面板配置区域",
+        "从大模型设置中获取可用模型列表",
+        "保存用户选择的模型配置到本地存储",
+        "AI 路由和执行使用用户配置的模型",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-017",
+      "title": "AI 工具用户认证",
+      "description": "作为用户，我需要登录后才能使用 AI 辅助工具。",
+      "acceptanceCriteria": [
+        "AI 工具执行时验证用户登录状态",
+        "未登录时提示用户登录",
+        "登录状态在面板中显示",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
