@@ -808,3 +808,25 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - Return response.data directly from API calls
   - Import DTO types from @x-console/dto package
 ---
+
+## 2026-03-09 00:20:00 - US-004 (GitHub Integration)
+- Created GithubService in apps/web/src/pages/github/github.service.ts:
+  - Observable state: repos, selectedRepo, selectedBranch, branches, isLoadingRepos, isLoadingBranches, error
+  - Uses @rabjs/react Service class pattern
+  - Methods: loadRepos(), selectRepo(), loadBranches(), selectBranch(), clearSelectedRepo()
+- Installed @octokit/rest dependency for GitHub API
+- selectRepo() fetches decrypted PAT via API, initializes Octokit, loads branches
+- loadBranches() calls GET /repos/{owner}/{repo}/branches
+- Auto-selects default branch (main/master) after loading
+- Typecheck and lint pass
+- Files changed:
+  - apps/web/src/pages/github/github.service.ts (new)
+  - apps/web/package.json (added @octokit/rest)
+  - tasks/prd.json (marked US-004 as complete)
+- **Learnings for future iterations:**
+  - Service extends Service from @rabjs/react (not a decorator)
+  - Octokit initialized with auth token from getToken() API
+  - Parse owner/repo from full_name (format: "owner/repo")
+  - Use per_page parameter to fetch paginated data
+  - Export singleton instance for use in components
+---
