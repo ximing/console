@@ -77,3 +77,18 @@
   - CommandPalette component only renders in Electron environment (isElectron check)
   - Alternative intents are provided by the backend API in alternativeIntents array
 ---
+
+## 2026-03-08 - US-005
+- Verified natural language input support is already implemented
+- The CommandPaletteIntentService uses AI to analyze user input and extract intent + parameters
+- System prompt includes parameter extraction guidance:
+  - uuid-generate: "生成5个UUID" extracts count=5
+  - ai-translate: "翻译hello world为中文" extracts text="hello world", targetLang="zh"
+- TypeScript typecheck passes
+- Lint passes (warnings only, no errors)
+- Files changed: None (already implemented)
+- **Learnings for future iterations:**
+  - Natural language support is built into the intent recognition system
+  - Parameter extraction is guided via system prompt for each tool
+  - The AI model extracts parameters based on natural language patterns
+---
