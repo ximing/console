@@ -830,3 +830,26 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - Use per_page parameter to fetch paginated data
   - Export singleton instance for use in components
 ---
+
+## 2026-03-09 00:30:00 - US-005 (GitHub Integration)
+- Added file tree and tab management to GithubService:
+  - Added interfaces: FileTreeNode, OpenTab, PendingChange
+  - State: fileTree, openTabs, activeTabPath, pendingChanges, isLoadingFileTree
+  - Methods: loadFileTree(), openFile(), closeTab(), forceCloseTab(), setActiveTab(), updateFile()
+- loadFileTree() calls GET /repos/{owner}/{repo}/git/trees/{sha}?recursive=1
+- buildFileTree() constructs hierarchical tree from flat GitHub API response
+- openFile() loads file content via GET /repos/{owner}/{repo}/contents/{path}, decodes base64
+- closeTab() returns false if tab has unsaved changes (requires confirmation)
+- forceCloseTab() closes tab without checking (used for pending delete)
+- updateFile() updates tab content and adds to pendingChanges map
+- Typecheck and lint pass
+- Files changed:
+  - apps/web/src/pages/github/github.service.ts (updated)
+  - tasks/prd.json (marked US-005 as complete)
+- **Learnings for future iterations:**
+  - GitHub API getContent returns base64-encoded content needing atob() decode
+  - getTree with recursive=1 returns flat list, need to build tree structure
+  - Sort nodes: directories first (type 'tree'), then files (type 'blob'), alphabetically
+  - Use Map for pendingChanges to track unsaved edits by path
+  - Tab close returns boolean to indicate if close was successful (allows caller to prompt)
+---
