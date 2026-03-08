@@ -271,3 +271,32 @@
   - Use authService.isAuthenticated to check login status
   - AuthService.login() handles login with auto-retry after successful login
   - CommandPalette only renders in Electron (isElectron() check), browser verification not applicable
+
+## 2026-03-09T04:00:00Z - US-018
+- Converted command palette from modal component to independent floating window (Alfred-style)
+- Created CommandPaletteWindowManager class in apps/client/src/main/command-palette-window.ts
+- Window configuration: 680x500 size, frame:false, transparent, alwaysOnTop: true, skipTaskbar: true
+- Window positioned at horizontal center, 20% from top
+- Modified CommandPaletteHotkey to toggle independent window instead of sending IPC message
+- Added /command-palette route in App.tsx for independent window page
+- Created standalone command palette page in apps/web/src/pages/command-palette/index.tsx
+- Added closeCommandPalette API to preload script
+- Added closeCommandPalette type to electronAPI interface
+- Fixed unused variable errors in command-palette-settings.tsx (removed UserModelDto import and selectedModel)
+- Typecheck passes for both web and client builds
+- Files changed:
+  - apps/client/src/main/command-palette-window.ts (new)
+  - apps/client/src/main/command-palette-hotkey.ts (modified)
+  - apps/client/src/main/index.ts (modified)
+  - apps/client/src/main/ipc.ts (modified)
+  - apps/client/src/preload/index.ts (modified)
+  - apps/web/src/pages/command-palette/index.tsx (new)
+  - apps/web/src/App.tsx (modified)
+  - apps/web/src/electron/isElectron.ts (modified)
+  - apps/web/src/pages/settings/components/command-palette-settings.tsx (modified)
+- **Learnings for future iterations:**
+  - Use BrowserWindow with frame:false, transparent, alwaysOnTop, skipTaskbar for floating panel
+  - Use commandPaletteStore for persisting hotkey settings across restarts
+  - Independent window uses different URL route (/command-palette vs /)
+  - ESC key handler in renderer calls window.electronAPI.closeCommandPalette()
+  - Use preload contextBridge to expose IPC methods to renderer
