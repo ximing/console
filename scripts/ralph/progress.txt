@@ -892,3 +892,22 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - Commit requires parent commit (current HEAD) in parents array
   - Base tree sha from getCommit response needed as base_tree for createTree
 ---
+
+## 2026-03-09 01:00:00 - US-008 (GitHub Integration)
+- Created RepoManager component for managing GitHub repositories:
+  - Created apps/web/src/pages/github/components/repo-manager.tsx
+  - Shows list of connected repos with delete button for each
+  - Add repo form with fields: name, full_name (owner/repo), PAT
+  - Uses githubApi.addRepo() and githubApi.deleteRepo() for API calls
+  - Form validation for required fields and owner/repo format
+  - Refreshes list after add/delete operations
+  - Toast notifications for success/error feedback
+- Typecheck and lint pass
+- Files changed:
+  - apps/web/src/pages/github/components/repo-manager.tsx (new)
+  - tasks/prd.json (marked US-008 as complete)
+- **Learnings for future iterations:**
+  - Use view and useService from @rabjs/react for reactive components
+  - Use ToastService for user feedback
+  - GitHub PAT needs repo scope permissions
+---
