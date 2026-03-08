@@ -54,3 +54,26 @@
   - Execute high confidence intents automatically using executeIntent API
   - Show loading spinner in search bar when isRecognizing is true
 ---
+
+## 2026-03-08 - US-004
+- Implemented multiple intent selection UI when multiple intents have confidence >= 0.7
+- Added showIntentSelection state and alternativeIntents state to CommandPalette component
+- Added handleIntentSelect handler for selecting and executing from candidates
+- Created intent selection UI with:
+  - Primary intent highlighted as "推荐" (recommended)
+  - All alternative intents displayed in list
+  - Confidence bars for each intent (green for >= 0.7, yellow for < 0.7)
+  - Extracted params preview for each intent
+  - Loading spinner during execution
+- Updated ESC key handler to support going back from intent selection
+- Updated cleanup handlers to reset new states
+- Files changed:
+  - apps/web/src/components/command-palette/command-palette.tsx (modified)
+  - tasks/prd.json (modified)
+- **Learnings for future iterations:**
+  - The confidence threshold for showing multiple intents is 0.7 (CONFIDENCE_MEDIUM)
+  - Primary intent is shown first with "推荐" badge
+  - Intent selection directly executes the selected intent (no separate confirmation step)
+  - CommandPalette component only renders in Electron environment (isElectron check)
+  - Alternative intents are provided by the backend API in alternativeIntents array
+---
