@@ -911,3 +911,22 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
   - Use ToastService for user feedback
   - GitHub PAT needs repo scope permissions
 ---
+
+## 2026-03-09 01:10:00 - US-009 (GitHub Integration)
+- Created RepoSelector component for repository and branch selection:
+  - Created apps/web/src/pages/github/components/repo-selector.tsx
+  - Left dropdown shows all repos, triggers selectRepo() on change
+  - Right dropdown shows branches for selected repo, triggers selectBranch() on change
+  - Uses GithubService for state management
+  - Loading states for repos and branches
+  - Protected branch indicator shown in dropdown
+  - Error display from service state
+- Typecheck and lint pass
+- Files changed:
+  - apps/web/src/pages/github/components/repo-selector.tsx (new)
+  - tasks/prd.json (marked US-009 as complete)
+- **Learnings for future iterations:**
+  - Branch loading is triggered automatically by selectRepo() in the service
+  - File tree reloads when branch changes via selectBranch()
+  - Protected branches are marked in the branch list
+---
