@@ -134,11 +134,13 @@ function getLogCount(params: Omit<LogQueryParams, 'offset' | 'limit'>): number {
 }
 
 import { CommandPaletteHotkey } from './command-palette-hotkey';
+import { CommandPaletteWindowManager } from './command-palette-window';
 
 export function setupIPCHandlers(
   windowManager: WindowManager,
   updaterManager: AutoUpdaterManager,
-  commandPaletteHotkey: CommandPaletteHotkey
+  commandPaletteHotkey: CommandPaletteHotkey,
+  commandPaletteWindowManager: CommandPaletteWindowManager
 ): void {
   // Logging
   ipcMain.handle('log-preload', (_event: IpcMainInvokeEvent, data: unknown) => {
@@ -225,27 +227,28 @@ export function setupIPCHandlers(
     }
   );
 
-  // Command palette IPC
+  // Command palette IPC - use independent window
   ipcMain.handle('show-command-palette', () => {
-    logger.info('[IPC] show-command-palette called');
-    const window = windowManager.getWindow();
-    logger.info('[IPC] window:', window === null ? 'null' : (window === undefined ? 'undefined' : 'exists'));
-    if (!window) {
-      logger.warn('[IPC] Window not available');
-      return { success: false, error: 'Window not available' };
-    }
-    logger.info('[IPC] webContents exists:', !!window.webContents);
-    logger.info('[IPC] webContents.isDestroyed():', window.webContents.isDestroyed());
-    logger.info('[IPC] webContents.isLoading():', window.webContents.isLoading());
-    logger.info('[IPC] sending toggle-command-palette to renderer');
+    logger.info('[IPC] show-command-palette called - using independent window');
     try {
-      window.webContents.send('toggle-command-palette');
-      logger.info('[IPC] send completed');
+      commandPaletteWindowManager.toggle();
+      return { success: true };
     } catch (error) {
-      logger.error('[IPC] send error:', { error: String(error) });
+      logger.error('[IPC] show-command-palette error:', { error: String(error) });
       return { success: false, error: String(error) };
     }
-    return { success: true };
+  });
+
+  // Close command palette window
+  ipcMain.handle('close-command-palette', () => {
+    logger.info('[IPC] close-command-palette called');
+    try {
+      commandPaletteWindowManager.hide();
+      return { success: true };
+    } catch (error) {
+      logger.error('[IPC] close-command-palette error:', { error: String(error) });
+      return { success: false, error: String(error) };
+    }
   });
 
   // Get command palette hotkey from store

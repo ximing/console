@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { UserModelService } from '../../../services/user-model.service';
 import { ToastService } from '../../../services/toast.service';
 import { Command, Bot, Keyboard } from 'lucide-react';
-import type { UserModelDto } from '@x-console/dto';
 import { isElectron } from '../../../electron/isElectron';
 
 const STORAGE_KEY = 'command-palette-model-id';
@@ -84,9 +83,6 @@ export const CommandPaletteSettings = view(() => {
       toastService.success('已使用默认模型');
     }
   };
-
-  // Get the selected model
-  const selectedModel = availableModels.find((m) => m.id === selectedModelId);
 
   // Helper to get provider display name
   const getProviderName = (provider: string) => {

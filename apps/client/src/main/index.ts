@@ -9,6 +9,7 @@ import { AutoUpdaterManager } from './updater';
 import { setupIPCHandlers } from './ipc';
 import { SocketServer } from './socket';
 import { CommandPaletteHotkey } from './command-palette-hotkey';
+import { CommandPaletteWindowManager } from './command-palette-window';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -32,14 +33,15 @@ export async function initializeApp(): Promise<void> {
   const menuManager = new MenuManager(windowManager);
   const updaterManager = new AutoUpdaterManager();
   const socketServer = new SocketServer();
-  const commandPaletteHotkey = new CommandPaletteHotkey(windowManager);
+  const commandPaletteWindowManager = new CommandPaletteWindowManager();
+  const commandPaletteHotkey = new CommandPaletteHotkey(commandPaletteWindowManager);
 
   // Connect managers that need each other
   menuManager.setUpdaterManager(updaterManager);
   socketServer.setWindowManager(windowManager);
 
   // Setup IPC handlers with dependencies
-  setupIPCHandlers(windowManager, updaterManager, commandPaletteHotkey);
+  setupIPCHandlers(windowManager, updaterManager, commandPaletteHotkey, commandPaletteWindowManager);
 
   // Initialize managers
   windowManager.create();

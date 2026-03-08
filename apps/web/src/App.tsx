@@ -7,6 +7,7 @@ import SettingsPage from './pages/settings';
 import TasksPage from './pages/tasks';
 import { NotificationsPage } from './pages/notifications';
 import NotFoundPage from './pages/not-found';
+import CommandPalettePage from './pages/command-palette';
 import { ProtectedRoute } from './components/protected-route';
 import { ToastContainer } from './components/toast';
 import { CommandPalette } from './components/command-palette/command-palette';
@@ -95,6 +96,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/command-palette" element={<CommandPalettePage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Router>
