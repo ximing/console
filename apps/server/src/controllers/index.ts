@@ -6,6 +6,7 @@ import { NotificationController } from './v1/notification.controller.js';
 import { NotificationBAController } from './v1/notification.ba.controller.js';
 import { AIController } from './v1/ai.controller.js';
 import { AIRouteController } from './v1/ai-route.controller.js';
+import { ToolExecutionController } from './v1/tool-execution.controller.js';
 import { UserModelController } from './v1/user-model.controller.js';
 import { ApiTokenController } from './v1/api-token.controller.js';
 import { StaticController } from './static.controller.js';
@@ -18,6 +19,7 @@ export const controllers = [
   NotificationBAController,
   AIController,
   AIRouteController,
+  ToolExecutionController,
   UserModelController,
   ApiTokenController,
   StaticController,
