@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { isElectron } from '../../electron/isElectron';
-import { executeTool, recognizeIntent, executeIntent, type Tool, type ToolExecutionResponse, type IntentResult } from '../../api/tool';
+import { executeTool, recognizeIntent, executeIntent, routeTool, type Tool, type ToolExecutionResponse, type IntentResult } from '../../api/tool';
 import { MarkdownRenderer } from '../../utils/markdown';
 import { renderMarkdownToHtml } from '../../utils/markdown-html';
 import { authService } from '../../services/auth.service';
@@ -44,6 +44,119 @@ export function CommandPalette() {
   const inputRef = useRef<HTMLInputElement>(null);
   const toolInputRef = useRef<HTMLTextAreaElement>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Handle Enter key to trigger immediate intent recognition and execution
+  const handleEnterKey = useCallback(async () => {
+    if (!inputValue.trim() || selectedTool) return;
+
+    // Clear any pending debounce timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    setIsRecognizing(true);
+    try {
+      const result = await recognizeIntent(inputValue, modelId || undefined);
+
+      // Handle command errors
+      if (result.isCommand && result.commandError) {
+        setCommandError(result.commandError);
+        setRecognizedIntent(null);
+        setAlternativeIntents([]);
+        setShowIntentConfirm(false);
+        setShowIntentSelection(false);
+        setMatchedTools([]);
+        setIsRecognizing(false);
+        return;
+      }
+
+      // Clear command error when we have a valid intent
+      if (result.intent) {
+        setCommandError(null);
+      }
+
+      // Check for multiple high-confidence intents (>= 0.7)
+      const highConfidenceIntents: IntentResult[] = [];
+      if (result.intent && result.intent.confidence >= 0.7) {
+        highConfidenceIntents.push(result.intent);
+      }
+      result.alternativeIntents.forEach(alt => {
+        if (alt.confidence >= 0.7) {
+          highConfidenceIntents.push(alt);
+        }
+      });
+
+      if (highConfidenceIntents.length > 1) {
+        // Multiple high confidence intents - show selection UI
+        setRecognizedIntent(highConfidenceIntents[0]);
+        setAlternativeIntents(highConfidenceIntents.slice(1));
+        setShowIntentSelection(true);
+        setShowIntentConfirm(false);
+        setMatchedTools([]);
+      } else if (result.intent) {
+        setRecognizedIntent(result.intent);
+        setAlternativeIntents([]);
+
+        if (result.intent.isHighConfidence) {
+          // High confidence - auto execute
+          setShowIntentSelection(false);
+          setShowIntentConfirm(false);
+          setMatchedTools([]);
+
+          // Auto execute the intent
+          if (result.intent.intentId.includes('ai-') && !isLoggedIn) {
+            setShowLoginPrompt(true);
+          } else {
+            setIsLoading(true);
+            try {
+              const execResult = await executeIntent(
+                result.intent.intentId,
+                result.intent.rawInput,
+                result.intent.extractedParams,
+                modelId || undefined
+              );
+
+              if (!execResult.success && (execResult.error?.includes('需要登录') || execResult.error?.includes('登录'))) {
+                setShowLoginPrompt(true);
+              }
+
+              setToolResult(execResult);
+            } catch (execError) {
+              setToolResult({
+                success: false,
+                error: execError instanceof Error ? execError.message : 'Auto execution failed',
+              });
+            } finally {
+              setIsLoading(false);
+            }
+          }
+        } else {
+          // Low confidence - show confirmation
+          setShowIntentSelection(false);
+          setShowIntentConfirm(true);
+          setMatchedTools([]);
+        }
+      } else {
+        // No intent recognized, fallback to tool list
+        setRecognizedIntent(null);
+        setShowIntentConfirm(false);
+        setShowIntentSelection(false);
+        setAlternativeIntents([]);
+        // Show tool list as fallback
+        const filtered = await routeTool(inputValue, modelId || undefined);
+        setMatchedTools(filtered.slice(0, 10));
+      }
+    } catch (error) {
+      console.error('Failed to recognize intent:', error);
+      setRecognizedIntent(null);
+      setShowIntentConfirm(false);
+      setShowIntentSelection(false);
+      setAlternativeIntents([]);
+      setMatchedTools([]);
+    } finally {
+      setIsRecognizing(false);
+    }
+  }, [inputValue, modelId, selectedTool, isLoggedIn]);
 
   // Load model preference from localStorage on mount
   useEffect(() => {
@@ -545,6 +658,12 @@ export function CommandPalette() {
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && inputValue.trim()) {
+                // Trigger immediate intent recognition on Enter
+                handleEnterKey();
+              }
+            }}
             placeholder="输入命令或搜索..."
             className="flex-1 bg-transparent border-none outline-none text-gray-900 dark:text-gray-100 placeholder-gray-400 text-lg"
             disabled={!!selectedTool}

@@ -17,11 +17,11 @@ export default defineConfig(({ mode }) => {
       port: 5273,
       proxy: {
         '/api': {
-          target: 'http://localhost:3002',
+          target: 'http://localhost:3100',
           changeOrigin: true,
         },
         '/socket.io': {
-          target: 'http://localhost:3002',
+          target: 'http://localhost:3100',
           ws: true,
           changeOrigin: true,
         },

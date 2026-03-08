@@ -544,7 +544,7 @@ Started: 2026年 2月15日 星期日 23时33分46秒 CST
 ## 2026-03-06 11:00:00 - US-003 (Electron Client Environment Configuration)
 - Implemented environment-based configuration for Electron client:
   - Electron client vite.config.ts now uses process.env.NODE_ENV to distinguish dev/prod
-  - Development: API = http://localhost:3002, Web = http://localhost:5273
+  - Development: API = http://localhost:3100, Web = http://localhost:5273
   - Production: API = https://console.aimo.plus, Web = https://console.aimo.plus
   - Also defined VITE_API_BASE_URL in client's vite.config for web app to use
 - Updated web app vite.config.ts to use correct production API URL (https://console.aimo.plus)

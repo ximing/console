@@ -14,7 +14,7 @@ NC='\033[0m'
 DEPLOY_TYPE="${1:-local}"
 CONTAINER_NAME="x-console-app"
 IMAGE_NAME="x-console:latest"
-PORT="${PORT:-3002}"
+PORT="${PORT:-3100}"
 
 echo -e "${BLUE}========================================${NC}"
 echo -e "${BLUE}Console Deployment Script${NC}"
@@ -61,7 +61,7 @@ deploy_docker_run() {
     echo -e "\n${YELLOW}Starting container...${NC}"
     docker run -d \
         --name "$CONTAINER_NAME" \
-        -p "$PORT:3002" \
+        -p "$PORT:3100" \
         --env-file .env \
         --health-interval 30s \
         --health-timeout 10s \

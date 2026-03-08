@@ -53,7 +53,7 @@ services:
       mysql:
         condition: service_healthy
     ports:
-      - '3002:3002'
+      - '3100:3100'
     volumes:
       # 数据库文件映射到外部磁盘
       - ./data/lancedb:/app/lancedb_data
@@ -62,10 +62,10 @@ services:
     environment:
       # ===== 基础配置 =====
       - NODE_ENV=production
-      - PORT=3002
+      - PORT=3100
 
       # ===== CORS 配置 =====
-      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3002}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3100}
       - CORS_CREDENTIALS=${CORS_CREDENTIALS:-true}
 
       # ===== JWT 配置 =====
@@ -137,7 +137,7 @@ services:
           'CMD',
           'node',
           '-e',
-          "require('http').get('http://localhost:3002', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})",
+          "require('http').get('http://localhost:3100', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})",
         ]
       interval: 30s
       timeout: 10s

@@ -10,5 +10,5 @@ echo ""
 echo "Endpoint: GET /api/v1/memos/poll?latestMemoId=<memoId>&sortBy=createdAt"
 echo ""
 echo "Example curl command (replace YOUR_JWT_TOKEN and MEMO_ID):"
-echo 'curl -X GET "http://localhost:3002/api/v1/memos/poll?latestMemoId=MEMO_ID&sortBy=createdAt" \'
+echo 'curl -X GET "http://localhost:3100/api/v1/memos/poll?latestMemoId=MEMO_ID&sortBy=createdAt" \'
 echo '  -H "Authorization: Bearer YOUR_JWT_TOKEN"'

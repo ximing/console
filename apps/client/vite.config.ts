@@ -11,7 +11,7 @@ const API_PROD_URL = 'https://console.aimo.plus';
 
 // Development API URL
 const VITE_DEV_SERVER_URL = isProduction ? API_PROD_URL : 'http://localhost:5273';
-const API_DEV_URL = isProduction ? API_PROD_URL : 'http://localhost:3002';
+const API_DEV_URL = isProduction ? API_PROD_URL : 'http://localhost:3100';
 const SOCKET_PATH = isProduction ? '/tmp/console.sock' : '/tmp/dev-console.sock';
 const define = {
   'process.env.VITE_DEV_SERVER_URL': JSON.stringify(VITE_DEV_SERVER_URL),
