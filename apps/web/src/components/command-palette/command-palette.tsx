@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { isElectron } from '../../electron/isElectron';
 import { routeTool, executeTool, type Tool, type ToolExecutionResponse } from '../../api/tool';
-import { MarkdownRenderer, renderMarkdownToHtml } from '../../utils/markdown';
+import { MarkdownRenderer } from '../../utils/markdown';
+import { renderMarkdownToHtml } from '../../utils/markdown-html';
 
 /**
  * CommandPalette component - a modal command palette similar to uTools
