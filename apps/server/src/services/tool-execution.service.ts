@@ -1,15 +1,20 @@
 import { ChatOpenAI } from '@langchain/openai';
-import { Service } from 'typedi';
+import { Service, Inject } from 'typedi';
 import * as crypto from 'crypto';
 
 import { config } from '../config/config.js';
 import { logger } from '../utils/logger.js';
 import { getToolById } from './tool-registry.js';
+import { UserModelService } from './user-model.service.js';
+import type { UserModel } from '../db/schema/user-models.js';
+import type { LLMProvider } from '@x-console/dto';
 
 export interface ToolExecutionRequest {
   toolId: string;
   input: string;
   options?: Record<string, unknown>;
+  modelId?: string;
+  userId?: string;
 }
 
 export interface ToolExecutionResult {
@@ -25,7 +30,7 @@ export interface ToolExecutionResult {
 export class ToolExecutionService {
   private model: ChatOpenAI;
 
-  constructor() {
+  constructor(@Inject() private userModelService: UserModelService) {
     this.model = new ChatOpenAI({
       modelName: config.openai.model || 'gpt-4o-mini',
       apiKey: config.openai.apiKey,
@@ -37,10 +42,65 @@ export class ToolExecutionService {
   }
 
   /**
+   * Get API configuration for a provider
+   */
+  private getApiConfig(provider: LLMProvider, model: UserModel): { baseUrl: string; apiKey: string } {
+    const modelName = model.modelName;
+
+    let baseUrl: string;
+    switch (provider) {
+      case 'openai':
+        baseUrl = model.apiBaseUrl || 'https://api.openai.com/v1';
+        break;
+      case 'deepseek':
+        baseUrl = model.apiBaseUrl || 'https://api.deepseek.com/v1';
+        break;
+      case 'openrouter':
+        baseUrl = model.apiBaseUrl || 'https://openrouter.ai/api/v1';
+        break;
+      case 'other':
+        if (!model.apiBaseUrl) {
+          throw new Error('API Base URL is required for custom providers');
+        }
+        baseUrl = model.apiBaseUrl;
+        break;
+      default:
+        throw new Error(`Unknown provider: ${provider}`);
+    }
+
+    return {
+      baseUrl,
+      apiKey: model.apiKey,
+    };
+  }
+
+  /**
+   * Create a ChatOpenAI instance with user-configured model
+   */
+  private async createModelWithConfig(userId: string, modelId: string): Promise<ChatOpenAI> {
+    const model = await this.userModelService.getModel(modelId, userId);
+
+    if (!model) {
+      throw new Error('Model not found');
+    }
+
+    const { baseUrl, apiKey } = this.getApiConfig(model.provider as LLMProvider, model);
+
+    return new ChatOpenAI({
+      modelName: model.modelName,
+      apiKey: apiKey,
+      configuration: {
+        baseURL: baseUrl,
+      },
+      temperature: 0.3,
+    });
+  }
+
+  /**
    * Execute a tool with the given input
    */
   async execute(request: ToolExecutionRequest): Promise<ToolExecutionResult> {
-    const { toolId, input, options = {} } = request;
+    const { toolId, input, options = {}, modelId, userId } = request;
 
     // Validate tool exists
     const tool = getToolById(toolId);
@@ -83,11 +143,11 @@ export class ToolExecutionService {
 
         // AI tools
         case 'ai-translate':
-          return this.executeAiTranslate(input, options);
+          return this.executeAiTranslate(input, options, modelId, userId);
         case 'ai-summarize':
-          return this.executeAiSummarize(input);
+          return this.executeAiSummarize(input, modelId, userId);
         case 'ai-explain-code':
-          return this.executeAiExplainCode(input);
+          return this.executeAiExplainCode(input, modelId, userId);
 
         default:
           return {
@@ -327,14 +387,29 @@ export class ToolExecutionService {
 
   // AI tools
 
-  private async executeAiTranslate(input: string, options: Record<string, unknown>): Promise<ToolExecutionResult> {
+  private async executeAiTranslate(
+    input: string,
+    options: Record<string, unknown>,
+    modelId?: string,
+    userId?: string
+  ): Promise<ToolExecutionResult> {
     const targetLang = (options.targetLanguage as string) || 'English';
+
+    // Determine which model to use
+    let modelToUse = this.model;
+    if (modelId && userId) {
+      try {
+        modelToUse = await this.createModelWithConfig(userId, modelId);
+      } catch (error) {
+        logger.warn('Failed to use user-configured model for translate, falling back to default:', error);
+      }
+    }
 
     // First, detect the source language
     const detectPrompt = `Detect the language of the following text. Respond with only the language name in English (e.g., "Chinese", "English", "Japanese", "French", etc.). If unsure, respond with "Unknown". Text: ${input}`;
 
     try {
-      const detectResponse = await this.model.invoke([
+      const detectResponse = await modelToUse.invoke([
         { role: 'user', content: detectPrompt },
       ]);
       const detectedLang = typeof detectResponse.content === 'string' ? detectResponse.content.trim() : 'Unknown';
@@ -354,7 +429,7 @@ export class ToolExecutionService {
 2. 保持原文的格式和风格
 3. 如果文本已经是目标语言，直接返回原文`;
 
-      const response = await this.model.invoke([
+      const response = await modelToUse.invoke([
         { role: 'system', content: systemPrompt },
         { role: 'user', content: input },
       ]);
@@ -369,7 +444,21 @@ export class ToolExecutionService {
     }
   }
 
-  private async executeAiSummarize(input: string): Promise<ToolExecutionResult> {
+  private async executeAiSummarize(
+    input: string,
+    modelId?: string,
+    userId?: string
+  ): Promise<ToolExecutionResult> {
+    // Determine which model to use
+    let modelToUse = this.model;
+    if (modelId && userId) {
+      try {
+        modelToUse = await this.createModelWithConfig(userId, modelId);
+      } catch (error) {
+        logger.warn('Failed to use user-configured model for summarize, falling back to default:', error);
+      }
+    }
+
     const systemPrompt = `你是一个文本总结助手。将用户提供的文本进行精简总结。
 
 要求：
@@ -379,7 +468,7 @@ export class ToolExecutionService {
 4. 如果文本太短无法总结，直接返回原文`;
 
     try {
-      const response = await this.model.invoke([
+      const response = await modelToUse.invoke([
         { role: 'system', content: systemPrompt },
         { role: 'user', content: input },
       ]);
@@ -394,7 +483,21 @@ export class ToolExecutionService {
     }
   }
 
-  private async executeAiExplainCode(input: string): Promise<ToolExecutionResult> {
+  private async executeAiExplainCode(
+    input: string,
+    modelId?: string,
+    userId?: string
+  ): Promise<ToolExecutionResult> {
+    // Determine which model to use
+    let modelToUse = this.model;
+    if (modelId && userId) {
+      try {
+        modelToUse = await this.createModelWithConfig(userId, modelId);
+      } catch (error) {
+        logger.warn('Failed to use user-configured model for explain code, falling back to default:', error);
+      }
+    }
+
     const systemPrompt = `你是一个代码解释助手。解释用户提供的代码的功能和工作原理。
 
 要求：
@@ -405,7 +508,7 @@ export class ToolExecutionService {
 5. 如果无法识别代码类型，尝试根据内容进行合理推测`;
 
     try {
-      const response = await this.model.invoke([
+      const response = await modelToUse.invoke([
         { role: 'system', content: systemPrompt },
         { role: 'user', content: input },
       ]);
@@ -420,3 +523,4 @@ export class ToolExecutionService {
     }
   }
 }
+

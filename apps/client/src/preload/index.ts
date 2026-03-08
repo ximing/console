@@ -45,11 +45,8 @@ const notificationClickCallbackMap = new Map<
   (event: IpcRendererEvent, data: { id: string }) => void
 >();
 
-// Command palette toggle callback map
-const commandPaletteToggleCallbackMap = new Map<
-  CommandPaletteToggleCallback,
-  (event: IpcRendererEvent) => void
->();
+// Command palette toggle callback - single callback
+let commandPaletteToggleCallback: (() => void) | null = null;
 
 // Log query params type
 export interface LogQueryParams {
@@ -183,19 +180,23 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Command palette APIs
   showCommandPalette: () => ipcRenderer.invoke('show-command-palette'),
   getCommandPaletteShortcut: () => ipcRenderer.invoke('get-command-palette-shortcut'),
+  setCommandPaletteShortcut: (hotkey: string) =>
+    ipcRenderer.invoke('set-command-palette-shortcut', hotkey),
   onCommandPaletteToggle: (callback: CommandPaletteToggleCallback) => {
-    const wrappedCallback = () => {
-      callback();
-    };
-    commandPaletteToggleCallbackMap.set(callback, wrappedCallback);
-    ipcRenderer.on('toggle-command-palette', wrappedCallback);
-  },
-  removeCommandPaletteToggleListener: (callback: CommandPaletteToggleCallback) => {
-    const wrappedCallback = commandPaletteToggleCallbackMap.get(callback);
-    if (wrappedCallback) {
-      ipcRenderer.removeListener('toggle-command-palette', wrappedCallback);
-      commandPaletteToggleCallbackMap.delete(callback);
+    // Remove existing listener if any
+    if (commandPaletteToggleCallback) {
+      ipcRenderer.removeAllListeners('toggle-command-palette');
     }
+    commandPaletteToggleCallback = callback;
+    ipcRenderer.on('toggle-command-palette', () => {
+      if (commandPaletteToggleCallback) {
+        commandPaletteToggleCallback();
+      }
+    });
+  },
+  removeCommandPaletteToggleListener: (_callback: CommandPaletteToggleCallback) => {
+    ipcRenderer.removeAllListeners('toggle-command-palette');
+    commandPaletteToggleCallback = null;
   },
 });
 
@@ -230,6 +231,9 @@ declare global {
       // Command palette APIs
       showCommandPalette: () => Promise<{ success: boolean; error?: string }>;
       getCommandPaletteShortcut: () => Promise<string>;
+      setCommandPaletteShortcut: (
+        hotkey: string
+      ) => Promise<{ success: boolean; hotkey?: string; error?: string }>;
       onCommandPaletteToggle: (callback: () => void) => void;
       removeCommandPaletteToggleListener: (callback: () => void) => void;
     };

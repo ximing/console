@@ -1,10 +1,10 @@
 import { globalShortcut } from 'electron';
 import { logger } from './logger';
-import { WindowManager } from './window';
+import { WindowManager, commandPaletteStore } from './window';
 
-// Determine shortcut based on platform
+// Get shortcut from store, fallback to platform default
 function getCommandPaletteShortcut(): string {
-  return process.platform === 'darwin' ? 'Option+Space' : 'Alt+Space';
+  return commandPaletteStore.get('hotkey');
 }
 
 export class CommandPaletteHotkey {
@@ -71,5 +71,43 @@ export class CommandPaletteHotkey {
     globalShortcut.unregisterAll();
     this.isRegistered = false;
     logger.info('All global shortcuts unregistered');
+  }
+
+  // Re-register with new hotkey (after user changes it)
+  reregister(newHotkey: string, oldHotkey?: string): boolean {
+    // Use provided oldHotkey or get from store (but store might already be updated)
+    const currentShortcut = oldHotkey || getCommandPaletteShortcut();
+
+    // Unregister old shortcut if different from new one
+    if (currentShortcut !== newHotkey) {
+      try {
+        globalShortcut.unregister(currentShortcut);
+        logger.info(`Unregistered old hotkey: ${currentShortcut}`);
+      } catch (error) {
+        logger.warn(`Failed to unregister old hotkey ${currentShortcut}:`, { error: String(error) });
+      }
+      this.isRegistered = false;
+    }
+
+    // Register new shortcut
+    try {
+      const success = globalShortcut.register(newHotkey, () => {
+        this.handleHotkeyPressed();
+      });
+
+      if (success) {
+        this.isRegistered = true;
+        logger.info(`Command palette hotkey registered: ${newHotkey}`);
+        return true;
+      } else {
+        logger.warn(`Failed to register command palette hotkey: ${newHotkey}`);
+        return false;
+      }
+    } catch (error) {
+      logger.error(`Error registering command palette hotkey: ${newHotkey}`, {
+        error: String(error),
+      });
+      return false;
+    }
   }
 }

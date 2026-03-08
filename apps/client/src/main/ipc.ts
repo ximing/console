@@ -2,8 +2,11 @@ import { app, ipcMain, Notification, type IpcMainInvokeEvent } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
 import { logger } from './logger';
-import { WindowManager } from './window';
+import { WindowManager, commandPaletteStore } from './window';
 import { AutoUpdaterManager } from './updater';
+
+// Re-export for use by CommandPaletteHotkey
+export { commandPaletteStore };
 
 interface NotificationPayload {
   id: string;
@@ -130,9 +133,12 @@ function getLogCount(params: Omit<LogQueryParams, 'offset' | 'limit'>): number {
   return logs.length;
 }
 
+import { CommandPaletteHotkey } from './command-palette-hotkey';
+
 export function setupIPCHandlers(
   windowManager: WindowManager,
-  updaterManager: AutoUpdaterManager
+  updaterManager: AutoUpdaterManager,
+  commandPaletteHotkey: CommandPaletteHotkey
 ): void {
   // Logging
   ipcMain.handle('log-preload', (_event: IpcMainInvokeEvent, data: unknown) => {
@@ -221,16 +227,54 @@ export function setupIPCHandlers(
 
   // Command palette IPC
   ipcMain.handle('show-command-palette', () => {
+    logger.info('[IPC] show-command-palette called');
     const window = windowManager.getWindow();
-    if (window) {
-      window.webContents.send('toggle-command-palette');
-      return { success: true };
+    logger.info('[IPC] window:', window === null ? 'null' : (window === undefined ? 'undefined' : 'exists'));
+    if (!window) {
+      logger.warn('[IPC] Window not available');
+      return { success: false, error: 'Window not available' };
     }
-    return { success: false, error: 'Window not available' };
+    logger.info('[IPC] webContents exists:', !!window.webContents);
+    logger.info('[IPC] webContents.isDestroyed():', window.webContents.isDestroyed());
+    logger.info('[IPC] webContents.isLoading():', window.webContents.isLoading());
+    logger.info('[IPC] sending toggle-command-palette to renderer');
+    try {
+      window.webContents.send('toggle-command-palette');
+      logger.info('[IPC] send completed');
+    } catch (error) {
+      logger.error('[IPC] send error:', { error: String(error) });
+      return { success: false, error: String(error) };
+    }
+    return { success: true };
   });
 
-  // Get command palette hotkey for display
+  // Get command palette hotkey from store
   ipcMain.handle('get-command-palette-shortcut', () => {
-    return process.platform === 'darwin' ? 'Option+Space' : 'Alt+Space';
+    return commandPaletteStore.get('hotkey');
+  });
+
+  // Set command palette hotkey
+  ipcMain.handle('set-command-palette-shortcut', (_event: IpcMainInvokeEvent, hotkey: string) => {
+    try {
+      // Get current hotkey before updating store
+      const oldHotkey = commandPaletteStore.get('hotkey');
+
+      // Save to store
+      commandPaletteStore.set('hotkey', hotkey);
+
+      // Re-register the hotkey (pass old hotkey to properly unregister)
+      const registered = commandPaletteHotkey.reregister(hotkey, oldHotkey);
+
+      if (registered) {
+        logger.info(`Command palette hotkey set to: ${hotkey}`);
+        return { success: true, hotkey };
+      } else {
+        logger.warn(`Failed to register hotkey: ${hotkey}, but saved to store`);
+        return { success: false, error: 'Failed to register hotkey. It may conflict with other apps.' };
+      }
+    } catch (error) {
+      logger.error('Failed to set command palette hotkey:', { error: String(error) });
+      return { success: false, error: String(error) };
+    }
   });
 }

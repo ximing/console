@@ -3,9 +3,10 @@ import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router'
 import { Layout } from '../../components/layout';
 import { UserSettings } from './components/user-settings';
 import { ModelSettings } from './components/model-settings';
+import { CommandPaletteSettings } from './components/command-palette-settings';
 import { ApiTokenSettings } from './components/api-token-settings';
 import { LogSettings } from './components/log-settings';
-import { User, Settings as SettingsIcon, Bot, Key, FileText } from 'lucide-react';
+import { User, Settings as SettingsIcon, Bot, Key, FileText, Command } from 'lucide-react';
 import { isElectron } from '../../electron/isElectron';
 
 const menuItems = [
@@ -20,6 +21,12 @@ const menuItems = [
     label: '大模型设置',
     icon: Bot,
     path: '/settings/models',
+  },
+  {
+    id: 'command-palette',
+    label: '命令面板',
+    icon: Command,
+    path: '/settings/command-palette',
   },
   {
     id: 'api-tokens',
@@ -89,6 +96,7 @@ export const SettingsPage = view(() => {
             <Route path="/" element={<Navigate to="/settings/user" replace />} />
             <Route path="/user" element={<UserSettings />} />
             <Route path="/models" element={<ModelSettings />} />
+            <Route path="/command-palette" element={<CommandPaletteSettings />} />
             <Route path="/api-tokens" element={<ApiTokenSettings />} />
             <Route path="/logs" element={<LogSettings />} />
           </Routes>

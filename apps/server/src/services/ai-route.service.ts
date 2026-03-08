@@ -1,9 +1,12 @@
 import { ChatOpenAI } from '@langchain/openai';
-import { Service } from 'typedi';
+import { Service, Inject } from 'typedi';
 
 import { config } from '../config/config.js';
 import { logger } from '../utils/logger.js';
 import { TOOL_REGISTRY, getToolById, type Tool } from './tool-registry.js';
+import { UserModelService } from './user-model.service.js';
+import type { UserModel } from '../db/schema/user-models.js';
+import type { LLMProvider } from '@x-console/dto';
 
 export interface MatchedTool {
   id: string;
@@ -26,7 +29,7 @@ export interface AIRouteResult {
 export class AIRouteService {
   private model: ChatOpenAI;
 
-  constructor() {
+  constructor(@Inject() private userModelService: UserModelService) {
     this.model = new ChatOpenAI({
       modelName: config.openai.model || 'gpt-4o-mini',
       apiKey: config.openai.apiKey,
@@ -38,13 +41,83 @@ export class AIRouteService {
   }
 
   /**
+   * Get API configuration for a provider
+   */
+  private getApiConfig(provider: LLMProvider, model: UserModel): { baseUrl: string; apiKey: string } {
+    const modelName = model.modelName;
+
+    let baseUrl: string;
+    switch (provider) {
+      case 'openai':
+        baseUrl = model.apiBaseUrl || 'https://api.openai.com/v1';
+        break;
+      case 'deepseek':
+        baseUrl = model.apiBaseUrl || 'https://api.deepseek.com/v1';
+        break;
+      case 'openrouter':
+        baseUrl = model.apiBaseUrl || 'https://openrouter.ai/api/v1';
+        break;
+      case 'other':
+        if (!model.apiBaseUrl) {
+          throw new Error('API Base URL is required for custom providers');
+        }
+        baseUrl = model.apiBaseUrl;
+        break;
+      default:
+        throw new Error(`Unknown provider: ${provider}`);
+    }
+
+    return {
+      baseUrl,
+      apiKey: model.apiKey,
+    };
+  }
+
+  /**
+   * Create a ChatOpenAI instance with user-configured model
+   */
+  private async createModelWithConfig(userId: string, modelId: string): Promise<ChatOpenAI> {
+    const model = await this.userModelService.getModel(modelId, userId);
+
+    if (!model) {
+      throw new Error('Model not found');
+    }
+
+    const { baseUrl, apiKey } = this.getApiConfig(model.provider as LLMProvider, model);
+
+    return new ChatOpenAI({
+      modelName: model.modelName,
+      apiKey: apiKey,
+      configuration: {
+        baseURL: baseUrl,
+      },
+      temperature: 0.3,
+    });
+  }
+
+  /**
    * Route user input to matching tools
    * @param userInput - The user's query or command
+   * @param modelId - Optional model ID for user-configured model
+   * @param userId - Optional user ID for model ownership verification
    * @returns List of matched tools with confidence scores
    */
-  async route(userInput: string): Promise<AIRouteResult> {
+  async route(userInput: string, modelId?: string, userId?: string): Promise<AIRouteResult> {
     if (!userInput || userInput.trim().length === 0) {
       return { tools: [] };
+    }
+
+    // Determine which model to use
+    let modelToUse: ChatOpenAI = this.model;
+
+    // If modelId is provided and userId is available, try to use user-configured model
+    if (modelId && userId) {
+      try {
+        modelToUse = await this.createModelWithConfig(userId, modelId);
+      } catch (error) {
+        logger.warn('Failed to use user-configured model, falling back to default:', error);
+        // Fall back to default model
+      }
     }
 
     const systemPrompt = `Role
@@ -90,7 +163,7 @@ ${toolsDescription}
 请分析用户输入，选择最匹配的工具并返回 JSON 格式的结果。`;
 
     try {
-      const response = await this.model.invoke([
+      const response = await modelToUse.invoke([
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
       ]);
