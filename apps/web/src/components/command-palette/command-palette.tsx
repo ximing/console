@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { isElectron } from '../../electron/isElectron';
-import { routeTool, executeTool, type Tool, type ToolExecutionResponse } from '../../api/tool';
+import { executeTool, recognizeIntent, executeIntent, type Tool, type ToolExecutionResponse, type IntentResult } from '../../api/tool';
 import { MarkdownRenderer } from '../../utils/markdown';
 import { renderMarkdownToHtml } from '../../utils/markdown-html';
 import { authService } from '../../services/auth.service';
@@ -24,6 +24,11 @@ export function CommandPalette() {
   const [toolInput, setToolInput] = useState('');
   const [toolResult, setToolResult] = useState<ToolExecutionResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Intent recognition state
+  const [recognizedIntent, setRecognizedIntent] = useState<IntentResult | null>(null);
+  const [showIntentConfirm, setShowIntentConfirm] = useState(false);
+  const [isRecognizing, setIsRecognizing] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [modelId, setModelId] = useState<string>('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -61,7 +66,11 @@ export function CommandPalette() {
   // Handle ESC key to close
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape' && isOpen) {
-      if (selectedTool) {
+      if (showIntentConfirm) {
+        // Go back from intent confirmation
+        setShowIntentConfirm(false);
+        setRecognizedIntent(null);
+      } else if (selectedTool) {
         // Go back to tool selection
         setSelectedTool(null);
         setToolInput('');
@@ -70,9 +79,11 @@ export function CommandPalette() {
         setIsOpen(false);
         setInputValue('');
         setMatchedTools([]);
+        setRecognizedIntent(null);
+        setShowIntentConfirm(false);
       }
     }
-  }, [isOpen, selectedTool]);
+  }, [isOpen, selectedTool, showIntentConfirm]);
 
   // Listen for global keyboard events
   useEffect(() => {
@@ -82,10 +93,12 @@ export function CommandPalette() {
     };
   }, [handleKeyDown]);
 
-  // Debounced AI route search
+  // Debounced AI intent recognition
   useEffect(() => {
     if (!inputValue.trim()) {
       setMatchedTools([]);
+      setRecognizedIntent(null);
+      setShowIntentConfirm(false);
       return;
     }
 
@@ -94,12 +107,65 @@ export function CommandPalette() {
     }
 
     debounceTimerRef.current = setTimeout(async () => {
+      setIsRecognizing(true);
       try {
-        const tools = await routeTool(inputValue, modelId || undefined);
-        setMatchedTools(tools);
+        const result = await recognizeIntent(inputValue, modelId || undefined);
+
+        if (result.intent) {
+          setRecognizedIntent(result.intent);
+
+          if (result.intent.isHighConfidence) {
+            // High confidence - auto execute
+            setShowIntentConfirm(false);
+            setMatchedTools([]);
+
+            // Auto execute the intent
+            if (result.intent.intentId.includes('ai-') && !isLoggedIn) {
+              // AI tool requires login - show login prompt
+              setShowLoginPrompt(true);
+            } else {
+              // Execute automatically
+              setIsLoading(true);
+              try {
+                const execResult = await executeIntent(
+                  result.intent.intentId,
+                  result.intent.rawInput,
+                  result.intent.extractedParams,
+                  modelId || undefined
+                );
+
+                if (!execResult.success && (execResult.error?.includes('需要登录') || execResult.error?.includes('登录'))) {
+                  setShowLoginPrompt(true);
+                }
+
+                setToolResult(execResult);
+              } catch (execError) {
+                setToolResult({
+                  success: false,
+                  error: execError instanceof Error ? execError.message : 'Auto execution failed',
+                });
+              } finally {
+                setIsLoading(false);
+              }
+            }
+          } else {
+            // Low confidence - show confirmation
+            setShowIntentConfirm(true);
+            setMatchedTools([]);
+          }
+        } else {
+          // No intent recognized, fallback to tool list
+          setRecognizedIntent(null);
+          setShowIntentConfirm(false);
+          setMatchedTools([]);
+        }
       } catch (error) {
-        console.error('Failed to route tool:', error);
+        console.error('Failed to recognize intent:', error);
+        setRecognizedIntent(null);
+        setShowIntentConfirm(false);
         setMatchedTools([]);
+      } finally {
+        setIsRecognizing(false);
       }
     }, 300);
 
@@ -128,6 +194,8 @@ export function CommandPalette() {
           setSelectedTool(null);
           setToolInput('');
           setToolResult(null);
+          setRecognizedIntent(null);
+          setShowIntentConfirm(false);
           setIsLoggedIn(authService.isAuthenticated);
         }
         return newValue;
@@ -154,6 +222,8 @@ export function CommandPalette() {
       setSelectedTool(null);
       setToolInput('');
       setToolResult(null);
+      setRecognizedIntent(null);
+      setShowIntentConfirm(false);
     }
   };
 
@@ -170,6 +240,63 @@ export function CommandPalette() {
     setToolResult(null);
     setIsLoading(false);
     setCopySuccess(false);
+  };
+
+  // Handle intent confirmation execution
+  const handleIntentConfirm = async () => {
+    if (!recognizedIntent) return;
+
+    // Check if AI tool requires login
+    if (recognizedIntent.intentId.includes('ai-') && !isLoggedIn) {
+      setShowLoginPrompt(true);
+      return;
+    }
+
+    setIsLoading(true);
+    setToolResult(null);
+
+    try {
+      const result = await executeIntent(
+        recognizedIntent.intentId,
+        recognizedIntent.rawInput,
+        recognizedIntent.extractedParams,
+        modelId || undefined
+      );
+
+      // Check if AI tool requires login
+      if (!result.success && result.error?.includes('需要登录') || result.error?.includes('登录')) {
+        setShowLoginPrompt(true);
+      }
+
+      setToolResult(result);
+      setShowIntentConfirm(false);
+    } catch (error) {
+      setToolResult({
+        success: false,
+        error: error instanceof Error ? error.message : 'Intent execution failed',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle modifying intent parameters
+  const handleIntentModify = () => {
+    if (!recognizedIntent) return;
+
+    // Convert intent to tool for the existing tool input UI
+    const tool: Tool = {
+      id: recognizedIntent.intentId,
+      name: recognizedIntent.intentName,
+      nameEn: recognizedIntent.intentName,
+      description: '',
+      confidence: recognizedIntent.confidence,
+    };
+
+    setSelectedTool(tool);
+    setToolInput(recognizedIntent.rawInput);
+    setShowIntentConfirm(false);
+    setToolResult(null);
   };
 
   // Handle tool execution
@@ -312,6 +439,12 @@ export function CommandPalette() {
               d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
             />
           </svg>
+          {isRecognizing && (
+            <svg className="animate-spin h-5 w-5 text-blue-500 mr-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          )}
           <input
             ref={inputRef}
             type="text"
@@ -329,7 +462,149 @@ export function CommandPalette() {
 
         {/* Results area */}
         <div className="max-h-[50vh] overflow-y-auto">
-          {selectedTool ? (
+          {showIntentConfirm && recognizedIntent ? (
+            // Intent confirmation view (when confidence < 0.8)
+            <div className="p-4">
+              {/* Intent header */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center">
+                  <button
+                    onClick={() => {
+                      setShowIntentConfirm(false);
+                      setRecognizedIntent(null);
+                    }}
+                    className="mr-2 p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <span className="font-medium text-gray-900 dark:text-gray-100">确认意图</span>
+                </div>
+              </div>
+
+              {/* Intent info card */}
+              <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-medium text-gray-900 dark:text-gray-100">{recognizedIntent.intentName}</span>
+                  <div className="flex items-center">
+                    <span className="text-sm text-gray-500 dark:text-gray-400 mr-2">置信度</span>
+                    <span className={`text-sm font-medium ${
+                      recognizedIntent.confidence >= 0.7
+                        ? 'text-green-600 dark:text-green-400'
+                        : recognizedIntent.confidence >= 0.6
+                        ? 'text-yellow-600 dark:text-yellow-400'
+                        : 'text-orange-600 dark:text-orange-400'
+                    }`}>
+                      {Math.round(recognizedIntent.confidence * 100)}%
+                    </span>
+                  </div>
+                </div>
+
+                {/* Confidence bar */}
+                <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-3">
+                  <div
+                    className={`h-full transition-all ${
+                      recognizedIntent.confidence >= 0.7
+                        ? 'bg-green-500'
+                        : recognizedIntent.confidence >= 0.6
+                        ? 'bg-yellow-500'
+                        : 'bg-orange-500'
+                    }`}
+                    style={{ width: `${recognizedIntent.confidence * 100}%` }}
+                  />
+                </div>
+
+                {/* Extracted params */}
+                {Object.keys(recognizedIntent.extractedParams).length > 0 && (
+                  <div className="text-sm">
+                    <span className="text-gray-500 dark:text-gray-400">提取的参数: </span>
+                    <span className="text-gray-900 dark:text-gray-100">
+                      {JSON.stringify(recognizedIntent.extractedParams)}
+                    </span>
+                  </div>
+                )}
+
+                {/* Raw input */}
+                <div className="mt-2 text-sm">
+                  <span className="text-gray-500 dark:text-gray-400">原始输入: </span>
+                  <span className="text-gray-900 dark:text-gray-100">{recognizedIntent.rawInput}</span>
+                </div>
+              </div>
+
+              {/* Loading indicator */}
+              {isLoading && (
+                <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
+                  <div className="flex items-center justify-center">
+                    <svg className="animate-spin h-5 w-5 text-blue-600 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span className="text-gray-600 dark:text-gray-400">正在执行...</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Tool result */}
+              {toolResult && (
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">结果</span>
+                    <button
+                      onClick={handleCopyResult}
+                      disabled={!toolResult.success}
+                      className="flex items-center px-2 py-1 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {copySuccess ? (
+                        <>
+                          <svg className="w-3 h-3 mr-1 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          已复制
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          复制
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  {toolResult.success ? (
+                    <pre className="p-3 text-xs bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-x-auto text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
+                      {toolResult.result}
+                    </pre>
+                  ) : (
+                    <div className="p-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                      {toolResult.error}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Action buttons */}
+              {!toolResult && (
+                <div className="flex justify-end space-x-2">
+                  <button
+                    onClick={handleIntentModify}
+                    disabled={isLoading}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    修改参数
+                  </button>
+                  <button
+                    onClick={handleIntentConfirm}
+                    disabled={isLoading}
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? '执行中...' : '确认执行'}
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : selectedTool ? (
             // Tool execution view
             <div className="p-4">
               {/* Tool header */}

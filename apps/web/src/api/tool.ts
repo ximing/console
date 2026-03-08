@@ -32,6 +32,27 @@ export interface ToolExecutionResponse {
   error?: string;
 }
 
+// Intent recognition types
+export interface IntentResult {
+  intentId: string;
+  intentName: string;
+  confidence: number;
+  isHighConfidence: boolean;
+  extractedParams: Record<string, unknown>;
+  rawInput: string;
+}
+
+export interface IntentRecognitionResult {
+  intent: IntentResult | null;
+  alternativeIntents: IntentResult[];
+}
+
+export interface IntentExecutionResult {
+  success: boolean;
+  result?: string;
+  error?: string;
+}
+
 /**
  * Route user input to matching tools using AI
  */
@@ -54,6 +75,45 @@ export const executeTool = async (data: ToolExecutionRequest): Promise<ToolExecu
   const response = await request.post<unknown, ApiResponse<{ result: string }>>('/api/tool/execute', data);
   if (response.code !== 0) {
     return { success: false, error: response.msg || 'Tool execution failed' };
+  }
+  return { success: true, result: response.data.result };
+};
+
+/**
+ * Recognize intent from user input using AI
+ */
+export const recognizeIntent = async (input: string, modelId?: string): Promise<IntentRecognitionResult> => {
+  const response = await request.post<unknown, ApiResponse<IntentRecognitionResult>>('/api/command-palette/intent', {
+    input,
+    modelId: modelId || undefined,
+  });
+  if (response.code !== 0) {
+    console.error('Intent recognition error:', response.msg);
+    return { intent: null, alternativeIntents: [] };
+  }
+  return response.data;
+};
+
+/**
+ * Execute tool from recognized intent (for confirmed or auto-executed intents)
+ */
+export const executeIntent = async (
+  intentId: string,
+  input: string,
+  params?: Record<string, unknown>,
+  modelId?: string
+): Promise<IntentExecutionResult> => {
+  const response = await request.post<unknown, ApiResponse<{ toolId: string; toolName: string; result: string }>>(
+    '/api/command-palette/execute',
+    {
+      intentId,
+      input,
+      params,
+      modelId: modelId || undefined,
+    }
+  );
+  if (response.code !== 0) {
+    return { success: false, error: response.msg || 'Intent execution failed' };
   }
   return { success: true, result: response.data.result };
 };
