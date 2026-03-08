@@ -329,14 +329,31 @@ export class ToolExecutionService {
 
   private async executeAiTranslate(input: string, options: Record<string, unknown>): Promise<ToolExecutionResult> {
     const targetLang = (options.targetLanguage as string) || 'English';
-    const systemPrompt = `你是一个专业的翻译助手。将用户提供的文本翻译成${targetLang}。
+
+    // First, detect the source language
+    const detectPrompt = `Detect the language of the following text. Respond with only the language name in English (e.g., "Chinese", "English", "Japanese", "French", etc.). If unsure, respond with "Unknown". Text: ${input}`;
+
+    try {
+      const detectResponse = await this.model.invoke([
+        { role: 'user', content: detectPrompt },
+      ]);
+      const detectedLang = typeof detectResponse.content === 'string' ? detectResponse.content.trim() : 'Unknown';
+
+      // If source and target are the same, return original text
+      if (detectedLang.toLowerCase() === targetLang.toLowerCase()) {
+        return {
+          success: true,
+          result: input,
+        };
+      }
+
+      const systemPrompt = `你是一个专业的翻译助手。将用户提供的文本从${detectedLang}翻译成${targetLang}。
 
 要求：
 1. 只返回翻译结果，不要添加任何解释
 2. 保持原文的格式和风格
-3. 如果文本已经是你要翻译的语言，直接返回原文`;
+3. 如果文本已经是目标语言，直接返回原文`;
 
-    try {
       const response = await this.model.invoke([
         { role: 'system', content: systemPrompt },
         { role: 'user', content: input },
