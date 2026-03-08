@@ -13,6 +13,11 @@ const STORAGE_KEY = 'command-palette-model-id';
  */
 export function CommandPalette() {
   const [isOpen, setIsOpen] = useState(false);
+  const isOpenRef = useRef(isOpen);
+  // Keep ref in sync with state
+  useEffect(() => {
+    isOpenRef.current = isOpen;
+  }, [isOpen]);
   const [inputValue, setInputValue] = useState('');
   const [matchedTools, setMatchedTools] = useState<Tool[]>([]);
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
@@ -112,25 +117,33 @@ export function CommandPalette() {
     }
 
     const toggleHandler = () => {
-      setIsOpen((prev) => !prev);
-      if (!isOpen) {
-        setInputValue('');
-        setMatchedTools([]);
-        setSelectedTool(null);
-        setToolInput('');
-        setToolResult(null);
-      }
+      console.log('[CommandPalette] Toggle event received, isOpenRef.current:', isOpenRef.current);
+      setIsOpen((prev) => {
+        const newValue = !prev;
+        console.log('[CommandPalette] isOpen changing from', prev, 'to', newValue);
+        if (!prev) {
+          // Opening the palette - reset state
+          setInputValue('');
+          setMatchedTools([]);
+          setSelectedTool(null);
+          setToolInput('');
+          setToolResult(null);
+          setIsLoggedIn(authService.isAuthenticated);
+        }
+        return newValue;
+      });
     };
 
+    console.log('[CommandPalette] Setting up toggle listener, electronAPI:', !!window.electronAPI);
+    console.log('[CommandPalette] onCommandPaletteToggle:', !!window.electronAPI?.onCommandPaletteToggle);
+    console.log('[CommandPalette] Registering toggleHandler');
     window.electronAPI?.onCommandPaletteToggle?.(toggleHandler);
 
     return () => {
+      console.log('[CommandPalette] Removing toggleHandler');
       window.electronAPI?.removeCommandPaletteToggleListener?.(toggleHandler);
     };
-
-    // Refresh login status when palette opens
-    setIsLoggedIn(authService.isAuthenticated);
-  }, [isOpen]);
+  }, []);
 
   // Handle backdrop click
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -270,6 +283,8 @@ export function CommandPalette() {
   if (!isElectron()) {
     return null;
   }
+
+  console.log('[CommandPalette] Rendering, isOpen:', isOpen);
 
   if (!isOpen) {
     return null;
