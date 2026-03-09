@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useId } from 'react';
 import { ChevronDown, Loader2 } from 'lucide-react';
 
 export interface SelectOption {
@@ -32,8 +32,23 @@ export const Select = ({
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const listboxId = useId();
 
   const selectedOption = options.find((o) => o.value === value);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    // Small timeout to let the dropdown render
+    const frame = requestAnimationFrame(() => {
+      const listbox = containerRef.current?.querySelector('[role="listbox"]');
+      if (!listbox) return;
+      // Focus selected option, or first option
+      const selected = listbox.querySelector('[aria-selected="true"]') as HTMLElement | null;
+      const first = listbox.querySelector('[role="option"]') as HTMLElement | null;
+      (selected ?? first)?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -58,7 +73,14 @@ export const Select = ({
       setIsOpen(false);
     } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
-      setIsOpen(true);
+      if (!isOpen) {
+        setIsOpen(true);
+      } else {
+        // Move focus into list
+        const listbox = containerRef.current?.querySelector('[role="listbox"]');
+        const first = listbox?.querySelector('[role="option"]') as HTMLElement | null;
+        first?.focus();
+      }
     }
   };
 
@@ -95,6 +117,7 @@ export const Select = ({
         aria-label={ariaLabel}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
+        aria-controls={listboxId}
         onClick={() => setIsOpen((prev) => !prev)}
         onKeyDown={handleTriggerKeyDown}
         disabled={isDisabled}
@@ -126,6 +149,7 @@ export const Select = ({
       {/* Dropdown */}
       {isOpen && (
         <div
+          id={listboxId}
           role="listbox"
           className="absolute z-50 mt-1 w-full min-w-[160px] bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg shadow-lg overflow-hidden"
         >
