@@ -369,13 +369,11 @@ export class GithubService extends Service {
 
     try {
       const [owner, repo] = this.selectedRepo.full_name.split('/');
-      const [filePath, ...rest] = path.split('/');
-      const fileName = rest.length > 0 ? rest.join('/') : filePath;
 
       const response = await this.octokit.repos.getContent({
         owner,
         repo,
-        path: fileName,
+        path,
         ref: this.selectedBranch,
       });
 
