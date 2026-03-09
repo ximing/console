@@ -137,6 +137,29 @@ export class GithubService extends Service {
   }
 
   /**
+   * Refresh the repo list without triggering auto-restore.
+   * Use this when you only need to update the list (e.g., after repo management).
+   */
+  async refreshRepoList(): Promise<void> {
+    this.isLoadingRepos = true;
+    try {
+      const data = await githubApi.getRepos();
+      this.repos = data.repos;
+      // Update selectedRepo reference if it's in the new list (name may have changed)
+      if (this.selectedRepo) {
+        const updated = this.repos.find((r) => r.id === this.selectedRepo!.id);
+        if (updated) {
+          this.selectedRepo = updated;
+        }
+      }
+    } catch (err) {
+      this.handleError(err, 'Failed to refresh repositories');
+    } finally {
+      this.isLoadingRepos = false;
+    }
+  }
+
+  /**
    * Select a repository and initialize Octokit
    */
   async selectRepo(repo: GithubRepoDto): Promise<void> {

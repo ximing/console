@@ -383,9 +383,12 @@ export const RepoManager = view(({ onClose, onRepoAdded }: RepoManagerProps) => 
 
   if (onClose) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center">
-        <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-        <div className="relative bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg shadow-xl max-h-[80vh] overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
+        <div className="absolute inset-0 bg-black/50" />
+        <div
+          className="relative bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg shadow-xl max-h-[80vh] overflow-y-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
           {content}
         </div>
       </div>
