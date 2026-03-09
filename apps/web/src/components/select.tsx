@@ -86,12 +86,29 @@ export const Select = ({
     }
   };
 
+  const handleFooterKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const optionButtons = containerRef.current?.querySelectorAll<HTMLButtonElement>('[role="option"]');
+      if (optionButtons && optionButtons.length > 0) {
+        optionButtons[optionButtons.length - 1].focus();
+      }
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setIsOpen(false);
+      triggerRef.current?.focus();
+    }
+  };
+
   const handleOptionKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       const optionButtons = containerRef.current?.querySelectorAll<HTMLButtonElement>('[role="option"]');
       if (optionButtons && index + 1 < optionButtons.length) {
         optionButtons[index + 1].focus();
+      } else {
+        const footer = containerRef.current?.querySelector<HTMLButtonElement>('[data-footer-action]');
+        footer?.focus();
       }
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
@@ -187,10 +204,12 @@ export const Select = ({
             <div className="border-t border-gray-200 dark:border-dark-700">
               <button
                 type="button"
+                data-footer-action
                 onClick={() => {
                   setIsOpen(false);
                   footerAction.onClick();
                 }}
+                onKeyDown={handleFooterKeyDown}
                 className="flex items-center w-full px-3 py-2 text-sm text-left text-primary-600 dark:text-primary-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-colors"
               >
                 {footerAction.label}
