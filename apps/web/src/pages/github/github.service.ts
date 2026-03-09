@@ -56,6 +56,22 @@ export class GithubService extends Service {
 
   // Octokit instance (initialized when repo is selected)
   private octokit: Octokit | null = null;
+  private static STORAGE_REPO_KEY = 'github_selected_repo_id';
+  private static STORAGE_BRANCH_KEY = 'github_selected_branch';
+
+  private saveSelection(): void {
+    if (this.selectedRepo) {
+      localStorage.setItem(GithubService.STORAGE_REPO_KEY, this.selectedRepo.id);
+    }
+    if (this.selectedBranch) {
+      localStorage.setItem(GithubService.STORAGE_BRANCH_KEY, this.selectedBranch);
+    }
+  }
+
+  private clearStoredSelection(): void {
+    localStorage.removeItem(GithubService.STORAGE_REPO_KEY);
+    localStorage.removeItem(GithubService.STORAGE_BRANCH_KEY);
+  }
 
   // Toast service for error notifications
   private get toast(): ToastService {
@@ -108,6 +124,15 @@ export class GithubService extends Service {
     try {
       const data = await githubApi.getRepos();
       this.repos = data.repos;
+
+      // Auto-restore previously selected repo
+      const savedRepoId = localStorage.getItem(GithubService.STORAGE_REPO_KEY);
+      if (savedRepoId) {
+        const savedRepo = this.repos.find((r) => r.id === savedRepoId);
+        if (savedRepo) {
+          await this.selectRepo(savedRepo);
+        }
+      }
     } catch (err) {
       this.error = 'Failed to load repositories';
       console.error('Load repos error:', err);
@@ -121,19 +146,20 @@ export class GithubService extends Service {
    */
   async selectRepo(repo: GithubRepoDto): Promise<void> {
     this.selectedRepo = repo;
+    this.selectedBranch = '';
     this.error = null;
 
     try {
-      // Get the decrypted PAT
       const tokenData = await githubApi.getToken(repo.id);
+      this.octokit = new Octokit({ auth: tokenData.pat });
 
-      // Initialize Octokit with the token
-      this.octokit = new Octokit({
-        auth: tokenData.pat,
-      });
+      // Restore saved branch before loading branches
+      const savedBranch = localStorage.getItem(GithubService.STORAGE_BRANCH_KEY);
 
-      // Load branches
-      await this.loadBranches();
+      await this.loadBranches(savedBranch ?? undefined);
+
+      // Save repo selection after successful init
+      this.saveSelection();
     } catch (err) {
       this.error = 'Failed to initialize repository';
       console.error('Select repo error:', err);
@@ -144,17 +170,13 @@ export class GithubService extends Service {
   /**
    * Load branches for selected repository
    */
-  async loadBranches(): Promise<void> {
-    if (!this.selectedRepo || !this.octokit) {
-      return;
-    }
+  async loadBranches(preferredBranch?: string): Promise<void> {
+    if (!this.selectedRepo || !this.octokit) return;
 
     this.isLoadingBranches = true;
 
     try {
-      // Parse owner and repo from full_name
       const [owner, repo] = this.selectedRepo.full_name.split('/');
-
       const response = await this.octokit.repos.listBranches({
         owner,
         repo,
@@ -166,11 +188,16 @@ export class GithubService extends Service {
         protected: branch.protected || false,
       }));
 
-      // Select default branch if none selected
       if (!this.selectedBranch && this.branches.length > 0) {
-        // Try to find the default branch
+        // Try preferred (saved) branch first, then main/master, then first
+        const preferred = preferredBranch
+          ? this.branches.find((b) => b.name === preferredBranch)
+          : undefined;
         const defaultBranch = this.branches.find((b) => b.name === 'main' || b.name === 'master');
-        this.selectedBranch = defaultBranch?.name || this.branches[0].name;
+        this.selectedBranch = preferred?.name ?? defaultBranch?.name ?? this.branches[0].name;
+
+        // Load file tree for the restored/default branch
+        await this.loadFileTree();
       }
     } catch (err) {
       this.handleError(err, 'Failed to load branches');
@@ -185,7 +212,7 @@ export class GithubService extends Service {
    */
   async selectBranch(branch: string): Promise<void> {
     this.selectedBranch = branch;
-    // Load file tree when branch changes
+    this.saveSelection();
     await this.loadFileTree();
   }
 
@@ -193,6 +220,7 @@ export class GithubService extends Service {
    * Clear selected repository
    */
   clearSelectedRepo(): void {
+    this.clearStoredSelection();
     this.selectedRepo = null;
     this.selectedBranch = '';
     this.branches = [];
