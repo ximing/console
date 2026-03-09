@@ -60,10 +60,8 @@ export class GithubService extends Service {
   private static STORAGE_BRANCH_KEY = 'github_selected_branch';
 
   private saveSelection(): void {
-    if (this.selectedRepo) {
+    if (this.selectedRepo && this.selectedBranch) {
       localStorage.setItem(GithubService.STORAGE_REPO_KEY, this.selectedRepo.id);
-    }
-    if (this.selectedBranch) {
       localStorage.setItem(GithubService.STORAGE_BRANCH_KEY, this.selectedBranch);
     }
   }
@@ -85,28 +83,24 @@ export class GithubService extends Service {
     const err = error as { status?: number; message?: string };
     const status = err.status;
 
+    if (status === 403 && err.message?.includes('rate limit')) {
+      const message = '请求过于频繁，请稍后重试';
+      this.toast.error(message);
+      return message;
+    }
+
     if (status === 401 || status === 403) {
-      // Invalid token or insufficient permissions
       const message = 'Token 无效，请重新配置';
       this.toast.error(message);
       return message;
     }
 
     if (status === 422) {
-      // SHA mismatch - file was modified remotely
       const message = '文件已被远程修改，请重新加载';
       this.toast.error(message);
       return message;
     }
 
-    if (status === 403 && err.message?.includes('rate limit')) {
-      // Rate limit exceeded
-      const message = '请求过于频繁，请稍后重试';
-      this.toast.error(message);
-      return message;
-    }
-
-    // Generic error
     const message = err.message || defaultMessage;
     this.error = message;
     this.toast.error(message);
@@ -131,6 +125,8 @@ export class GithubService extends Service {
         const savedRepo = this.repos.find((r) => r.id === savedRepoId);
         if (savedRepo) {
           await this.selectRepo(savedRepo);
+        } else {
+          this.clearStoredSelection();
         }
       }
     } catch (err) {
@@ -212,8 +208,8 @@ export class GithubService extends Service {
    */
   async selectBranch(branch: string): Promise<void> {
     this.selectedBranch = branch;
-    this.saveSelection();
     await this.loadFileTree();
+    this.saveSelection();
   }
 
   /**
