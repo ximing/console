@@ -1,0 +1,113 @@
+import { useState, useRef, useEffect } from 'react';
+import { ChevronDown, Loader2 } from 'lucide-react';
+
+export interface SelectOption {
+  value: string;
+  label: string;
+}
+
+interface SelectProps {
+  value: string;
+  options: SelectOption[];
+  onChange: (value: string) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  loading?: boolean;
+  className?: string;
+}
+
+export const Select = ({
+  value,
+  options,
+  onChange,
+  placeholder = '请选择...',
+  disabled = false,
+  loading = false,
+  className = '',
+}: SelectProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const selectedOption = options.find((o) => o.value === value);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isOpen]);
+
+  const handleSelect = (optionValue: string) => {
+    onChange(optionValue);
+    setIsOpen(false);
+  };
+
+  const isDisabled = disabled || loading;
+
+  return (
+    <div ref={containerRef} className={`relative ${className}`}>
+      {/* Trigger button */}
+      <button
+        type="button"
+        onClick={() => !isDisabled && setIsOpen((prev) => !prev)}
+        disabled={isDisabled}
+        className={`
+          flex items-center gap-2 px-3 py-2 w-full
+          bg-white dark:bg-dark-800
+          border border-gray-200 dark:border-dark-700
+          rounded-lg text-sm text-left
+          transition-colors
+          ${isDisabled
+            ? 'opacity-50 cursor-not-allowed'
+            : 'hover:bg-gray-50 dark:hover:bg-dark-700 cursor-pointer'
+          }
+          ${isOpen ? 'ring-2 ring-primary-500' : ''}
+        `}
+      >
+        <span className={`flex-1 truncate ${!selectedOption ? 'text-gray-400 dark:text-gray-500' : ''}`}>
+          {selectedOption ? selectedOption.label : placeholder}
+        </span>
+        {loading ? (
+          <Loader2 className="w-4 h-4 flex-shrink-0 text-gray-500 dark:text-gray-400 animate-spin" />
+        ) : (
+          <ChevronDown
+            className={`w-4 h-4 flex-shrink-0 text-gray-500 dark:text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          />
+        )}
+      </button>
+
+      {/* Dropdown */}
+      {isOpen && (
+        <div className="absolute z-50 mt-1 w-full min-w-[160px] bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg shadow-lg overflow-hidden">
+          <div className="max-h-[240px] overflow-y-auto py-1">
+            {options.length === 0 ? (
+              <div className="px-3 py-2 text-sm text-gray-400 dark:text-gray-500">暂无选项</div>
+            ) : (
+              options.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => handleSelect(option.value)}
+                  className={`
+                    flex items-center w-full px-3 py-2 text-sm text-left transition-colors
+                    ${option.value === value
+                      ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                      : 'hover:bg-gray-100 dark:hover:bg-dark-700 text-gray-900 dark:text-gray-50'
+                    }
+                  `}
+                >
+                  <span className="truncate">{option.label}</span>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
