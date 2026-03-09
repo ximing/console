@@ -291,29 +291,34 @@ export class GithubService extends Service {
     const root: FileTreeNode[] = [];
 
     for (const item of items) {
+      // Skip directory entries — they are implicitly created when processing file paths
+      if (item.type === 'tree') continue;
+
       const parts = item.path.split('/');
       let current = root;
 
       for (let i = 0; i < parts.length; i++) {
         const part = parts[i];
         const isLast = i === parts.length - 1;
-        const type = item.type === 'tree' ? 'tree' : 'blob';
 
         let node = current.find((n) => n.name === part);
 
         if (!node) {
           node = {
             name: part,
-            path: isLast ? item.path : parts.slice(0, i + 1).join('/'),
-            type: isLast ? type : 'tree',
+            path: parts.slice(0, i + 1).join('/'),
+            type: isLast ? 'blob' : 'tree',
             sha: isLast ? item.sha : undefined,
             children: isLast ? undefined : [],
           };
           current.push(node);
+        } else if (!isLast && !node.children) {
+          // Directory node was created without children (shouldn't happen now, but guard anyway)
+          node.children = [];
         }
 
-        if (node.children) {
-          current = node.children;
+        if (!isLast) {
+          current = node.children!;
         }
       }
     }
