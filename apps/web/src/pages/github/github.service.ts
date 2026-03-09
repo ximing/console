@@ -17,12 +17,16 @@ export interface FileTreeNode {
   children?: FileTreeNode[];
 }
 
+export type FileType = 'text' | 'image' | 'binary';
+
 export interface OpenTab {
   path: string;
-  content: string;
+  content: string;   // text content for text files; data URL for images; '' for binary
   sha?: string;
   isDirty: boolean;
   isNew: boolean;
+  fileType: FileType;
+  downloadUrl?: string;  // original_url for binary/image download
 }
 
 export type PendingChangeType = 'edit' | 'create' | 'delete';
@@ -282,6 +286,21 @@ export class GithubService extends Service {
     }
   }
 
+  private detectFileType(path: string): FileType {
+    const ext = path.split('.').pop()?.toLowerCase() ?? '';
+    const imageExts = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'ico', 'bmp'];
+    const textExts = [
+      'md', 'txt', 'js', 'jsx', 'ts', 'tsx', 'json', 'yaml', 'yml', 'toml',
+      'html', 'htm', 'css', 'scss', 'less', 'xml', 'sh', 'bash', 'zsh',
+      'py', 'rb', 'go', 'rs', 'java', 'kt', 'swift', 'c', 'cpp', 'h',
+      'php', 'vue', 'svelte', 'graphql', 'sql', 'env', 'gitignore',
+      'dockerfile', 'makefile', 'lock', 'csv', 'log',
+    ];
+    if (imageExts.includes(ext)) return 'image';
+    if (textExts.includes(ext) || ext === '') return 'text';
+    return 'binary';
+  }
+
   /**
    * Build file tree from flat GitHub API response
    */
@@ -357,6 +376,7 @@ export class GithubService extends Service {
         content: pendingChange.content || '',
         isDirty: true,
         isNew: true,
+        fileType: 'text',
       };
       this.openTabs.push(newTab);
       this.activeTabPath = path;
@@ -377,8 +397,30 @@ export class GithubService extends Service {
         ref: this.selectedBranch,
       });
 
-      const content = response.data as { content?: string; encoding?: string; sha?: string };
-      const decodedContent = content.content ? atob(content.content) : '';
+      const content = response.data as {
+        content?: string;
+        encoding?: string;
+        sha?: string;
+        download_url?: string;
+      };
+
+      const fileType = this.detectFileType(path);
+      let decodedContent = '';
+
+      if (content.content) {
+        // GitHub API returns base64 with newlines — strip them first
+        const b64 = content.content.replace(/\n/g, '');
+        if (fileType === 'text') {
+          // Decode base64 → Uint8Array → UTF-8 string
+          const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+          decodedContent = new TextDecoder('utf-8').decode(bytes);
+        } else if (fileType === 'image') {
+          const ext = path.split('.').pop()?.toLowerCase() ?? '';
+          const mime = ext === 'svg' ? 'image/svg+xml' : `image/${ext === 'jpg' ? 'jpeg' : ext}`;
+          decodedContent = `data:${mime};base64,${b64}`;
+        }
+        // binary: leave decodedContent as ''
+      }
 
       const newTab: OpenTab = {
         path,
@@ -386,6 +428,8 @@ export class GithubService extends Service {
         sha: content.sha,
         isDirty: false,
         isNew: false,
+        fileType,
+        downloadUrl: content.download_url ?? undefined,
       };
 
       this.openTabs.push(newTab);
@@ -483,6 +527,7 @@ export class GithubService extends Service {
       content: '',
       isDirty: true,
       isNew: true,
+      fileType: 'text',
     };
     this.openTabs.push(newTab);
     this.activeTabPath = path;
