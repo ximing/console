@@ -164,7 +164,7 @@ export const FileTree = view(() => {
         <div
           className={`
             flex items-center gap-1 px-2 py-1 cursor-pointer rounded
-            ${isActive ? 'bg-primary-100 dark:bg-primary-900/30' : 'hover:bg-muted'}
+            ${isActive ? 'bg-primary-100 dark:bg-primary-900/30' : 'hover:bg-gray-100 dark:hover:bg-dark-800'}
             ${status === 'deleted' ? 'line-through text-red-500' : ''}
           `}
           style={{ paddingLeft: `${depth * 16 + 8}px` }}
@@ -175,9 +175,9 @@ export const FileTree = view(() => {
           {node.type === 'tree' ? (
             <span className="w-4 h-4 flex-shrink-0">
               {isExpanded ? (
-                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
               ) : (
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                <ChevronRight className="w-4 h-4 text-gray-500 dark:text-gray-400" />
               )}
             </span>
           ) : (
@@ -192,7 +192,7 @@ export const FileTree = view(() => {
               <Folder className="w-4 h-4 text-yellow-500 flex-shrink-0" />
             )
           ) : (
-            <File className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+            <File className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
           )}
 
           {/* Name */}
@@ -233,7 +233,7 @@ export const FileTree = view(() => {
         {newItemInput.type === 'directory' ? (
           <Folder className="w-4 h-4 text-yellow-500 flex-shrink-0" />
         ) : (
-          <File className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+          <File className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
         )}
         <input
           ref={inputRef}
@@ -256,16 +256,16 @@ export const FileTree = view(() => {
   };
 
   return (
-    <div className="w-[240px] h-full overflow-auto bg-card border-r border-border">
+    <div className="w-[240px] h-full overflow-auto bg-white dark:bg-dark-800 border-r border-gray-200 dark:border-dark-700">
       {/* Header */}
-      <div className="sticky top-0 flex items-center justify-between px-3 py-2 border-b border-border bg-card">
+      <div className="sticky top-0 flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-dark-700 bg-white dark:bg-dark-800">
         <span className="text-sm font-medium">文件</span>
         <button
           onClick={() => {
             setNewItemInput({ visible: true, parentPath: '', type: 'file' });
             setNewItemName('');
           }}
-          className="p-1 hover:bg-muted rounded"
+          className="p-1 hover:bg-gray-100 dark:hover:bg-dark-800 rounded"
           title="新建文件"
         >
           <FilePlus className="w-4 h-4" />
@@ -275,13 +275,13 @@ export const FileTree = view(() => {
       {/* Loading State */}
       {githubService.isLoadingFileTree && (
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+          <Loader2 className="w-5 h-5 animate-spin text-gray-500 dark:text-gray-400" />
         </div>
       )}
 
       {/* Empty State */}
       {!githubService.isLoadingFileTree && githubService.fileTree.length === 0 && (
-        <div className="text-center py-8 text-sm text-muted-foreground">
+        <div className="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
           {githubService.selectedRepo ? '暂无文件' : '请先选择仓库'}
         </div>
       )}
@@ -298,21 +298,21 @@ export const FileTree = view(() => {
       {contextMenu.visible && (
         <div
           ref={contextMenuRef}
-          className="fixed z-50 bg-popover border border-border rounded-lg shadow-lg py-1 min-w-[160px]"
+          className="fixed z-50 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg shadow-lg py-1 min-w-[160px]"
           style={{ left: contextMenu.x, top: contextMenu.y }}
         >
           {contextMenu.node?.type === 'tree' && (
             <>
               <button
                 onClick={handleNewFile}
-                className="flex items-center gap-2 w-full px-3 py-1.5 text-sm hover:bg-muted text-left"
+                className="flex items-center gap-2 w-full px-3 py-1.5 text-sm hover:bg-gray-100 dark:hover:bg-dark-800 text-left"
               >
                 <FilePlus className="w-4 h-4" />
                 新建文件
               </button>
               <button
                 onClick={handleNewDirectory}
-                className="flex items-center gap-2 w-full px-3 py-1.5 text-sm hover:bg-muted text-left"
+                className="flex items-center gap-2 w-full px-3 py-1.5 text-sm hover:bg-gray-100 dark:hover:bg-dark-800 text-left"
               >
                 <FolderPlus className="w-4 h-4" />
                 新建目录
@@ -322,7 +322,7 @@ export const FileTree = view(() => {
           {contextMenu.node?.type === 'blob' && (
             <button
               onClick={handleDeleteFile}
-              className="flex items-center gap-2 w-full px-3 py-1.5 text-sm hover:bg-muted text-left text-red-500"
+              className="flex items-center gap-2 w-full px-3 py-1.5 text-sm hover:bg-gray-100 dark:hover:bg-dark-800 text-left text-red-500"
             >
               <Trash2 className="w-4 h-4" />
               删除文件

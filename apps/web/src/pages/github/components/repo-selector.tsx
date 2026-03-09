@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { view, useService } from '@rabjs/react';
 import { GithubService } from '../github.service';
-import { Github } from 'lucide-react';
 import { Select } from '../../../components/select';
 import type { SelectOption } from '../../../components/select';
 import { RepoManager } from './repo-manager';
@@ -45,9 +44,6 @@ export const RepoSelector = view(() => {
   return (
     <>
       <div className="flex items-center gap-2">
-        {/* Repo icon */}
-        <Github className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
-
         {/* Repo Selector */}
         <Select
           value={githubService.selectedRepo?.id || ''}
@@ -57,7 +53,7 @@ export const RepoSelector = view(() => {
           loading={githubService.isLoadingRepos}
           disabled={githubService.isLoadingRepos}
           className="min-w-[180px]"
-          footerAction={{ label: '+ 添加仓库', onClick: () => setIsManaging(true) }}
+          footerAction={{ label: '管理仓库', onClick: () => setIsManaging(true) }}
         />
 
         {/* Branch Selector */}
