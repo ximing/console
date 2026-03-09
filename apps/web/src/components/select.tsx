@@ -14,6 +14,8 @@ interface SelectProps {
   disabled?: boolean;
   loading?: boolean;
   className?: string;
+  id?: string;
+  'aria-label'?: string;
 }
 
 export const Select = ({
@@ -24,22 +26,24 @@ export const Select = ({
   disabled = false,
   loading = false,
   className = '',
+  id,
+  'aria-label': ariaLabel,
 }: SelectProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const selectedOption = options.find((o) => o.value === value);
 
   useEffect(() => {
+    if (!isOpen) return;
     const handleClickOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
       }
     };
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
   const handleSelect = (optionValue: string) => {
@@ -49,12 +53,50 @@ export const Select = ({
 
   const isDisabled = disabled || loading;
 
+  const handleTriggerKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key === 'Escape') {
+      setIsOpen(false);
+    } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      setIsOpen(true);
+    }
+  };
+
+  const handleOptionKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const optionButtons = containerRef.current?.querySelectorAll<HTMLButtonElement>('[role="option"]');
+      if (optionButtons && index + 1 < optionButtons.length) {
+        optionButtons[index + 1].focus();
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (index === 0) {
+        triggerRef.current?.focus();
+      } else {
+        const optionButtons = containerRef.current?.querySelectorAll<HTMLButtonElement>('[role="option"]');
+        if (optionButtons) {
+          optionButtons[index - 1].focus();
+        }
+      }
+    } else if (e.key === 'Escape') {
+      setIsOpen(false);
+      triggerRef.current?.focus();
+    }
+  };
+
   return (
     <div ref={containerRef} className={`relative ${className}`}>
       {/* Trigger button */}
       <button
+        ref={triggerRef}
         type="button"
-        onClick={() => !isDisabled && setIsOpen((prev) => !prev)}
+        id={id}
+        aria-label={ariaLabel}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((prev) => !prev)}
+        onKeyDown={handleTriggerKeyDown}
         disabled={isDisabled}
         className={`
           flex items-center gap-2 px-3 py-2 w-full
@@ -83,16 +125,22 @@ export const Select = ({
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute z-50 mt-1 w-full min-w-[160px] bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg shadow-lg overflow-hidden">
+        <div
+          role="listbox"
+          className="absolute z-50 mt-1 w-full min-w-[160px] bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg shadow-lg overflow-hidden"
+        >
           <div className="max-h-[240px] overflow-y-auto py-1">
             {options.length === 0 ? (
               <div className="px-3 py-2 text-sm text-gray-400 dark:text-gray-500">暂无选项</div>
             ) : (
-              options.map((option) => (
+              options.map((option, index) => (
                 <button
                   key={option.value}
                   type="button"
+                  role="option"
+                  aria-selected={option.value === value}
                   onClick={() => handleSelect(option.value)}
+                  onKeyDown={(e) => handleOptionKeyDown(e, index)}
                   className={`
                     flex items-center w-full px-3 py-2 text-sm text-left transition-colors
                     ${option.value === value
