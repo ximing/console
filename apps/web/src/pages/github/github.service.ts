@@ -130,8 +130,7 @@ export class GithubService extends Service {
         }
       }
     } catch (err) {
-      this.error = 'Failed to load repositories';
-      console.error('Load repos error:', err);
+      this.handleError(err, 'Failed to load repositories');
     } finally {
       this.isLoadingRepos = false;
     }
@@ -678,6 +677,3 @@ export class GithubService extends Service {
     }
   }
 }
-
-// Export singleton instance
-export const githubService = new GithubService();
