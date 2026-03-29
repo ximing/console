@@ -4,6 +4,8 @@ import { BlogService } from '../../../services/blog.service';
 import { SearchButton } from './search-button';
 import { ActionButtons } from './action-buttons';
 import { DirectoryTree } from '../directory-tree';
+import type { DirectoryTreeNode } from '../../../../services/directory.service';
+import type { BlogDto } from '@x-console/dto';
 
 interface SidebarProps {
   selectedDirectoryId: string | null;
@@ -13,8 +15,8 @@ interface SidebarProps {
   onSearchClick: () => void;
   onNewBlog: () => void;
   onNewDirectory: () => void;
-  onContextMenuDirectory: (e: React.MouseEvent, node: any) => void;
-  onContextMenuPage: (e: React.MouseEvent, blog: any) => void;
+  onContextMenuDirectory: (e: React.MouseEvent, node: DirectoryTreeNode) => void;
+  onContextMenuPage: (e: React.MouseEvent, blog: BlogDto) => void;
   onExpandDirectory?: (directoryId: string) => void;
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { view, useService } from '@rabjs/react';
 import { useParams, useNavigate } from 'react-router';
 import { useEditor, EditorContent } from '@tiptap/react';

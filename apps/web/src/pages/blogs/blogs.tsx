@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { view, useService } from '@rabjs/react';
 import { useNavigate } from 'react-router';
-import { Plus, Loader2 } from 'lucide-react';
 import { Layout } from '../../components/layout';
 import { BlogService } from '../../services/blog.service';
 import { DirectoryService } from '../../services/directory.service';
@@ -38,11 +37,11 @@ export const BlogListPage = view(() => {
     x: number;
     y: number;
     type: 'directory' | 'page';
-    data: any;
+    data: DirectoryTreeNode | BlogDto | null;
   }>({ visible: false, x: 0, y: 0, type: 'directory', data: null });
 
-  // Expanded directories for tree
-  const [expandedDirs, setExpandedDirs] = useState<Set<string>>(new Set());
+  // Expanded directories for tree - stored but currently not read back
+  const [, setExpandedDirs] = useState<Set<string>>(new Set());
 
   // Load directories on mount
   useEffect(() => {
@@ -90,8 +89,8 @@ export const BlogListPage = view(() => {
     }
   };
 
-  // Create new directory
-  const handleCreateDirectory = async (parentId: string | null) => {
+  // Create new directory - handled inline in DirectoryTree via context menu
+  const handleCreateDirectory = async () => {
     // The DirectoryTree component handles directory creation inline
     // This is a no-op placeholder for the Sidebar action button
   };
@@ -293,7 +292,7 @@ export const BlogListPage = view(() => {
             onSelectPage={handleSelectPage}
             onSearchClick={() => setSearchModalVisible(true)}
             onNewBlog={() => handleCreateBlog(selectedDirectoryId)}
-            onNewDirectory={() => handleCreateDirectory(null)}
+            onNewDirectory={() => handleCreateDirectory()}
             onContextMenuDirectory={handleContextMenuDirectory}
             onContextMenuPage={handleContextMenuPage}
             onExpandDirectory={handleExpandDirectory}
