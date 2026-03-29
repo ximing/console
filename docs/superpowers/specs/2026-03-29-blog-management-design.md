@@ -103,8 +103,14 @@
 ## 业务规则
 
 ### 删除行为
-- **删除目录**：如果目录包含博客，博客会移动到根目录（directoryId 设为 null）
+- **删除目录**：如果目录包含子目录，子目录也会被级联删除；如果目录包含博客，博客会移动到根目录（directoryId 设为 null）
 - **删除标签**：删除标签时，自动清除该标签与所有博客的关联（BlogTag 表记录删除）
+
+### Slug 规范
+- 格式：小写字母、数字、连字符组成（如 `my-first-post`）
+- 最大长度：100 字符
+- 唯一性：同一用户下唯一
+- 自动生成：从标题转换而来（如 "我的第一篇博客" → `wo-de-di-yi-pian-bo-ke`）
 
 ### 内容存储
 - Tiptap JSON 内容直接存储在 `content` 字段
@@ -117,6 +123,13 @@
 ### 自动保存冲突
 - 采用"最后写入优先"策略
 - 保存时携带 `updatedAt` 时间戳，服务端对比后决定是否接受更新
+
+### 自动保存失败处理
+- 网络错误：静默重试 3 次，间隔 2 秒
+- 重试失败后：显示错误提示，用户可手动重试
+
+### 摘要生成
+- 如果未手动输入摘要，自动从内容前 200 字符生成
 
 ## 数据库实体
 
@@ -185,7 +198,9 @@
 - 上传失败重试：最多 3 次，间隔 1 秒
 
 ### 博客相关
-- `GET /api/blogs` - 获取博客列表（支持目录、标签、状态筛选）
+- `GET /api/blogs` - 获取博客列表（支持目录、标签、状态筛选，分页）
+  - 查询参数：`page`, `pageSize`, `directoryId`, `tagId`, `status`, `search`
+  - 响应：`{ data: Blog[], total: number, page: number, pageSize: number }`
 - `GET /api/blogs/:id` - 获取博客详情
 - `POST /api/blogs` - 创建博客
 - `PUT /api/blogs/:id` - 更新博客
@@ -206,7 +221,12 @@
 - `DELETE /api/blogs/tags/:id` - 删除标签
 
 ### 文件上传
-- `POST /api/upload` - 上传文件到 MinIO，返回 URL
+- `POST /api/upload` - 上传文件到 MinIO
+  - 请求：`multipart/form-data`，字段 `file`
+  - 成功响应：`{ "url": "https://minio.../xxx.png" }`
+
+### 公开博客访问
+- `GET /blog/:slug` - 通过 slug 获取已发布的博客（无需登录）
 
 ## 技术实现
 
