@@ -1,11 +1,7 @@
 import { Service } from '@rabjs/react';
 import { tagApi } from '../api/blog';
 import type { TagDto, CreateTagDto, UpdateTagDto } from '@x-console/dto';
-
-type ToastService = {
-  success(message: string): void;
-  error(message: string): void;
-};
+import type { ToastService } from './types';
 
 /**
  * Tag Service
@@ -52,6 +48,8 @@ export class TagService extends Service {
     try {
       const tag = await tagApi.createTag(data);
       this.tags = [...this.tags, tag];
+      const toast = await this.getToastService();
+      toast.success('Tag created successfully');
       return tag;
     } catch (err) {
       console.error('Create tag error:', err);
@@ -68,6 +66,8 @@ export class TagService extends Service {
     try {
       const tag = await tagApi.updateTag(id, data);
       this.tags = this.tags.map((t) => (t.id === id ? tag : t));
+      const toast = await this.getToastService();
+      toast.success('Tag updated successfully');
       return tag;
     } catch (err) {
       console.error('Update tag error:', err);
@@ -84,6 +84,8 @@ export class TagService extends Service {
     try {
       await tagApi.deleteTag(id);
       this.tags = this.tags.filter((t) => t.id !== id);
+      const toast = await this.getToastService();
+      toast.success('Tag deleted successfully');
       return true;
     } catch (err) {
       console.error('Delete tag error:', err);
