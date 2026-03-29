@@ -21,6 +21,7 @@ interface DirectoryTreeProps {
   onSelectPage: (pageId: string) => void;
   onContextMenuDirectory: (e: React.MouseEvent, node: DirectoryTreeNode) => void;
   onContextMenuPage: (e: React.MouseEvent, blog: BlogDto) => void;
+  onExpandDirectory?: (directoryId: string) => void;
 }
 
 interface NewDirectoryInput {
@@ -34,7 +35,7 @@ interface NewDirectoryInput {
  * Displays hierarchical directory structure with expand/collapse and context menu
  */
 export const DirectoryTree = view(
-  ({ selectedDirectoryId, selectedPageId, onSelectDirectory, onSelectPage, onContextMenuDirectory, onContextMenuPage }: DirectoryTreeProps) => {
+  ({ selectedDirectoryId, selectedPageId, onSelectDirectory, onSelectPage, onContextMenuDirectory, onContextMenuPage, onExpandDirectory }: DirectoryTreeProps) => {
     const directoryService = useService(DirectoryService);
     const blogService = useService(BlogService);
     const toastService = useService(ToastService);
@@ -76,6 +77,10 @@ export const DirectoryTree = view(
           next.delete(dirId);
         } else {
           next.add(dirId);
+          // Notify parent that directory was expanded
+          if (onExpandDirectory) {
+            onExpandDirectory(dirId);
+          }
         }
         return next;
       });

@@ -6,6 +6,7 @@ import type { BlogDto } from '@x-console/dto';
 interface BlogCardProps {
   blog: BlogDto;
   directoryName?: string;
+  onClick?: () => void;
 }
 
 /**
@@ -36,12 +37,16 @@ const formatRelativeTime = (dateStr: string): string => {
  * Blog Card Component
  * Displays a single blog post with title, excerpt, directory, tags, status, and update time
  */
-export const BlogCard = view(({ blog, directoryName }: BlogCardProps) => {
+export const BlogCard = view(({ blog, directoryName, onClick }: BlogCardProps) => {
   const navigate = useNavigate();
 
-  // Handle click to navigate to editor
+  // Handle click to navigate to editor or call onClick
   const handleClick = () => {
-    navigate(`/blogs/${blog.id}/editor`);
+    if (onClick) {
+      onClick();
+    } else {
+      navigate(`/blogs/${blog.id}/editor`);
+    }
   };
 
   // Display tags (up to 3, then "+N")
