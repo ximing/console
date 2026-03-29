@@ -83,8 +83,10 @@ function convertDirectoryToDto(directory: Directory): DirectoryDto {
     userId: directory.userId,
     name: directory.name,
     parentId: directory.parentId ?? undefined,
-    createdAt: directory.createdAt instanceof Date ? directory.createdAt.toISOString() : directory.createdAt,
-    updatedAt: directory.updatedAt instanceof Date ? directory.updatedAt.toISOString() : directory.updatedAt,
+    createdAt:
+      directory.createdAt instanceof Date ? directory.createdAt.toISOString() : directory.createdAt,
+    updatedAt:
+      directory.updatedAt instanceof Date ? directory.updatedAt.toISOString() : directory.updatedAt,
   };
 }
 
@@ -119,7 +121,8 @@ export class BlogController {
   @Get('/')
   async listBlogs(
     @CurrentUser() userDto: UserInfoDto,
-    @QueryParams() params: {
+    @QueryParams()
+    params: {
       page?: string;
       pageSize?: string;
       directoryId?: string;
@@ -165,28 +168,6 @@ export class BlogController {
   }
 
   /**
-   * GET /api/v1/blogs/:id - Get blog details
-   */
-  @Get('/:id')
-  async getBlog(@CurrentUser() userDto: UserInfoDto, @Param('id') id: string) {
-    try {
-      if (!userDto?.id) {
-        return ResponseUtility.error(ErrorCode.UNAUTHORIZED);
-      }
-
-      const blog = await this.blogService.getBlog(id, userDto.id);
-      if (!blog) {
-        return ResponseUtility.error(ErrorCode.NOT_FOUND, 'Blog not found');
-      }
-
-      return ResponseUtility.success(convertBlogToDto(blog));
-    } catch (error) {
-      logger.error('Get blog error:', error);
-      return ResponseUtility.error(ErrorCode.DB_ERROR);
-    }
-  }
-
-  /**
    * POST /api/v1/blogs - Create a new blog
    */
   @Post('/')
@@ -210,7 +191,10 @@ export class BlogController {
           .select({ slug: blogs.slug })
           .from(blogs)
           .where(eq(blogs.userId, userDto.id));
-        slug = generateUniqueSlug(slug, existingSlugs.map((s) => s.slug));
+        slug = generateUniqueSlug(
+          slug,
+          existingSlugs.map((s) => s.slug)
+        );
       }
 
       const blog = await this.blogService.createBlog(userDto.id, {
@@ -228,142 +212,6 @@ export class BlogController {
       return ResponseUtility.success(convertBlogToDto(createdBlog!));
     } catch (error) {
       logger.error('Create blog error:', error);
-      return ResponseUtility.error(ErrorCode.DB_ERROR);
-    }
-  }
-
-  /**
-   * PUT /api/v1/blogs/:id - Update a blog
-   */
-  @Put('/:id')
-  async updateBlog(
-    @CurrentUser() userDto: UserInfoDto,
-    @Param('id') id: string,
-    @Body() updateData: UpdateBlogDto
-  ) {
-    try {
-      if (!userDto?.id) {
-        return ResponseUtility.error(ErrorCode.UNAUTHORIZED);
-      }
-
-      // Check if blog exists
-      const existingBlog = await this.blogService.getBlog(id, userDto.id);
-      if (!existingBlog) {
-        return ResponseUtility.error(ErrorCode.NOT_FOUND, 'Blog not found');
-      }
-
-      // Validate slug uniqueness if being changed
-      if (updateData.slug && updateData.slug !== existingBlog.slug) {
-        const db = getDatabase();
-        const existingSlugs = await db
-          .select({ slug: blogs.slug })
-          .from(blogs)
-          .where(eq(blogs.userId, userDto.id));
-        const otherSlugs = existingSlugs.filter((s) => s.slug !== existingBlog.slug).map((s) => s.slug);
-        const newSlug = generateUniqueSlug(updateData.slug, otherSlugs);
-        updateData.slug = newSlug;
-      }
-
-      const updatedBlog = await this.blogService.updateBlog(id, userDto.id, {
-        title: updateData.title?.trim(),
-        content: updateData.content,
-        excerpt: updateData.excerpt,
-        slug: updateData.slug,
-        directoryId: updateData.directoryId,
-        status: updateData.status,
-        tagIds: updateData.tagIds,
-      });
-
-      if (!updatedBlog) {
-        return ResponseUtility.error(ErrorCode.NOT_FOUND, 'Blog not found');
-      }
-
-      // Fetch the updated blog with tags
-      const blogWithTags = await this.blogService.getBlog(id, userDto.id);
-
-      return ResponseUtility.success(convertBlogToDto(blogWithTags!));
-    } catch (error) {
-      logger.error('Update blog error:', error);
-      return ResponseUtility.error(ErrorCode.DB_ERROR);
-    }
-  }
-
-  /**
-   * DELETE /api/v1/blogs/:id - Delete a blog
-   */
-  @Delete('/:id')
-  async deleteBlog(@CurrentUser() userDto: UserInfoDto, @Param('id') id: string) {
-    try {
-      if (!userDto?.id) {
-        return ResponseUtility.error(ErrorCode.UNAUTHORIZED);
-      }
-
-      const deleted = await this.blogService.deleteBlog(id, userDto.id);
-      if (!deleted) {
-        return ResponseUtility.error(ErrorCode.NOT_FOUND, 'Blog not found');
-      }
-
-      return ResponseUtility.success({ deleted: true });
-    } catch (error) {
-      logger.error('Delete blog error:', error);
-      return ResponseUtility.error(ErrorCode.DB_ERROR);
-    }
-  }
-
-  /**
-   * POST /api/v1/blogs/:id/publish - Publish a blog
-   */
-  @Post('/:id/publish')
-  async publishBlog(@CurrentUser() userDto: UserInfoDto, @Param('id') id: string) {
-    try {
-      if (!userDto?.id) {
-        return ResponseUtility.error(ErrorCode.UNAUTHORIZED);
-      }
-
-      const existingBlog = await this.blogService.getBlog(id, userDto.id);
-      if (!existingBlog) {
-        return ResponseUtility.error(ErrorCode.NOT_FOUND, 'Blog not found');
-      }
-
-      const blog = await this.blogService.publishBlog(id, userDto.id);
-      if (!blog) {
-        return ResponseUtility.error(ErrorCode.NOT_FOUND, 'Blog not found');
-      }
-
-      const blogWithTags = await this.blogService.getBlog(id, userDto.id);
-
-      return ResponseUtility.success(convertBlogToDto(blogWithTags!));
-    } catch (error) {
-      logger.error('Publish blog error:', error);
-      return ResponseUtility.error(ErrorCode.DB_ERROR);
-    }
-  }
-
-  /**
-   * POST /api/v1/blogs/:id/unpublish - Unpublish a blog
-   */
-  @Post('/:id/unpublish')
-  async unpublishBlog(@CurrentUser() userDto: UserInfoDto, @Param('id') id: string) {
-    try {
-      if (!userDto?.id) {
-        return ResponseUtility.error(ErrorCode.UNAUTHORIZED);
-      }
-
-      const existingBlog = await this.blogService.getBlog(id, userDto.id);
-      if (!existingBlog) {
-        return ResponseUtility.error(ErrorCode.NOT_FOUND, 'Blog not found');
-      }
-
-      const blog = await this.blogService.unpublishBlog(id, userDto.id);
-      if (!blog) {
-        return ResponseUtility.error(ErrorCode.NOT_FOUND, 'Blog not found');
-      }
-
-      const blogWithTags = await this.blogService.getBlog(id, userDto.id);
-
-      return ResponseUtility.success(convertBlogToDto(blogWithTags!));
-    } catch (error) {
-      logger.error('Unpublish blog error:', error);
       return ResponseUtility.error(ErrorCode.DB_ERROR);
     }
   }
@@ -455,7 +303,10 @@ export class BlogController {
       if (updateData.parentId) {
         // Prevent setting self as parent
         if (updateData.parentId === id) {
-          return ResponseUtility.error(ErrorCode.PARAMS_ERROR, 'Directory cannot be its own parent');
+          return ResponseUtility.error(
+            ErrorCode.PARAMS_ERROR,
+            'Directory cannot be its own parent'
+          );
         }
         const parent = await this.directoryService.getDirectory(updateData.parentId, userDto.id);
         if (!parent) {
@@ -601,6 +452,166 @@ export class BlogController {
       return ResponseUtility.success({ deleted: true });
     } catch (error) {
       logger.error('Delete tag error:', error);
+      return ResponseUtility.error(ErrorCode.DB_ERROR);
+    }
+  }
+
+  /**
+   * GET /api/v1/blogs/:id - Get blog details
+   */
+  @Get('/:id')
+  async getBlog(@CurrentUser() userDto: UserInfoDto, @Param('id') id: string) {
+    try {
+      if (!userDto?.id) {
+        return ResponseUtility.error(ErrorCode.UNAUTHORIZED);
+      }
+
+      const blog = await this.blogService.getBlog(id, userDto.id);
+      if (!blog) {
+        return ResponseUtility.error(ErrorCode.NOT_FOUND, 'Blog not found');
+      }
+
+      return ResponseUtility.success(convertBlogToDto(blog));
+    } catch (error) {
+      logger.error('Get blog error:', error);
+      return ResponseUtility.error(ErrorCode.DB_ERROR);
+    }
+  }
+
+  /**
+   * PUT /api/v1/blogs/:id - Update a blog
+   */
+  @Put('/:id')
+  async updateBlog(
+    @CurrentUser() userDto: UserInfoDto,
+    @Param('id') id: string,
+    @Body() updateData: UpdateBlogDto
+  ) {
+    try {
+      if (!userDto?.id) {
+        return ResponseUtility.error(ErrorCode.UNAUTHORIZED);
+      }
+
+      // Check if blog exists
+      const existingBlog = await this.blogService.getBlog(id, userDto.id);
+      if (!existingBlog) {
+        return ResponseUtility.error(ErrorCode.NOT_FOUND, 'Blog not found');
+      }
+
+      // Validate slug uniqueness if being changed
+      if (updateData.slug && updateData.slug !== existingBlog.slug) {
+        const db = getDatabase();
+        const existingSlugs = await db
+          .select({ slug: blogs.slug })
+          .from(blogs)
+          .where(eq(blogs.userId, userDto.id));
+        const otherSlugs = existingSlugs
+          .filter((s) => s.slug !== existingBlog.slug)
+          .map((s) => s.slug);
+        const newSlug = generateUniqueSlug(updateData.slug, otherSlugs);
+        updateData.slug = newSlug;
+      }
+
+      const updatedBlog = await this.blogService.updateBlog(id, userDto.id, {
+        title: updateData.title?.trim(),
+        content: updateData.content,
+        excerpt: updateData.excerpt,
+        slug: updateData.slug,
+        directoryId: updateData.directoryId,
+        status: updateData.status,
+        tagIds: updateData.tagIds,
+      });
+
+      if (!updatedBlog) {
+        return ResponseUtility.error(ErrorCode.NOT_FOUND, 'Blog not found');
+      }
+
+      // Fetch the updated blog with tags
+      const blogWithTags = await this.blogService.getBlog(id, userDto.id);
+
+      return ResponseUtility.success(convertBlogToDto(blogWithTags!));
+    } catch (error) {
+      logger.error('Update blog error:', error);
+      return ResponseUtility.error(ErrorCode.DB_ERROR);
+    }
+  }
+
+  /**
+   * DELETE /api/v1/blogs/:id - Delete a blog
+   */
+  @Delete('/:id')
+  async deleteBlog(@CurrentUser() userDto: UserInfoDto, @Param('id') id: string) {
+    try {
+      if (!userDto?.id) {
+        return ResponseUtility.error(ErrorCode.UNAUTHORIZED);
+      }
+
+      const deleted = await this.blogService.deleteBlog(id, userDto.id);
+      if (!deleted) {
+        return ResponseUtility.error(ErrorCode.NOT_FOUND, 'Blog not found');
+      }
+
+      return ResponseUtility.success({ deleted: true });
+    } catch (error) {
+      logger.error('Delete blog error:', error);
+      return ResponseUtility.error(ErrorCode.DB_ERROR);
+    }
+  }
+
+  /**
+   * POST /api/v1/blogs/:id/publish - Publish a blog
+   */
+  @Post('/:id/publish')
+  async publishBlog(@CurrentUser() userDto: UserInfoDto, @Param('id') id: string) {
+    try {
+      if (!userDto?.id) {
+        return ResponseUtility.error(ErrorCode.UNAUTHORIZED);
+      }
+
+      const existingBlog = await this.blogService.getBlog(id, userDto.id);
+      if (!existingBlog) {
+        return ResponseUtility.error(ErrorCode.NOT_FOUND, 'Blog not found');
+      }
+
+      const blog = await this.blogService.publishBlog(id, userDto.id);
+      if (!blog) {
+        return ResponseUtility.error(ErrorCode.NOT_FOUND, 'Blog not found');
+      }
+
+      const blogWithTags = await this.blogService.getBlog(id, userDto.id);
+
+      return ResponseUtility.success(convertBlogToDto(blogWithTags!));
+    } catch (error) {
+      logger.error('Publish blog error:', error);
+      return ResponseUtility.error(ErrorCode.DB_ERROR);
+    }
+  }
+
+  /**
+   * POST /api/v1/blogs/:id/unpublish - Unpublish a blog
+   */
+  @Post('/:id/unpublish')
+  async unpublishBlog(@CurrentUser() userDto: UserInfoDto, @Param('id') id: string) {
+    try {
+      if (!userDto?.id) {
+        return ResponseUtility.error(ErrorCode.UNAUTHORIZED);
+      }
+
+      const existingBlog = await this.blogService.getBlog(id, userDto.id);
+      if (!existingBlog) {
+        return ResponseUtility.error(ErrorCode.NOT_FOUND, 'Blog not found');
+      }
+
+      const blog = await this.blogService.unpublishBlog(id, userDto.id);
+      if (!blog) {
+        return ResponseUtility.error(ErrorCode.NOT_FOUND, 'Blog not found');
+      }
+
+      const blogWithTags = await this.blogService.getBlog(id, userDto.id);
+
+      return ResponseUtility.success(convertBlogToDto(blogWithTags!));
+    } catch (error) {
+      logger.error('Unpublish blog error:', error);
       return ResponseUtility.error(ErrorCode.DB_ERROR);
     }
   }

@@ -4,22 +4,18 @@
   "private": true,
   "license": "BSL-1.1",
   "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "types": "./dist/index.d.ts"
     }
   },
   "files": [
     "dist/**"
   ],
   "scripts": {
-    "build": "rollup -c",
-    "dev": "rollup -c -w",
+    "build": "tsc --emitDeclarationOnly --declaration --declarationMap",
+    "dev": "tsc --emitDeclarationOnly --declaration --declarationMap --watch",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix --fix-type problem",
     "typecheck": "tsc --noEmit",
@@ -31,7 +27,6 @@
   "devDependencies": {
     "@x-console/eslint-config": "workspace:*",
     "@x-console/jest-presets": "workspace:*",
-    "@x-console/rollup-config": "workspace:*",
     "@x-console/typescript-config": "workspace:*",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.13.4",
