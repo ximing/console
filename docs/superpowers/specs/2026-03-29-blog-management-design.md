@@ -100,15 +100,35 @@
 - Command/Ctrl + S 快捷键保存
 - 显示保存状态
 
+## 业务规则
+
+### 删除行为
+- **删除目录**：如果目录包含博客，博客会移动到根目录（directoryId 设为 null）
+- **删除标签**：删除标签时，自动清除该标签与所有博客的关联（BlogTag 表记录删除）
+
+### 内容存储
+- Tiptap JSON 内容直接存储在 `content` 字段
+- 前端渲染时直接从 JSON 恢复编辑器状态
+
+### 权限模型
+- 博客管理仅限已登录用户（继承现有认证体系）
+- 所有博客数据按用户隔离（userId 关联）
+
+### 自动保存冲突
+- 采用"最后写入优先"策略
+- 保存时携带 `updatedAt` 时间戳，服务端对比后决定是否接受更新
+
 ## 数据库实体
 
 ### Blog
 | 字段 | 类型 | 描述 |
 |------|------|------|
 | id | uuid | 主键 |
+| userId | uuid (FK) | 所属用户 |
 | title | varchar(255) | 标题 |
 | content | json | Tiptap JSON 内容 |
 | excerpt | text | 摘要（可选） |
+| slug | varchar(255) | URL slug（用于公开访问，如 /blog/my-first-post） |
 | directoryId | uuid (FK) | 所属目录，可空 |
 | status | enum | 'draft' \| 'published' |
 | publishedAt | datetime | 发布时间，可空 |
@@ -139,6 +159,30 @@
 | tagId | uuid (FK) | 标签外键 |
 
 ## API 设计
+
+### 错误处理
+所有 API 返回统一错误格式：
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "标题不能为空",
+    "details": {}
+  }
+}
+```
+
+**错误码：**
+- `VALIDATION_ERROR` - 参数校验失败
+- `NOT_FOUND` - 资源不存在
+- `UNAUTHORIZED` - 未登录
+- `FORBIDDEN` - 无权限
+- `SERVER_ERROR` - 服务器错误
+
+### 文件上传约束
+- 最大文件大小：图片 5MB，音频/视频 50MB
+- 支持格式：图片 (jpg/png/gif/webp/svg)，音频 (mp3/wav/ogg)，视频 (mp4/webm)
+- 上传失败重试：最多 3 次，间隔 1 秒
 
 ### 博客相关
 - `GET /api/blogs` - 获取博客列表（支持目录、标签、状态筛选）
@@ -201,14 +245,14 @@ apps/web/src/
 
 apps/server/src/
 ├── controllers/
-│   └── blogs.controller.ts
+│   └── blog.controller.ts
 ├── services/
 │   └── blog.service.ts
 ├── actions/
 │   └── blog.action.ts
 ├── db/
 │   └── schema/
-│       ├── blogs.ts
-│       ├── directories.ts
-│       └── tags.ts
+│       ├── blog.ts
+│       ├── directory.ts
+│       └── tag.ts
 ```
