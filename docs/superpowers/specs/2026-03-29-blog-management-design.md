@@ -105,12 +105,13 @@
 ### 删除行为
 - **删除目录**：如果目录包含子目录，子目录也会被级联删除；如果目录包含博客，博客会移动到根目录（directoryId 设为 null）
 - **删除标签**：删除标签时，自动清除该标签与所有博客的关联（BlogTag 表记录删除）
+- **删除博客**：级联删除关联的 BlogTag 记录
 
 ### Slug 规范
 - 格式：小写字母、数字、连字符组成（如 `my-first-post`）
 - 最大长度：100 字符
 - 唯一性：同一用户下唯一
-- 自动生成：从标题转换而来（如 "我的第一篇博客" → `wo-de-di-yi-pian-bo-ke`）
+- 自动生成：使用 `slugify` 库处理非 ASCII 字符（如 "我的第一篇博客" → `wo-de-di-yi-pian-bo-ke`）
 
 ### 内容存储
 - Tiptap JSON 内容直接存储在 `content` 字段
@@ -141,7 +142,7 @@
 | title | varchar(255) | 标题 |
 | content | json | Tiptap JSON 内容 |
 | excerpt | text | 摘要（可选） |
-| slug | varchar(255) | URL slug（用于公开访问，如 /blog/my-first-post） |
+| slug | varchar(100) | URL slug（用于公开访问，如 /blog/my-first-post） |
 | directoryId | uuid (FK) | 所属目录，可空 |
 | status | enum | 'draft' \| 'published' |
 | publishedAt | datetime | 发布时间，可空 |
@@ -201,7 +202,7 @@
 - `GET /api/blogs` - 获取博客列表（支持目录、标签、状态筛选，分页）
   - 查询参数：`page`, `pageSize`, `directoryId`, `tagId`, `status`, `search`
   - 响应：`{ data: Blog[], total: number, page: number, pageSize: number }`
-- `GET /api/blogs/:id` - 获取博客详情
+- `GET /api/blogs/:id` - 获取博客详情（返回完整 Blog 实体，含关联标签）
 - `POST /api/blogs` - 创建博客
 - `PUT /api/blogs/:id` - 更新博客
 - `DELETE /api/blogs/:id` - 删除博客
@@ -227,6 +228,8 @@
 
 ### 公开博客访问
 - `GET /blog/:slug` - 通过 slug 获取已发布的博客（无需登录）
+  - 仅返回 `status='published'` 的博客
+  - 草稿状态的博客返回 404
 
 ## 技术实现
 
