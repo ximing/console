@@ -43,6 +43,13 @@
       "when": 1772985039358,
       "tag": "0005_boring_centennial",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1774789575062,
+      "tag": "0006_peaceful_firedrake",
+      "breakpoints": true
     }
   ]
 }
