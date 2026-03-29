@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { view, useService } from '@rabjs/react';
 import { useParams, useNavigate } from 'react-router';
 import { useEditor, EditorContent } from '@tiptap/react';
@@ -20,6 +20,11 @@ import { TagService } from '../../../services/tag.service';
 import { ToastService } from '../../../services/toast.service';
 import { EditorToolbar } from '../components/editor-toolbar';
 import { Select } from '../../../components/select';
+
+// Magic numbers extracted as constants
+const MAX_EXCERPT_LENGTH = 200;
+const DEFAULT_YOUTUBE_WIDTH = 640;
+const DEFAULT_YOUTUBE_HEIGHT = 360;
 
 interface BlogEditorProps {
   id?: string;
@@ -72,8 +77,8 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
         },
       }),
       Youtube.configure({
-        width: 640,
-        height: 360,
+        width: DEFAULT_YOUTUBE_WIDTH,
+        height: DEFAULT_YOUTUBE_HEIGHT,
         autoplay: false,
       }),
       Link.configure({
@@ -95,7 +100,7 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
         const content = editor.getJSON();
         blogService.updateBlog(blogId!, {
           content,
-          excerpt: editor.getText().slice(0, 200),
+          excerpt: editor.getText().slice(0, MAX_EXCERPT_LENGTH),
         });
       }
     },
@@ -110,20 +115,25 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
   // Load existing blog if editing
   useEffect(() => {
     if (isEditing && blogId) {
-      blogService.loadBlog(blogId).then(() => {
-        const blog = blogService.currentBlog;
-        if (blog) {
-          setTitle(blog.title);
-          setSelectedDirectoryId(blog.directoryId || '');
-          setSelectedTagIds(blog.tags.map((t) => t.id));
-          if (editor && blog.content) {
-            editor.commands.setContent(blog.content);
+      blogService.loadBlog(blogId)
+        .then(() => {
+          const blog = blogService.currentBlog;
+          if (blog) {
+            setTitle(blog.title);
+            setSelectedDirectoryId(blog.directoryId || '');
+            setSelectedTagIds(blog.tags.map((t) => t.id));
+            if (editor && blog.content) {
+              editor.commands.setContent(blog.content);
+            }
+            setContentLoaded(true);
           }
-          setContentLoaded(true);
-        }
-      });
+        })
+        .catch((error) => {
+          toastService.error('加载博客失败');
+          console.error('Failed to load blog:', error);
+        });
     }
-  }, [isEditing, blogId, editor]);
+  }, [isEditing, blogId, editor, blogService, toastService]);
 
   // Handle title change with auto-save
   const handleTitleChange = useCallback(
@@ -174,7 +184,7 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
           const content = editor?.getJSON();
           blogService.saveBlog(blogId, {
             content,
-            excerpt: editor?.getText().slice(0, 200),
+            excerpt: editor?.getText().slice(0, MAX_EXCERPT_LENGTH),
           });
         }
       }
@@ -182,7 +192,7 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isEditing, blogId, editor]);
+  }, [isEditing, blogId, editor, blogService]);
 
   // Create new blog if not editing
   useEffect(() => {
@@ -228,7 +238,7 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
       const content = editor?.getJSON();
       await blogService.saveBlog(blogId, {
         content,
-        excerpt: editor?.getText().slice(0, 200),
+        excerpt: editor?.getText().slice(0, MAX_EXCERPT_LENGTH),
         status: 'published',
       });
       const blog = await blogService.publishBlog(blogId);
@@ -247,7 +257,7 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
     const content = editor?.getJSON();
     await blogService.saveBlog(blogId, {
       content,
-      excerpt: editor?.getText().slice(0, 200),
+      excerpt: editor?.getText().slice(0, MAX_EXCERPT_LENGTH),
       status: 'draft',
     });
     toastService.success('草稿保存成功');
