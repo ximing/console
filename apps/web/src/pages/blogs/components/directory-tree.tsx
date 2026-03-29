@@ -6,22 +6,21 @@ import {
   Folder,
   FolderOpen,
   Plus,
-  Trash2,
   Loader2,
+  FileText,
 } from 'lucide-react';
 import { DirectoryService, type DirectoryTreeNode } from '../../../services/directory.service';
+import { BlogService } from '../../../services/blog.service';
+import type { BlogDto } from '@x-console/dto';
 import { ToastService } from '../../../services/toast.service';
 
 interface DirectoryTreeProps {
   selectedDirectoryId: string | null;
+  selectedPageId: string | null;
   onSelectDirectory: (directoryId: string | null) => void;
-}
-
-interface ContextMenuState {
-  visible: boolean;
-  x: number;
-  y: number;
-  node: DirectoryTreeNode | null;
+  onSelectPage: (pageId: string) => void;
+  onContextMenuDirectory: (e: React.MouseEvent, node: DirectoryTreeNode) => void;
+  onContextMenuPage: (e: React.MouseEvent, blog: BlogDto) => void;
 }
 
 interface NewDirectoryInput {
@@ -35,19 +34,15 @@ interface NewDirectoryInput {
  * Displays hierarchical directory structure with expand/collapse and context menu
  */
 export const DirectoryTree = view(
-  ({ selectedDirectoryId, onSelectDirectory }: DirectoryTreeProps) => {
+  ({ selectedDirectoryId, selectedPageId, onSelectDirectory, onSelectPage, onContextMenuDirectory, onContextMenuPage }: DirectoryTreeProps) => {
     const directoryService = useService(DirectoryService);
+    const blogService = useService(BlogService);
     const toastService = useService(ToastService);
-    const contextMenuRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
     const [expandedDirs, setExpandedDirs] = useState<Set<string>>(new Set());
-    const [contextMenu, setContextMenu] = useState<ContextMenuState>({
-      visible: false,
-      x: 0,
-      y: 0,
-      node: null,
-    });
+    const [loadedBlogsForDirs, setLoadedBlogsForDirs] = useState<Set<string>>(new Set());
+    const [dirBlogs, setDirBlogs] = useState<Map<string, BlogDto[]>>(new Map());
     const [newDirectoryInput, setNewDirectoryInput] = useState<NewDirectoryInput>({
       visible: false,
       parentId: null,
@@ -57,20 +52,6 @@ export const DirectoryTree = view(
     // Build tree from flat directory list
     const tree = directoryService.buildTree();
 
-    // Close context menu on click outside
-    useEffect(() => {
-      const handleClickOutside = (e: MouseEvent) => {
-        if (contextMenuRef.current && !contextMenuRef.current.contains(e.target as Node)) {
-          setContextMenu((prev) => ({ ...prev, visible: false }));
-        }
-      };
-
-      if (contextMenu.visible) {
-        document.addEventListener('click', handleClickOutside);
-        return () => document.removeEventListener('click', handleClickOutside);
-      }
-    }, [contextMenu.visible]);
-
     // Focus input when new directory input becomes visible
     useEffect(() => {
       if (newDirectoryInput.visible && inputRef.current) {
@@ -79,7 +60,16 @@ export const DirectoryTree = view(
     }, [newDirectoryInput.visible]);
 
     // Toggle directory expand/collapse
-    const toggleDir = (dirId: string) => {
+    const toggleDir = async (dirId: string) => {
+      const isExpanding = !expandedDirs.has(dirId);
+
+      if (isExpanding && !loadedBlogsForDirs.has(dirId)) {
+        // Load blogs for this directory when expanding for the first time
+        await blogService.loadBlogs({ directoryId: dirId, pageSize: 1000 });
+        setLoadedBlogsForDirs((prev) => new Set(prev).add(dirId));
+        setDirBlogs((prev) => new Map(prev).set(dirId, blogService.blogs));
+      }
+
       setExpandedDirs((prev) => {
         const next = new Set(prev);
         if (next.has(dirId)) {
@@ -99,21 +89,21 @@ export const DirectoryTree = view(
       onSelectDirectory(dir.id);
     };
 
-    // Handle right-click context menu
+    // Handle right-click context menu for directories
     const handleContextMenu = (e: React.MouseEvent, node: DirectoryTreeNode) => {
       e.preventDefault();
-      setContextMenu({
-        visible: true,
-        x: e.clientX,
-        y: e.clientY,
-        node,
-      });
+      onContextMenuDirectory(e, node);
+    };
+
+    // Handle right-click context menu for pages
+    const handlePageContextMenu = (e: React.MouseEvent, blog: BlogDto) => {
+      e.preventDefault();
+      onContextMenuPage(e, blog);
     };
 
     // Show new directory input
     const handleNewDirectory = (parentId: string | null = null) => {
       setNewDirectoryInput({ visible: true, parentId, name: '' });
-      setContextMenu((prev) => ({ ...prev, visible: false }));
     };
 
     // Create new directory
@@ -139,32 +129,12 @@ export const DirectoryTree = view(
       }
     };
 
-    // Delete directory
-    const handleDeleteDirectory = async () => {
-      if (!contextMenu.node) return;
-
-      const dirName = contextMenu.node.name;
-      if (!confirm(`确定要删除目录 "${dirName}" 吗？`)) {
-        setContextMenu((prev) => ({ ...prev, visible: false }));
-        return;
-      }
-
-      const success = await directoryService.deleteDirectory(contextMenu.node.id);
-      if (success) {
-        toastService.success('目录已删除');
-        if (selectedDirectoryId === contextMenu.node.id) {
-          onSelectDirectory(null);
-        }
-      }
-
-      setContextMenu((prev) => ({ ...prev, visible: false }));
-    };
-
     // Render directory node recursively
     const renderNode = (node: DirectoryTreeNode, depth: number = 0): React.ReactNode => {
       const isExpanded = expandedDirs.has(node.id);
       const isActive = selectedDirectoryId === node.id;
       const hasChildren = node.children.length > 0;
+      const blogs = dirBlogs.get(node.id) || [];
 
       return (
         <div key={node.id}>
@@ -201,10 +171,32 @@ export const DirectoryTree = view(
             <span className="truncate text-sm">{node.name}</span>
           </div>
 
-          {/* Children */}
-          {hasChildren && isExpanded && (
+          {/* Children - Subdirectories and Blog Pages */}
+          {(hasChildren || blogs.length > 0) && isExpanded && (
             <div>
+              {/* Subdirectories */}
               {node.children.map((child) => renderNode(child, depth + 1))}
+
+              {/* Blog Pages */}
+              {blogs.map((blog) => {
+                const isPageActive = selectedPageId === blog.id;
+                return (
+                  <div
+                    key={blog.id}
+                    className={`
+                      flex items-center gap-1 px-2 py-1.5 cursor-pointer rounded
+                      ${isPageActive ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' : 'hover:bg-gray-100 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300'}
+                    `}
+                    style={{ paddingLeft: `${(depth + 1) * 16 + 8}px` }}
+                    onClick={() => onSelectPage(blog.id)}
+                    onContextMenu={(e) => handlePageContextMenu(e, blog)}
+                  >
+                    <span className="w-4 h-4" />
+                    <FileText className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                    <span className="truncate text-sm">{blog.title}</span>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -288,32 +280,6 @@ export const DirectoryTree = view(
             新建目录
           </button>
         </div>
-
-        {/* Context Menu */}
-        {contextMenu.visible && (
-          <div
-            ref={contextMenuRef}
-            className="fixed z-50 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg shadow-lg py-1 min-w-[140px]"
-            style={{ left: contextMenu.x, top: contextMenu.y }}
-          >
-            <button
-              onClick={() => {
-                handleNewDirectory(contextMenu.node?.id || null);
-              }}
-              className="flex items-center gap-2 w-full px-3 py-1.5 text-sm hover:bg-gray-100 dark:hover:bg-dark-800 text-left text-gray-700 dark:text-gray-300"
-            >
-              <Plus className="w-4 h-4" />
-              新建子目录
-            </button>
-            <button
-              onClick={handleDeleteDirectory}
-              className="flex items-center gap-2 w-full px-3 py-1.5 text-sm hover:bg-gray-100 dark:hover:bg-dark-800 text-left text-red-500"
-            >
-              <Trash2 className="w-4 h-4" />
-              删除目录
-            </button>
-          </div>
-        )}
       </div>
     );
   }
