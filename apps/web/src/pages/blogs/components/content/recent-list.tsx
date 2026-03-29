@@ -1,7 +1,7 @@
 import { view, useService } from '@rabjs/react';
 import { FileText, Loader2 } from 'lucide-react';
-import { BlogService } from '../../../services/blog.service';
-import { DirectoryService } from '../../../services/directory.service';
+import { BlogService } from '../../../../services/blog.service';
+import { DirectoryService } from '../../../../services/directory.service';
 import { BlogCard } from '../blog-card';
 
 interface RecentListProps {

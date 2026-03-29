@@ -1,8 +1,11 @@
+import { useEffect } from 'react';
 import { view, useService } from '@rabjs/react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
 import { ArrowLeft, Edit2, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router';
-import { BlogService } from '../../../services/blog.service';
-import { DirectoryService } from '../../../services/directory.service';
+import { BlogService } from '../../../../services/blog.service';
+import { DirectoryService } from '../../../../services/directory.service';
 
 interface PagePreviewProps {
   pageId: string;
@@ -15,6 +18,21 @@ export const PagePreview = view(({ pageId, onBack }: PagePreviewProps) => {
   const navigate = useNavigate();
 
   const blog = blogService.currentBlog;
+
+  // Initialize read-only Tiptap editor
+  const editor = useEditor({
+    extensions: [StarterKit],
+    content: blog?.content || '',
+    editable: false,
+    immediatelyRender: false,
+  });
+
+  // Update editor content when blog changes
+  useEffect(() => {
+    if (editor && blog?.content) {
+      editor.commands.setContent(blog.content);
+    }
+  }, [editor, blog?.content]);
 
   const getDirectoryPath = (): string => {
     if (!blog?.directoryId) return '';
@@ -61,9 +79,9 @@ export const PagePreview = view(({ pageId, onBack }: PagePreviewProps) => {
         </button>
       </div>
 
-      {/* Content - Read-only rendering */}
+      {/* Content - Read-only Tiptap rendering */}
       <div className="flex-1 overflow-auto prose dark:prose-invert max-w-none">
-        <div dangerouslySetInnerHTML={{ __html: blog.content || '' }} />
+        <EditorContent editor={editor} />
       </div>
     </div>
   );
