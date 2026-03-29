@@ -12,7 +12,7 @@
 ├──────────────┬──────────────────────────────────────────────────┤
 │              │                                                   │
 │  左侧边栏     │   右侧内容区                                       │
-│  (260px)     │   (flex-1)                                       │
+│  (240px)     │   (flex-1)                                       │
 │              │                                                   │
 │  搜索图标     │   动态内容区：                                    │
 │  目录树       │   - 未选择目录 → 最近博客列表                     │
@@ -43,29 +43,29 @@
 
 #### 1. 初始状态（最近博客）
 - 标题："最近"
-- 页面卡片列表（无分页，按更新时间排序）
-- 点击卡片进入预览
+- 页面卡片列表（无分页，显示所有博客，按 updatedAt 降序排列）
+- 点击卡片 → 切换到预览状态
 
 #### 2. 目录选中状态
 - 标题：目录名称
 - 返回按钮（返回"全部博客"/最近）
 - 页面卡片列表（无分页）
-- 点击卡片进入预览
+- 点击卡片 → 切换到预览状态
 
-#### 3. 页面预览状态（只读）
-- 顶部：页面标题 + 面包屑（目录路径）
-- 底部工具栏：编辑按钮（跳转编辑器）、返回列表按钮
-- 内容区：博客富文本内容（只读渲染）
+#### 3. 页面预览状态（只读，内联替换列表）
+- 顶部：页面标题 + 面包屑（格式：`目录名 / 页面名`，静态展示）
+- 底部工具栏：返回按钮（返回列表）、编辑按钮（跳转 `/blogs/:id/editor`）
+- 内容区：博客富文本内容（只读渲染，使用 Tiptap 的 read-only 模式或直接渲染 HTML）
 
 ## 搜索弹窗
 
 - **触发**：点击侧边栏顶部搜索图标
-- **位置**：居中 Modal（宽度 560px）
+- **位置**：居中 Modal（宽度 560px，垂直居中，背景遮罩）
 - **交互**：
   - 自动聚焦搜索输入框
-  - 实时搜索（debounce 300ms）
-  - 显示匹配博客列表
-  - 点击结果：关闭弹窗 + 进入预览 + 目录树定位
+  - 客户端 debounce 300ms 后调用 API
+  - 显示匹配博客列表（标题 + 目录名）
+  - 点击结果：关闭弹窗 + 进入预览 + 目录树定位（自动展开并选中该页面所在目录）
 
 ## 右键菜单
 
@@ -82,15 +82,17 @@
 |------|------|
 | 在编辑器中打开 | 跳转到 Tiptap 编辑器 |
 | 删除 | 确认后删除博客 |
-| 移动到 | 打开目录选择器 |
-| 复制链接 | 复制博客链接到剪贴板 |
+| 移动到 | 打开下拉目录选择器，确认后移动博客 |
+| 复制链接 | 复制博客链接到剪贴板，显示 toast 提示 |
 
 ## 数据流
 
 1. **目录树操作** → DirectoryService
-2. **博客列表加载** → BlogService.loadBlogs() 无分页参数
+2. **博客列表加载** → BlogService.loadBlogs() 无分页参数，加载该目录下所有博客
 3. **博客预览** → BlogService.loadBlog(id) 获取完整内容
-4. **搜索** → blogApi.searchBlogs(query) 返回匹配列表
+4. **搜索** → blogApi.getBlogs({ search: query }) 返回匹配列表（客户端 debounce 300ms）
+5. **创建博客** → BlogService.createBlog(data, directoryId?) 支持指定目录
+6. **移动博客** → BlogService.moveBlog(blogId, targetDirectoryId)
 
 ## 组件结构
 
@@ -124,12 +126,30 @@ pages/blogs/
 ## 实现顺序
 
 1. 重构 sidebar 组件结构
-2. 实现 content 区域三种状态
+2. 实现 content 区域三种状态（最近列表、目录列表、预览）
 3. 实现搜索弹窗
-4. 添加右键菜单功能
-5. 移除 TagFilter 和 StatusFilter（不在需要）
-6. 移除分页组件
-7. 清理旧代码
+4. 添加目录节点右键菜单（新建博客、新建子目录、重命名、删除）
+5. 添加页面节点右键菜单（在编辑器中打开、删除、移动到、复制链接）
+6. 移除 TagFilter 和 StatusFilter
+7. 移除分页组件
+8. 清理旧代码
+
+## API 变更
+
+### BlogService
+```typescript
+// 新增 directoryId 参数
+async createBlog(data: CreateBlogDto, directoryId?: string): Promise<BlogDto | null>
+
+// 新增移动博客方法
+async moveBlog(blogId: string, targetDirectoryId: string): Promise<boolean>
+```
+
+### blogApi
+```typescript
+// 使用现有 getBlogs，通过 search 参数搜索
+getBlogs({ search: query })  // 已支持
+```
 
 ## 待确认
 
