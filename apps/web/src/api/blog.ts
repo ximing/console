@@ -32,12 +32,16 @@ export const blogApi = {
     pageSize?: number;
     directoryId?: string;
     status?: 'draft' | 'published';
+    tagId?: string;
+    search?: string;
   }): Promise<BlogListDto> => {
     const searchParams = new URLSearchParams();
     if (params?.page) searchParams.set('page', params.page.toString());
     if (params?.pageSize) searchParams.set('pageSize', params.pageSize.toString());
     if (params?.directoryId) searchParams.set('directoryId', params.directoryId);
     if (params?.status) searchParams.set('status', params.status);
+    if (params?.tagId) searchParams.set('tagId', params.tagId);
+    if (params?.search) searchParams.set('search', params.search);
     const query = searchParams.toString();
     const response = await request.get<unknown, ApiResponse<BlogListDto>>(
       `/api/v1/blogs${query ? `?${query}` : ''}`

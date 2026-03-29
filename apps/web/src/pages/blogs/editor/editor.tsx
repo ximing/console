@@ -142,7 +142,7 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
       if (isEditing && blogId) {
         blogService.updateBlog(blogId, {
           title: newTitle,
-          slug: slugify(newTitle, { lower: true, locale: 'zh' }),
+          slug: slugify(newTitle, { lower: true, locale: 'zh', strict: false }),
         });
       }
     },
