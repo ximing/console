@@ -156,7 +156,6 @@ const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
 
 **新增：**
 - @dnd-kit/core
-- @dnd-kit/sortable
 - @dnd-kit/utilities
 
 ## 10. 待确认问题
