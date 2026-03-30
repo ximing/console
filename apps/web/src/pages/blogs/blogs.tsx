@@ -8,8 +8,6 @@ import { ToastService } from '../../services/toast.service';
 import { Sidebar } from './components/sidebar';
 import { ContentArea } from './components/content';
 import { SearchModal } from './components/search-modal';
-import { ContextMenu, type ContextMenuItem } from './components/context-menu';
-import type { DirectoryTreeNode } from '../../services/directory.service';
 import type { BlogDto } from '@x-console/dto';
 
 type ContentMode = 'recent' | 'directory' | 'preview' | 'edit';
@@ -32,15 +30,6 @@ export const BlogListPage = view(() => {
   const [searchModalVisible, setSearchModalVisible] = useState(false);
   const [directoryLoading, setDirectoryLoading] = useState(false);
   const [initialExpandedIds, setInitialExpandedIds] = useState<string[]>([]);
-
-  // Context menu state
-  const [contextMenu, setContextMenu] = useState<{
-    visible: boolean;
-    x: number;
-    y: number;
-    type: 'directory' | 'page';
-    data: DirectoryTreeNode | BlogDto | null;
-  }>({ visible: false, x: 0, y: 0, type: 'directory', data: null });
 
   // Expanded directories for tree - stored but currently not read back
   const [, setExpandedDirs] = useState<Set<string>>(new Set());
@@ -260,106 +249,6 @@ export const BlogListPage = view(() => {
     setExpandedDirs((prev) => new Set([...prev, directoryId]));
   };
 
-  // Context menu for directory
-  const handleContextMenuDirectory = (e: React.MouseEvent, nodeId: string, nodeName: string) => {
-    setContextMenu({
-      visible: true,
-      x: e.clientX,
-      y: e.clientY,
-      type: 'directory',
-      data: { id: nodeId, name: nodeName } as DirectoryTreeNode,
-    });
-  };
-
-  // Context menu for page
-  const handleContextMenuPage = (e: React.MouseEvent, blogId: string) => {
-    const blog = blogService.blogs.find(b => b.id === blogId);
-    if (!blog) return;
-    setContextMenu({
-      visible: true,
-      x: e.clientX,
-      y: e.clientY,
-      type: 'page',
-      data: blog,
-    });
-  };
-
-  // Get context menu items for directory
-  const getDirectoryContextMenuItems = (): ContextMenuItem[] => {
-    const items: ContextMenuItem[] = [
-      {
-        label: '新建博客',
-        onClick: () => handleCreateBlog(contextMenu.data.id),
-      },
-      {
-        label: '新建子目录',
-        onClick: async () => {
-          // Trigger new directory creation with parentId
-          const name = prompt('请输入目录名称：');
-          if (name) {
-            try {
-              await directoryService.createDirectory({
-                name,
-                parentId: contextMenu.data.id,
-              });
-              toastService.success('目录创建成功');
-              // Expand the parent directory
-              setExpandedDirs((prev) => new Set([...prev, contextMenu.data.id]));
-            } catch {
-              toastService.error('创建目录失败');
-            }
-          }
-        },
-      },
-      {
-        label: '重命名',
-        onClick: () => {
-          const newName = prompt('请输入新名称：', contextMenu.data.name);
-          if (newName && newName !== contextMenu.data.name) {
-            handleRenameDirectory(contextMenu.data.id, newName);
-          }
-        },
-      },
-      {
-        label: '删除',
-        danger: true,
-        onClick: () => {
-          if (confirm('确定要删除这个目录吗？目录下的博客不会被删除。')) {
-            handleDeleteDirectory(contextMenu.data.id);
-          }
-        },
-      },
-    ];
-    return items;
-  };
-
-  // Get context menu items for page
-  const getPageContextMenuItems = (): ContextMenuItem[] => {
-    const items: ContextMenuItem[] = [
-      {
-        label: '编辑',
-        onClick: () => handleEditPage(contextMenu.data as BlogDto),
-      },
-      {
-        label: '移动到...',
-        onClick: () => {
-          const dirId = prompt('请输入目标目录ID（留空移到根目录）：');
-          handleMoveBlog(contextMenu.data.id, dirId || null);
-        },
-      },
-      {
-        label: '删除',
-        danger: true,
-        onClick: () => {
-          if (confirm('确定要删除这篇博客吗？')) {
-            handleDeleteBlog(contextMenu.data.id);
-          }
-        },
-      },
-    ];
-    return items;
-  };
-
   return (
     <Layout>
       <div className="flex h-full">
@@ -374,8 +263,8 @@ export const BlogListPage = view(() => {
             onSearchClick={() => setSearchModalVisible(true)}
             onNewBlog={(dirId) => handleCreateBlog(dirId ?? selectedDirectoryId)}
             onNewDirectory={(parentId) => handleCreateDirectory(parentId)}
-            onContextMenuDirectory={handleContextMenuDirectory}
-            onContextMenuPage={handleContextMenuPage}
+            onContextMenuDirectory={() => {}}
+            onContextMenuPage={() => {}}
           />
         </div>
 
@@ -400,15 +289,6 @@ export const BlogListPage = view(() => {
           onClose={() => setSearchModalVisible(false)}
           onSelectPage={handleSelectPage}
           onExpandDirectory={handleExpandDirectory}
-        />
-
-        {/* Context Menu */}
-        <ContextMenu
-          visible={contextMenu.visible}
-          x={contextMenu.x}
-          y={contextMenu.y}
-          items={contextMenu.type === 'directory' ? getDirectoryContextMenuItems() : getPageContextMenuItems()}
-          onClose={() => setContextMenu((prev) => ({ ...prev, visible: false }))}
         />
       </div>
     </Layout>
