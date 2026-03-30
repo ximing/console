@@ -58,31 +58,37 @@ export const RecentBlogList = view(
 
     return (
       <div className="flex-1 overflow-auto py-1">
-        {blogService.blogs.map((blog) => (
-          <div
-            key={blog.id}
-            onClick={() => onSelectBlog(blog.id)}
-            className={`flex items-center gap-2 px-3 py-2 text-sm cursor-pointer transition-colors ${
-              selectedBlogId === blog.id
-                ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
-                : 'hover:bg-gray-100 dark:hover:bg-dark-700 text-gray-700 dark:text-gray-300'
-            }`}
-          >
-            <FileText className="w-4 h-4 flex-shrink-0 opacity-50" />
-            <div className="flex-1 min-w-0">
-              <div className="line-clamp-1">{blog.title}</div>
-              <div className="flex items-center gap-2 text-xs opacity-50">
-                {getDirectoryName(blog.directoryId) && (
-                  <span className="truncate">{getDirectoryName(blog.directoryId)}</span>
-                )}
-                <span className="flex items-center gap-1 flex-shrink-0">
-                  <Clock className="w-3 h-3" />
-                  {formatRelativeTime(blog.updatedAt)}
-                </span>
+        {blogService.blogs.map((blog) => {
+          const dirName = getDirectoryName(blog.directoryId);
+          return (
+            <button
+              key={blog.id}
+              type="button"
+              onClick={() => onSelectBlog(blog.id)}
+              onKeyDown={(e) => e.key === 'Enter' && onSelectBlog(blog.id)}
+              aria-label={blog.title}
+              className={`flex items-center gap-2 px-3 py-2 text-sm cursor-pointer transition-colors w-full text-left ${
+                selectedBlogId === blog.id
+                  ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
+                  : 'hover:bg-gray-100 dark:hover:bg-dark-700 text-gray-700 dark:text-gray-300'
+              }`}
+            >
+              <FileText className="w-4 h-4 flex-shrink-0 opacity-50" />
+              <div className="flex-1 min-w-0">
+                <div className="line-clamp-1">{blog.title}</div>
+                <div className="flex items-center gap-2 text-xs opacity-50">
+                  {dirName && (
+                    <span className="truncate">{dirName}</span>
+                  )}
+                  <span className="flex items-center gap-1 flex-shrink-0">
+                    <Clock className="w-3 h-3" />
+                    {formatRelativeTime(blog.updatedAt)}
+                  </span>
+                </div>
               </div>
-            </div>
-          </div>
-        ))}
+            </button>
+          );
+        })}
       </div>
     );
   }
