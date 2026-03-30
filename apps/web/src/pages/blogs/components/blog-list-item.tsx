@@ -34,9 +34,7 @@ export const BlogListItem = view(
   ({ blog, directoryName, onClick, onEdit }: BlogListItemProps) => {
     const handleEditClick = (e: React.MouseEvent) => {
       e.stopPropagation();
-      if (onEdit) {
-        onEdit(blog);
-      }
+      onEdit?.(blog);
     };
 
     const displayTags = blog.tags.slice(0, 3);
@@ -44,7 +42,10 @@ export const BlogListItem = view(
 
     return (
       <div
+        role="button"
+        tabIndex={0}
         onClick={onClick}
+        onKeyDown={(e) => e.key === 'Enter' && onClick?.()}
         className="flex items-start justify-between gap-4 px-4 py-3 border-b border-gray-200 dark:border-dark-700 hover:bg-gray-50 dark:hover:bg-dark-700 cursor-pointer group transition-colors"
       >
         {/* Left Section */}
