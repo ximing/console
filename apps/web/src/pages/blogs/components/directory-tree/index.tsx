@@ -1,5 +1,6 @@
 import { useMemo, useState, useCallback } from 'react';
 import { view, useService } from '@rabjs/react';
+import { useNavigate } from 'react-router';
 import { Folder, Loader2 } from 'lucide-react';
 import {
   DndContext,
@@ -17,6 +18,7 @@ import { DraggableTreeNode } from './TreeNode';
 import { TreeDragOverlay } from './TreeDragOverlay';
 import { useTreeState } from './hooks/useTreeState';
 import { useTreeDragDrop } from './hooks/useTreeDragDrop';
+import { ContextMenu, type ContextMenuItem } from '../context-menu';
 import type { TreeNodeData, DirectoryTreeProps } from './types';
 
 export const DirectoryTree = view(
@@ -30,10 +32,108 @@ export const DirectoryTree = view(
     onNewBlog,
     onNewDirectory,
   }: DirectoryTreeProps) => {
+    const navigate = useNavigate();
     const directoryService = useService(DirectoryService);
     const blogService = useService(BlogService);
     const { expandedIds, toggleNode } = useTreeState();
     const [activeNode, setActiveNode] = useState<TreeNodeData | null>(null);
+
+    // Context menu state
+    const [contextMenu, setContextMenu] = useState<{
+      visible: boolean;
+      x: number;
+      y: number;
+      type: 'directory' | 'page';
+      data: { id: string; name?: string } | null;
+    }>({ visible: false, x: 0, y: 0, type: 'directory', data: null });
+
+    // Context menu handlers
+    const handleContextMenuDirectory = useCallback((e: React.MouseEvent, nodeId: string, nodeName: string) => {
+      e.preventDefault();
+      setContextMenu({
+        visible: true,
+        x: e.clientX,
+        y: e.clientY,
+        type: 'directory',
+        data: { id: nodeId, name: nodeName },
+      });
+    }, []);
+
+    const handleContextMenuPage = useCallback((e: React.MouseEvent, blogId: string) => {
+      e.preventDefault();
+      setContextMenu({
+        visible: true,
+        x: e.clientX,
+        y: e.clientY,
+        type: 'page',
+        data: { id: blogId },
+      });
+    }, []);
+
+    // Get context menu items based on type
+    const getContextMenuItems = useCallback((menu: typeof contextMenu): ContextMenuItem[] => {
+      if (!menu.data) return [];
+
+      if (menu.type === 'directory') {
+        const dirData = menu.data as { id: string; name?: string };
+        return [
+          {
+            label: '新建博客',
+            onClick: () => onNewBlog(dirData.id),
+          },
+          {
+            label: '新建子目录',
+            onClick: () => onNewDirectory(dirData.id),
+          },
+          {
+            label: '重命名',
+            onClick: async () => {
+              const newName = prompt('请输入新目录名称:', dirData.name);
+              if (newName && newName !== dirData.name) {
+                await directoryService.updateDirectory(dirData.id, { name: newName });
+              }
+            },
+          },
+          {
+            label: '删除',
+            danger: true,
+            onClick: async () => {
+              if (confirm('确定要删除此目录吗？目录下的博客不会被删除。')) {
+                await directoryService.deleteDirectory(dirData.id);
+              }
+            },
+          },
+        ];
+      } else {
+        const pageData = menu.data as { id: string };
+        return [
+          {
+            label: '编辑',
+            onClick: () => navigate(`/blogs/${pageData.id}/edit`),
+          },
+          {
+            label: '移动到...',
+            onClick: async () => {
+              const targetDirId = prompt('请输入目标目录ID (留空移至根目录):');
+              if (targetDirId !== null) {
+                await blogService.updateBlog(pageData.id, {
+                  directoryId: targetDirId || undefined,
+                });
+              }
+            },
+          },
+          {
+            label: '删除',
+            danger: true,
+            onClick: async () => {
+              if (confirm('确定要删除此博客吗？')) {
+                await blogService.deleteBlog(pageData.id);
+              }
+            },
+          },
+        ];
+      }
+    }, [navigate, onNewBlog, onNewDirectory, directoryService, blogService]);
 
     // Build tree data from services
     const treeData = useMemo(() => {
@@ -181,8 +281,8 @@ export const DirectoryTree = view(
                 onToggle={toggleNode}
                 onSelectDirectory={onSelectDirectory}
                 onSelectPage={onSelectPage}
-                onContextMenuDirectory={onContextMenuDirectory}
-                onContextMenuPage={onContextMenuPage}
+                onContextMenuDirectory={handleContextMenuDirectory}
+                onContextMenuPage={handleContextMenuPage}
                 onNewBlog={onNewBlog}
                 onNewDirectory={onNewDirectory}
               />
@@ -204,8 +304,8 @@ export const DirectoryTree = view(
                 onToggle={toggleNode}
                 onSelectDirectory={onSelectDirectory}
                 onSelectPage={onSelectPage}
-                onContextMenuDirectory={onContextMenuDirectory}
-                onContextMenuPage={onContextMenuPage}
+                onContextMenuDirectory={handleContextMenuDirectory}
+                onContextMenuPage={handleContextMenuPage}
                 onNewBlog={onNewBlog}
                 onNewDirectory={onNewDirectory}
               />
@@ -227,6 +327,13 @@ export const DirectoryTree = view(
         <DragOverlay>
           <TreeDragOverlay node={activeNode} />
         </DragOverlay>
+        <ContextMenu
+          visible={contextMenu.visible}
+          x={contextMenu.x}
+          y={contextMenu.y}
+          items={getContextMenuItems(contextMenu)}
+          onClose={() => setContextMenu(prev => ({ ...prev, visible: false }))}
+        />
       </DndContext>
     );
   }
