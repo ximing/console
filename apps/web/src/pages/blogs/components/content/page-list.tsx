@@ -43,21 +43,21 @@ export const PageList = view((props: PageListProps) => {
 
   // Filtered and sorted blogs
   const filteredBlogs = useMemo(() => {
-    let result = [...props.blogs];
+    const result = [...props.blogs].filter(blog => {
+      // Status filter
+      if (statusFilter !== 'all' && blog.status !== statusFilter) {
+        return false;
+      }
 
-    // Status filter
-    if (statusFilter !== 'all') {
-      result = result.filter(blog => blog.status === statusFilter);
-    }
+      // Tag filter (AND logic)
+      if (selectedTags.length > 0 && !selectedTags.every(tagName =>
+        blog.tags.some(tag => tag.name === tagName)
+      )) {
+        return false;
+      }
 
-    // Tag filter (AND logic)
-    if (selectedTags.length > 0) {
-      result = result.filter(blog =>
-        selectedTags.every(tagName =>
-          blog.tags.some(tag => tag.name === tagName)
-        )
-      );
-    }
+      return true;
+    });
 
     // Sort
     result.sort((a, b) => {
@@ -173,6 +173,7 @@ export const PageList = view((props: PageListProps) => {
             onClick={() => {
               setStatusFilter('all');
               setSelectedTags([]);
+              setSortBy('updatedAt');
             }}
             className="flex items-center gap-1 px-2 py-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
           >
@@ -198,6 +199,7 @@ export const PageList = view((props: PageListProps) => {
             onClick={() => {
               setStatusFilter('all');
               setSelectedTags([]);
+              setSortBy('updatedAt');
             }}
             className="mt-2 text-sm text-primary-600 dark:text-primary-400 hover:underline"
           >
