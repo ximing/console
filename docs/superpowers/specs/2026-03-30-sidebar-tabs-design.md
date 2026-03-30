@@ -24,18 +24,18 @@
 
 ```
 Sidebar (flex-col, h-full)
-├── TabHeader
+├── TabHeader (固定在顶部)
 │   ├── Tab: 目录 (active/inactive)
 │   └── Tab: 最近 (active/inactive)
-├── TabContent (目录模式)
-│   ├── SearchButton
+├── SearchButton (始终显示，不受 Tab 影响)
+├── TabContent (目录模式) - 当 activeTab === 'directory'
 │   ├── DirectoryTree
 │   └── ActionButtons (新建博客, 新建目录)
-└── TabContent (最近模式)
-    ├── SearchButton
-    ├── RecentBlogList (在侧边栏内显示博客列表)
-    └── ActionButtons (新建博客)
+└── TabContent (最近模式) - 当 activeTab === 'recent'
+    └── RecentBlogList
 ```
+
+**SearchButton 始终显示**，不受 Tab 切换影响，在目录树和最近列表上方。
 
 ### ContentMode 简化
 
@@ -46,14 +46,44 @@ type ContentMode = 'directory' | 'preview' | 'edit';
 
 ### 状态管理
 
+**blogs.tsx (父组件) 管理的状态：**
 ```tsx
-// Sidebar 内部状态
-type SidebarTab = 'directory' | 'recent';
-const [activeTab, setActiveTab] = useState<SidebarTab>('directory');
-
-// 新增：选中的博客 ID（在最近 Tab 下选择时）
-const [selectedRecentBlogId, setSelectedRecentBlogId] = useState<string | null>(null);
+const [activeTab, setActiveTab] = useState<'directory' | 'recent'>('directory');
 ```
+
+**Sidebar 内部状态：**
+- `activeTab` 由父组件控制，通过 props 传入
+- Tab 切换通过 `onTabChange` 回调通知父组件
+
+**Sidebar → ContentArea 通信：**
+通过 `onSelectPage` 和 `onSelectDirectory` 回调。当用户：
+- 在目录 Tab 点击目录 → 调用 `onSelectDirectory(directoryId)`
+- 在目录 Tab 点击博客 → 调用 `onSelectPage(blogId)`
+- 在最近 Tab 点击博客 → 调用 `onSelectPage(blogId)`（同时记录 `lastActiveTab = 'recent'`）
+
+**ContentArea 显示逻辑：**
+```tsx
+if (mode === 'edit') {
+  return <InlineBlogEditor />;
+}
+if (mode === 'preview' && selectedPageId) {
+  return <PagePreview pageId={selectedPageId} />;
+}
+if (mode === 'directory' && selectedDirectoryId) {
+  return <PageList />;
+}
+// 默认（目录模式但未选目录，或最近模式未选博客）：
+return <EmptyState />;
+```
+
+### URL 路由
+
+URL 用于分享和书签，始终指向当前博客：
+- `/blogs/:blogId` - 预览博客
+- `/blogs/:blogId/edit` - 编辑博客
+- `/blogs` - 默认视图（显示目录 Tab）
+
+**空状态时的 URL：** `/blogs`（不选任何目录或博客）
 
 ## 组件设计
 
@@ -93,16 +123,31 @@ const [selectedRecentBlogId, setSelectedRecentBlogId] = useState<string | null>(
 ### 场景 1：用户点击目录 Tab
 1. Sidebar 显示目录树
 2. 点击某个目录 → ContentArea 显示 PageList
-3. 点击某个博客 → ContentArea 显示 PagePreview
+3. 点击某个博客 → ContentArea 显示 PagePreview，URL 更新为 `/blogs/:blogId`
 
 ### 场景 2：用户点击最近 Tab
 1. Sidebar 显示最近博客列表
-2. Sidebar 内点击某个博客 → ContentArea 显示 PagePreview（同时侧边栏内该博客高亮）
-3. ContentArea 显示空状态直到用户选择博客
+2. Sidebar 内点击某个博客 → ContentArea 显示 PagePreview，URL 更新为 `/blogs/:blogId`
+3. ContentArea 初始显示空状态直到用户选择博客
 
-### 场景 3：用户从博客预览返回
-1. 如果之前在目录模式 → 返回 PageList
-2. 如果之前在最近模式 → ContentArea 保持空状态（用户需要重新选择）
+### 场景 3：PagePreview 的返回按钮
+当用户点击 PagePreview 的返回按钮：
+- **来自目录模式** → 返回 PageList（`contentMode = 'directory'`）
+- **来自最近模式** → 返回空状态（`contentMode` 保持，但 `selectedPageId` 置空）
+
+**实现方式：** PagePreview 接收一个 `onBack` 回调，由父组件根据 `lastActiveTab` 决定如何处理。
+
+### 场景 4：在最近 Tab 下新建博客
+当用户在最近 Tab 下点击"新建博客"：
+1. 博客创建在根级别（`directoryId = null`）
+2. 创建后跳转到编辑模式 `/blogs/:newBlogId/edit`
+3. 最近 Tab 的列表自动刷新显示新博客
+
+### 场景 5：Tab 切换时保留状态
+- 切换 Tab 时，保留当前选中的博客/目录
+- 例如：在最近 Tab 选中了博客 A，切换到目录 Tab，再切换回最近 Tab，博客 A 仍然高亮
+
+**实现：** 在 `blogs.tsx` 中维护 `lastSelectedBlogId` 和 `lastSelectedDirectoryId`，切换 Tab 时恢复对应选择。
 
 ## 文件变更
 
@@ -125,7 +170,36 @@ const [selectedRecentBlogId, setSelectedRecentBlogId] = useState<string | null>(
 
 ## 迁移注意事项
 
-1. 保持 `onNewBlog` 和 `onNewDirectory` 的功能正常
-2. 保持拖拽功能正常（如果已实现）
-3. 保持搜索功能正常
-4. URL 路由逻辑保持不变
+1. **保持 `onNewBlog` 和 `onNewDirectory` 的功能正常**
+   - 目录 Tab：新建博客到当前目录，新建目录到当前目录
+   - 最近 Tab：新建博客到根级别，新建目录到根级别
+
+2. **保持拖拽功能正常**（如果已实现）
+   - 拖拽博客到目录树下移动到目录
+   - 拖拽博客到根区域移动到根级别
+
+3. **保持搜索功能正常**
+   - SearchButton 始终可见，不受 Tab 影响
+
+4. **URL 路由逻辑保持不变**
+   - 分享链接仍然指向具体博客
+
+5. **删除废弃组件**
+   - `RecentList` 组件可删除（或保留供其他页面使用）
+   - `blogs.tsx` 中的 `contentMode === 'recent'` 判断可移除
+
+## ContentArea Props 变更
+
+```tsx
+interface ContentAreaProps {
+  mode: ContentMode;  // 'directory' | 'preview' | 'edit'
+  selectedDirectoryId: string | null;
+  selectedPageId: string | null;
+  directoryBlogs: BlogDto[];
+  directoryLoading: boolean;
+  // 移除 onBackToRecent，因为不再有 'recent' 模式
+  onBackToDirectory: () => void;
+  onSelectPage: (pageId: string) => void;
+  onEditPage?: (blog: BlogDto) => void;
+}
+```
