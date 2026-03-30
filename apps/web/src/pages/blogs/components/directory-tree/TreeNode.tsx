@@ -7,7 +7,7 @@ interface Props extends Omit<TreeNodeProps, 'node'> {
   depth: number;
 }
 
-const DEPTH_INDENT = 24; // pixels per depth level
+const DEPTH_INDENT = 16; // pixels per depth level
 
 export const TreeNode = forwardRef<HTMLDivElement, Props>(
   (
