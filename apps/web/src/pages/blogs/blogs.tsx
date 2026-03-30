@@ -183,6 +183,7 @@ export const BlogListPage = view(() => {
 
   // Select page (blog) - preview mode
   const handleSelectPage = (pageId: string) => {
+    setSelectedDirectoryId(null); // Clear directory selection when selecting a blog
     setSelectedPageId(pageId);
     setContentMode('preview');
     blogService.loadBlog(pageId);
