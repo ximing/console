@@ -20,7 +20,7 @@
 
 - [ ] **Step 1: 安装 @dnd-kit 依赖**
 
-Run: `pnpm --filter @x-console/web add @dnd-kit/core @dnd-kit/utilities @dnd-kit/css`
+Run: `pnpm --filter @x-console/web add @dnd-kit/core @dnd-kit/utilities`
 
 - [ ] **Step 2: 创建 types.ts**
 
@@ -63,6 +63,8 @@ export interface DirectoryTreeProps {
   onNewDirectory: (parentId?: string) => void;
 }
 ```
+
+注：`onContextMenuDirectory` 传递 `nodeId` 和 `nodeName`。SideBar 和 blogs.tsx 需要更新回调签名以匹配。
 
 - [ ] **Step 3: 创建 useTreeState.ts**
 
@@ -508,19 +510,19 @@ export function useTreeDragDrop({ treeData, onDataChange }: UseTreeDragDropProps
 }
 ```
 
-- [ ] **Step 2: 创建 DragOverlay.tsx**
+- [ ] **Step 2: 创建 TreeDragOverlay.tsx**
 
 ```typescript
-// apps/web/src/pages/blogs/components/directory-tree/DragOverlay.tsx
+// apps/web/src/pages/blogs/components/directory-tree/TreeDragOverlay.tsx
 
 import { Folder, FileText } from 'lucide-react';
 import type { TreeNodeData } from './types';
 
-interface DragOverlayProps {
+interface TreeDragOverlayProps {
   node: TreeNodeData | null;
 }
 
-export function DragOverlay({ node }: DragOverlayProps) {
+export function TreeDragOverlay({ node }: TreeDragOverlayProps) {
   if (!node) return null;
 
   const isDirectory = node.type === 'directory';
@@ -547,7 +549,8 @@ export function DragOverlay({ node }: DragOverlayProps) {
 
 // 在 import 部分添加
 import { DndContext, DragOverlay, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
-import { DragOverlay } from './DragOverlay';
+import { TreeDragOverlay } from './TreeDragOverlay';
+import { useState, useCallback } from 'react';
 
 // 添加 state
 const [activeNode, setActiveNode] = useState<TreeNodeData | null>(null);
@@ -562,13 +565,13 @@ const sensors = useSensors(
 );
 
 // 添加 drag handlers
-const handleDragStart = (event: DragStartEvent) => {
+const handleDragStart = useCallback((event: DragStartEvent) => {
   const { active } = event;
   const nodeData = active.data.current as TreeNodeData;
   setActiveNode(nodeData);
-};
+}, []);
 
-const handleDragEnd = (event: DragEndEvent) => {
+const handleDragEnd = useCallback((event: DragEndEvent) => {
   const { active, over } = event;
   setActiveNode(null);
 
@@ -590,7 +593,7 @@ const handleDragEnd = (event: DragEndEvent) => {
 
   // Call handleDragEnd from hook
   handleTreeDragEnd({ dragNode, dropTarget, isRootLevel });
-};
+}, [treeData, handleTreeDragEnd]);
 
 // 在 JSX 中添加 DndContext
 return (
@@ -621,7 +624,7 @@ return (
     </div>
 
     <DragOverlay>
-      <DragOverlayContent node={activeNode} />
+      <TreeDragOverlay node={activeNode} />
     </DragOverlay>
   </DndContext>
 );
@@ -632,17 +635,18 @@ return (
 在 TreeNode.tsx 中添加 `DraggableTreeNode` 组件，使用 `@dnd-kit/core` 的 `useDraggable` 和 `useDroppable`。
 
 ```typescript
-// 添加到 TreeNode.tsx
+// 添加到 TreeNode.tsx 开头
 
+import { forwardRef, useCallback } from 'react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 
-interface DraggableTreeNodeProps extends TreeNodeProps {
-  isDropTarget?: boolean;
-}
+// 添加到文件末尾
+
+interface DraggableTreeNodeProps extends TreeNodeProps {}
 
 export const DraggableTreeNode = forwardRef<HTMLDivElement, DraggableTreeNodeProps>(
   (props, ref) => {
-    const { node, isDropTarget } = props;
+    const { node } = props;
 
     const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
       id: node.id,
@@ -663,17 +667,34 @@ export const DraggableTreeNode = forwardRef<HTMLDivElement, DraggableTreeNodePro
       else if (ref) ref.current = el;
     }, [setDragRef, setDropRef, ref]);
 
+    // Pass through rendering to TreeNode but with drag/drop refs
     return (
-      <div ref={setRefs} {...attributes} {...listeners}>
-        <TreeNodeContent
-          {...props}
-          isDragging={isDragging}
-          isDropTarget={isOver || isDropTarget}
-        />
-      </div>
+      <TreeNode
+        {...props}
+        dragRef={setRefs}
+        dragAttributes={attributes}
+        dragListeners={listeners}
+        isDragging={isDragging}
+        isDropTarget={isOver}
+      />
     );
   }
 );
+
+// 同时修改 TreeNode 组件支持 dragRef 和 drag props
+export interface TreeNodeProps {
+  // ... existing props
+  dragRef?: (el: HTMLDivElement | null) => void;
+  dragAttributes?: Record<string, unknown>;
+  dragListeners?: Record<string, unknown>;
+  isDragging?: boolean;
+  isDropTarget?: boolean;
+}
+
+// 修改 TreeNode 的根 div
+// <div ref={ref} ...>
+// 改为
+// <div ref={dragRef} {...dragAttributes} {...dragListeners} ...>
 ```
 
 - [ ] **Step 5: Typecheck**
