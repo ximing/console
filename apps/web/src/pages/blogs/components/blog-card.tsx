@@ -82,13 +82,13 @@ export const BlogCard = view(({ blog, directoryName, onClick, onEdit }: BlogCard
 
       {/* Excerpt */}
       {blog.excerpt && (
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2 ml-7">
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
           {blog.excerpt}
         </p>
       )}
 
       {/* Meta Info Row */}
-      <div className="flex flex-wrap items-center gap-2 ml-7">
+      <div className="flex flex-wrap items-center gap-2">
         {/* Directory Badge */}
         {directoryName && (
           <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded bg-gray-100 dark:bg-dark-700 text-gray-600 dark:text-gray-400">
