@@ -86,6 +86,27 @@
 
 上传文件存储路径: `{S3_PREFIX}/blogs/media/{uuid}/{filename}`
 
+**说明:** `S3_PREFIX` 是现有的环境变量（`S3_PREFIX`），复用现有 S3 配置。
+
+### 认证
+
+该接口需要用户认证，使用现有的 `authMiddleware` 中间件校验 JWT token。
+
+### StorageService 接口
+
+复用 `StorageService.uploadFile` 方法，签名如下：
+
+```typescript
+uploadFile(
+  file: Express.Multer.File,
+  options: {
+    bucket?: string;           // 可选，默认使用 ATTACHMENT_S3_BUCKET 或 S3_BUCKET
+    prefix?: string;           // 可选，默认 'blogs/media'
+    filename?: string;         // 可选，默认使用 uuid 生成的文件名
+  }
+): Promise<{ url: string; filename: string; size: number; mimetype: string }>
+```
+
 ## 组件设计
 
 ### EditorToolbar 修改
@@ -101,12 +122,45 @@
 上传模态框：
 - 显示文件名
 - 进度条 + 百分比
-- 取消按钮
 - 上传成功/失败状态
+
+**上传流程:**
+
+```
+用户点击上传按钮
+    ↓
+选择文件 (input[type=file])
+    ↓
+前端校验文件类型和大小 (客户端预检)
+    ↓
+显示进度模态框
+    ↓
+通过 XHR/Fetch 上传 (支持进度回调)
+    ↓
+上传完成 → 获取 S3 URL → 插入编辑器
+    ↓
+关闭进度模态框
+```
+
+**注意:** 不支持上传取消，上传一旦开始无法中断（取消按钮仅关闭 UI，不影响实际上传）。
 
 ### 外链识别扩展
 
-使用 TipTap 的 `TextMutate` 或自定义扩展，检测 URL 格式并转换为嵌入式播放器。
+使用自定义 TipTap 扩展实现外链识别：
+
+**实现方式:** 自定义 `ExternalVideoExtension`，监听 `paste` 事件
+
+**转换时机:** 用户粘贴 URL 时自动检测并转换
+
+**URL 识别正则:**
+
+| 平台 | 正则 | Video ID 提取 |
+|------|------|---------------|
+| YouTube | `/^https?:\/\/(www\.)?(youtube\.com\/watch\?v=\|youtu\.be\/)([\w-]+)/` | 第3组 |
+| Bilibili | `/^https?:\/\/(www\.)?bilibili\.com\/video\/(BV[\w]+)/` | 第2组 |
+| 抖音 | `/^https?:\/\/(www\.)?douyin\.com\/video\/([\w]+)/` | 第2组 |
+
+**嵌入方式:** 使用 TipTap 的 `setYoutubeVideo` 类似机制，通过 `iframe` 插入嵌入式播放器。
 
 ## 文件结构
 
@@ -151,9 +205,9 @@ apps/web/src/pages/blogs/
 
 ## 错误处理
 
-| 错误类型 | HTTP Code | Error Code |
-|----------|-----------|------------|
-| 文件类型不支持 | 400 | INVALID_FILE_TYPE |
-| 文件大小超限 | 400 | FILE_TOO_LARGE |
-| 上传失败 | 500 | UPLOAD_FAILED |
-| 未认证 | 401 | UNAUTHORIZED |
+| 错误类型 | HTTP Code | Error Code | 说明 |
+|----------|-----------|------------|------|
+| 文件类型不支持 | 400 | INVALID_FILE_TYPE | 客户端预检 + 服务端校验 |
+| 文件大小超限 | 400 | FILE_TOO_LARGE | 客户端预检 + 服务端校验 |
+| 上传失败 | 500 | UPLOAD_FAILED | S3 上传错误 |
+| 未认证 | 401 | UNAUTHORIZED | authMiddleware 拦截 |
