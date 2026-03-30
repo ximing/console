@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { view, useService } from '@rabjs/react';
 import { DirectoryService } from '../../../../services/directory.service';
 import { BlogService } from '../../../../services/blog.service';
+import { ViewToggle, type ViewMode } from '../view-toggle';
 import { RecentList } from './recent-list';
 import { PageList } from './page-list';
 import { PagePreview } from './page-preview';
@@ -24,6 +26,8 @@ interface ContentAreaProps {
 export const ContentArea = view((props: ContentAreaProps) => {
   const directoryService = useService(DirectoryService);
   const blogService = useService(BlogService);
+
+  const [viewMode, setViewMode] = useState<ViewMode>('card');
 
   const getDirectoryName = (): string => {
     if (!props.selectedDirectoryId) return '';
@@ -52,6 +56,8 @@ export const ContentArea = view((props: ContentAreaProps) => {
         directoryName={getDirectoryName()}
         blogs={props.directoryBlogs}
         loading={props.directoryLoading}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
         onBack={props.onBackToRecent}
         onSelectPage={props.onSelectPage}
         onEditPage={props.onEditPage}
@@ -59,5 +65,12 @@ export const ContentArea = view((props: ContentAreaProps) => {
     );
   }
 
-  return <RecentList onSelectPage={props.onSelectPage} onEditPage={props.onEditPage} />;
+  return (
+    <RecentList
+      viewMode={viewMode}
+      onViewModeChange={setViewMode}
+      onSelectPage={props.onSelectPage}
+      onEditPage={props.onEditPage}
+    />
+  );
 });
