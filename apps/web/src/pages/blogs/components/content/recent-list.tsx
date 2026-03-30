@@ -3,12 +3,14 @@ import { FileText, Loader2 } from 'lucide-react';
 import { BlogService } from '../../../../services/blog.service';
 import { DirectoryService } from '../../../../services/directory.service';
 import { BlogCard } from '../blog-card';
+import type { BlogDto } from '@x-console/dto';
 
 interface RecentListProps {
   onSelectPage: (pageId: string) => void;
+  onEditPage?: (blog: BlogDto) => void;
 }
 
-export const RecentList = view(({ onSelectPage }: RecentListProps) => {
+export const RecentList = view(({ onSelectPage, onEditPage }: RecentListProps) => {
   const blogService = useService(BlogService);
   const directoryService = useService(DirectoryService);
 
@@ -43,6 +45,7 @@ export const RecentList = view(({ onSelectPage }: RecentListProps) => {
           blog={blog}
           directoryName={getDirectoryName(blog.directoryId)}
           onClick={() => onSelectPage(blog.id)}
+          onEdit={onEditPage}
         />
       ))}
     </div>

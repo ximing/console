@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { view, useService } from '@rabjs/react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useLocation } from 'react-router';
 import { Layout } from '../../components/layout';
 import { BlogService } from '../../services/blog.service';
 import { DirectoryService } from '../../services/directory.service';
@@ -12,7 +12,7 @@ import { ContextMenu, type ContextMenuItem } from './components/context-menu';
 import type { DirectoryTreeNode } from '../../services/directory.service';
 import type { BlogDto } from '@x-console/dto';
 
-type ContentMode = 'recent' | 'directory' | 'preview';
+type ContentMode = 'recent' | 'directory' | 'preview' | 'edit';
 
 /**
  * Blog List Page
@@ -23,6 +23,7 @@ export const BlogListPage = view(() => {
   const directoryService = useService(DirectoryService);
   const toastService = useService(ToastService);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // UI State
   const [contentMode, setContentMode] = useState<ContentMode>('recent');
@@ -43,6 +44,33 @@ export const BlogListPage = view(() => {
   // Expanded directories for tree - stored but currently not read back
   const [, setExpandedDirs] = useState<Set<string>>(new Set());
 
+  // Sync URL to state on mount and URL change
+  useEffect(() => {
+    const pathParts = location.pathname.split('/').filter(Boolean);
+    // pathParts: ['blogs', 'pageId'] or ['blogs', 'pageId', 'edit']
+
+    if (pathParts[0] === 'blogs' && pathParts.length >= 2) {
+      const pageId = pathParts[1];
+      const isEditMode = pathParts[2] === 'edit';
+
+      // Only update if different from current state to avoid infinite loops
+      if (selectedPageId !== pageId || contentMode === 'recent') {
+        setSelectedPageId(pageId);
+        blogService.loadBlog(pageId).then(() => {
+          setContentMode(isEditMode ? 'edit' : 'preview');
+        });
+      }
+    } else if (pathParts.length === 1 && pathParts[0] === 'blogs') {
+      // Root /blogs path - show recent list
+      if (contentMode !== 'recent') {
+        setContentMode('recent');
+        setSelectedDirectoryId(null);
+        setSelectedPageId(null);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
   // Load directories on mount
   useEffect(() => {
     directoryService.loadDirectories();
@@ -50,7 +78,7 @@ export const BlogListPage = view(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Load directory blogs when directory is selected
+  // Load blogs when directory selection changes
   useEffect(() => {
     if (selectedDirectoryId) {
       setContentMode('directory');
@@ -58,18 +86,12 @@ export const BlogListPage = view(() => {
       blogService
         .loadBlogs({ directoryId: selectedDirectoryId, pageSize: 1000 })
         .finally(() => setDirectoryLoading(false));
+    } else {
+      // Load all blogs when viewing all
+      blogService.loadBlogs({ pageSize: 1000 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDirectoryId]);
-
-  // Load full blog content when entering preview
-  useEffect(() => {
-    if (selectedPageId) {
-      setContentMode('preview');
-      blogService.loadBlog(selectedPageId);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPageId]);
 
   // Create new blog
   const handleCreateBlog = async (directoryId: string | null) => {
@@ -82,17 +104,23 @@ export const BlogListPage = view(() => {
 
       if (blog) {
         toastService.success('博客创建成功');
-        navigate(`/blogs/${blog.id}/editor`);
+        navigate(`/blogs/${blog.id}/edit`);
       }
     } catch {
       toastService.error('创建博客失败');
     }
   };
 
-  // Create new directory - handled inline in DirectoryTree via context menu
-  const handleCreateDirectory = async () => {
-    // The DirectoryTree component handles directory creation inline
-    // This is a no-op placeholder for the Sidebar action button
+  // Create new directory
+  const handleCreateDirectory = async (parentId?: string) => {
+    try {
+      const name = prompt('请输入目录名称');
+      if (!name) return;
+      await directoryService.createDirectory({ name, parentId });
+      toastService.success('目录创建成功');
+    } catch {
+      toastService.error('创建目录失败');
+    }
   };
 
   // Rename directory
@@ -127,6 +155,7 @@ export const BlogListPage = view(() => {
       if (selectedPageId === blogId) {
         setSelectedPageId(null);
         setContentMode(selectedDirectoryId ? 'directory' : 'recent');
+        navigate('/blogs');
       }
     } catch {
       toastService.error('删除博客失败');
@@ -148,14 +177,32 @@ export const BlogListPage = view(() => {
     setSelectedDirectoryId(directoryId);
     if (!directoryId) {
       setContentMode('recent');
+      navigate('/blogs');
     }
   };
 
-  // Select page (blog)
+  // Select page (blog) - preview mode
   const handleSelectPage = (pageId: string) => {
     setSelectedPageId(pageId);
     setContentMode('preview');
     blogService.loadBlog(pageId);
+    navigate(`/blogs/${pageId}`);
+  };
+
+  // Edit page (switch to inline edit mode)
+  const handleEditPage = (blog: BlogDto) => {
+    // Only load if different from current blog
+    if (blogService.currentBlog?.id !== blog.id) {
+      setSelectedPageId(blog.id);
+      blogService.loadBlog(blog.id).then(() => {
+        setContentMode('edit');
+        navigate(`/blogs/${blog.id}/edit`);
+      });
+    } else {
+      // Same blog, just switch mode
+      setContentMode('edit');
+      navigate(`/blogs/${blog.id}/edit`);
+    }
   };
 
   // Back to recent list
@@ -164,16 +211,20 @@ export const BlogListPage = view(() => {
     setSelectedDirectoryId(null);
     setSelectedPageId(null);
     blogService.loadBlogs({ pageSize: 20 });
+    navigate('/blogs');
   };
 
   // Back to directory
   const handleBackToDirectory = () => {
-    if (selectedDirectoryId) {
+    if (selectedPageId) {
+      setContentMode('preview');
+      navigate(`/blogs/${selectedPageId}`);
+    } else if (selectedDirectoryId) {
       setContentMode('directory');
-      setSelectedPageId(null);
+      navigate('/blogs');
     } else {
       setContentMode('recent');
-      setSelectedPageId(null);
+      navigate('/blogs');
     }
   };
 
@@ -258,7 +309,7 @@ export const BlogListPage = view(() => {
     const items: ContextMenuItem[] = [
       {
         label: '编辑',
-        onClick: () => navigate(`/blogs/${contextMenu.data.id}/editor`),
+        onClick: () => handleEditPage(contextMenu.data as BlogDto),
       },
       {
         label: '移动到...',
@@ -291,8 +342,8 @@ export const BlogListPage = view(() => {
             onSelectDirectory={handleSelectDirectory}
             onSelectPage={handleSelectPage}
             onSearchClick={() => setSearchModalVisible(true)}
-            onNewBlog={() => handleCreateBlog(selectedDirectoryId)}
-            onNewDirectory={() => handleCreateDirectory()}
+            onNewBlog={(dirId) => handleCreateBlog(dirId ?? selectedDirectoryId)}
+            onNewDirectory={(parentId) => handleCreateDirectory(parentId)}
             onContextMenuDirectory={handleContextMenuDirectory}
             onContextMenuPage={handleContextMenuPage}
             onExpandDirectory={handleExpandDirectory}
@@ -300,7 +351,7 @@ export const BlogListPage = view(() => {
         </div>
 
         {/* Right Content Area */}
-        <div className="flex-1 overflow-hidden bg-gray-50 dark:bg-dark-900 p-6">
+        <div className="flex-1 overflow-hidden bg-gray-50 dark:bg-dark-900">
           <ContentArea
             mode={contentMode}
             selectedDirectoryId={selectedDirectoryId}
@@ -310,6 +361,7 @@ export const BlogListPage = view(() => {
             onBackToRecent={handleBackToRecent}
             onBackToDirectory={handleBackToDirectory}
             onSelectPage={handleSelectPage}
+            onEditPage={handleEditPage}
           />
         </div>
 

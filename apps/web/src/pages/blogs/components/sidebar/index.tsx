@@ -13,8 +13,8 @@ interface SidebarProps {
   onSelectDirectory: (directoryId: string | null) => void;
   onSelectPage: (pageId: string) => void;
   onSearchClick: () => void;
-  onNewBlog: () => void;
-  onNewDirectory: () => void;
+  onNewBlog: (directoryId?: string) => void;
+  onNewDirectory: (parentId?: string) => void;
   onContextMenuDirectory: (e: React.MouseEvent, node: DirectoryTreeNode) => void;
   onContextMenuPage: (e: React.MouseEvent, blog: BlogDto) => void;
   onExpandDirectory?: (directoryId: string) => void;
@@ -51,6 +51,8 @@ export const Sidebar = view((props: SidebarProps) => {
             onContextMenuDirectory={props.onContextMenuDirectory}
             onContextMenuPage={props.onContextMenuPage}
             onExpandDirectory={props.onExpandDirectory}
+            onNewBlog={props.onNewBlog}
+            onNewDirectory={props.onNewDirectory}
           />
         )}
       </div>
@@ -58,7 +60,7 @@ export const Sidebar = view((props: SidebarProps) => {
       {/* Action Buttons - New Blog and New Directory */}
       <div className="flex flex-col gap-1 px-2 py-2 border-t border-gray-200 dark:border-dark-700">
         <button
-          onClick={props.onNewBlog}
+          onClick={() => props.onNewBlog()}
           disabled={blogService.loading || directoryService.loading}
           className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
@@ -66,7 +68,7 @@ export const Sidebar = view((props: SidebarProps) => {
           新建博客
         </button>
         <button
-          onClick={props.onNewDirectory}
+          onClick={() => props.onNewDirectory()}
           disabled={blogService.loading || directoryService.loading}
           className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >

@@ -1,12 +1,12 @@
 import { view } from '@rabjs/react';
-import { useNavigate } from 'react-router';
-import { Clock, FileText } from 'lucide-react';
+import { Clock, FileText, Edit2 } from 'lucide-react';
 import type { BlogDto } from '@x-console/dto';
 
 interface BlogCardProps {
   blog: BlogDto;
   directoryName?: string;
   onClick?: () => void;
+  onEdit?: (blog: BlogDto) => void;
 }
 
 /**
@@ -37,15 +37,19 @@ const formatRelativeTime = (dateStr: string): string => {
  * Blog Card Component
  * Displays a single blog post with title, excerpt, directory, tags, status, and update time
  */
-export const BlogCard = view(({ blog, directoryName, onClick }: BlogCardProps) => {
-  const navigate = useNavigate();
-
-  // Handle click to navigate to editor or call onClick
+export const BlogCard = view(({ blog, directoryName, onClick, onEdit }: BlogCardProps) => {
+  // Handle click to view preview
   const handleClick = () => {
     if (onClick) {
       onClick();
-    } else {
-      navigate(`/blogs/${blog.id}/editor`);
+    }
+  };
+
+  // Handle edit button click
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onEdit) {
+      onEdit(blog);
     }
   };
 
@@ -56,14 +60,24 @@ export const BlogCard = view(({ blog, directoryName, onClick }: BlogCardProps) =
   return (
     <div
       onClick={handleClick}
-      className="bg-white dark:bg-dark-800 rounded-xl border border-gray-200 dark:border-dark-700 p-4 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-md transition-all cursor-pointer"
+      className="bg-white dark:bg-dark-800 rounded-xl border border-gray-200 dark:border-dark-700 p-4 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-md transition-all cursor-pointer group"
     >
-      {/* Title */}
+      {/* Title Row */}
       <div className="flex items-start gap-2 mb-2">
         <FileText className="w-5 h-5 text-gray-400 dark:text-gray-500 flex-shrink-0 mt-0.5" />
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors line-clamp-1">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors line-clamp-1 flex-1">
           {blog.title}
         </h3>
+        {/* Edit Button - visible on hover */}
+        {onEdit && (
+          <button
+            onClick={handleEditClick}
+            className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-all"
+            title="编辑"
+          >
+            <Edit2 className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+          </button>
+        )}
       </div>
 
       {/* Excerpt */}
