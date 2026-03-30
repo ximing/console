@@ -27,6 +27,8 @@ export interface TreeNodeProps {
   dragListeners?: Record<string, unknown>;
   isDragging?: boolean;
   isDropTarget?: boolean;
+  // Children (rendered recursively by parent for drag support)
+  children?: React.ReactNode;
 }
 
 export interface DirectoryTreeProps {
