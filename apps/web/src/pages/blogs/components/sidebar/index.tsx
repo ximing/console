@@ -8,6 +8,7 @@ import type { BlogDto } from '@x-console/dto';
 import { Plus, FolderPlus, Loader2 } from 'lucide-react';
 
 interface SidebarProps {
+  initialExpandedIds?: string[];
   selectedDirectoryId: string | null;
   selectedPageId: string | null;
   onSelectDirectory: (directoryId: string | null) => void;
@@ -44,6 +45,7 @@ export const Sidebar = view((props: SidebarProps) => {
           </div>
         ) : (
           <DirectoryTree
+            initialExpandedIds={props.initialExpandedIds}
             selectedDirectoryId={props.selectedDirectoryId}
             selectedPageId={props.selectedPageId}
             onSelectDirectory={props.onSelectDirectory}

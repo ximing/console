@@ -23,6 +23,7 @@ import type { TreeNodeData, DirectoryTreeProps } from './types';
 
 export const DirectoryTree = view(
   ({
+    initialExpandedIds,
     selectedDirectoryId,
     selectedPageId,
     onSelectDirectory,
@@ -35,7 +36,7 @@ export const DirectoryTree = view(
     const navigate = useNavigate();
     const directoryService = useService(DirectoryService);
     const blogService = useService(BlogService);
-    const { expandedIds, toggleNode } = useTreeState();
+    const { expandedIds, toggleNode } = useTreeState(initialExpandedIds || []);
     const [activeNode, setActiveNode] = useState<TreeNodeData | null>(null);
 
     // Context menu state

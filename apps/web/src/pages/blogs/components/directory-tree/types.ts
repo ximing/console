@@ -32,6 +32,7 @@ export interface TreeNodeProps {
 }
 
 export interface DirectoryTreeProps {
+  initialExpandedIds?: string[];
   selectedDirectoryId: string | null;
   selectedPageId: string | null;
   onSelectDirectory: (directoryId: string | null) => void;
