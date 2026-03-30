@@ -15,8 +15,8 @@ interface SidebarProps {
   onSearchClick: () => void;
   onNewBlog: (directoryId?: string) => void;
   onNewDirectory: (parentId?: string) => void;
-  onContextMenuDirectory: (e: React.MouseEvent, node: DirectoryTreeNode) => void;
-  onContextMenuPage: (e: React.MouseEvent, blog: BlogDto) => void;
+  onContextMenuDirectory: (e: React.MouseEvent, nodeId: string, nodeName: string) => void;
+  onContextMenuPage: (e: React.MouseEvent, blogId: string) => void;
   onExpandDirectory?: (directoryId: string) => void;
 }
 
@@ -50,7 +50,6 @@ export const Sidebar = view((props: SidebarProps) => {
             onSelectPage={props.onSelectPage}
             onContextMenuDirectory={props.onContextMenuDirectory}
             onContextMenuPage={props.onContextMenuPage}
-            onExpandDirectory={props.onExpandDirectory}
             onNewBlog={props.onNewBlog}
             onNewDirectory={props.onNewDirectory}
           />

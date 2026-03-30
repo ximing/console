@@ -235,18 +235,20 @@ export const BlogListPage = view(() => {
   };
 
   // Context menu for directory
-  const handleContextMenuDirectory = (e: React.MouseEvent, node: DirectoryTreeNode) => {
+  const handleContextMenuDirectory = (e: React.MouseEvent, nodeId: string, nodeName: string) => {
     setContextMenu({
       visible: true,
       x: e.clientX,
       y: e.clientY,
       type: 'directory',
-      data: node,
+      data: { id: nodeId, name: nodeName } as DirectoryTreeNode,
     });
   };
 
   // Context menu for page
-  const handleContextMenuPage = (e: React.MouseEvent, blog: BlogDto) => {
+  const handleContextMenuPage = (e: React.MouseEvent, blogId: string) => {
+    const blog = blogService.blogs.find(b => b.id === blogId);
+    if (!blog) return;
     setContextMenu({
       visible: true,
       x: e.clientX,
@@ -347,7 +349,6 @@ export const BlogListPage = view(() => {
             onNewDirectory={(parentId) => handleCreateDirectory(parentId)}
             onContextMenuDirectory={handleContextMenuDirectory}
             onContextMenuPage={handleContextMenuPage}
-            onExpandDirectory={handleExpandDirectory}
           />
         </div>
 
