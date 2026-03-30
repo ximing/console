@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { view } from '@rabjs/react';
 import { ArrowLeft, Loader2, ChevronDown, X } from 'lucide-react';
 import { BlogCard } from '../blog-card';
+import { ViewToggle, type ViewMode } from '../view-toggle';
+import { BlogListItem } from '../blog-list-item';
 import type { BlogDto } from '@x-console/dto';
 
 type StatusFilter = 'all' | 'published' | 'draft';
@@ -15,6 +17,8 @@ interface PageListProps {
   onBack: () => void;
   onSelectPage: (pageId: string) => void;
   onEditPage?: (blog: BlogDto) => void;
+  viewMode: ViewMode;
+  onViewModeChange: (mode: ViewMode) => void;
 }
 
 export const PageList = view((props: PageListProps) => {
@@ -88,16 +92,33 @@ export const PageList = view((props: PageListProps) => {
   }, []);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full px-6 py-4">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-4">
-        <button
-          onClick={props.onBack}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-        </button>
-        <h2 className="text-lg font-semibold">{props.directoryName}</h2>
+      <div className="flex items-center justify-between pb-4 mb-4 border-b border-gray-200 dark:border-dark-700">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={props.onBack}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <h2 className="text-lg font-semibold">{props.directoryName}</h2>
+          <span className="px-2 py-0.5 text-xs rounded-full bg-gray-100 dark:bg-dark-700">
+            {props.blogs.length === 1 ? '1 篇' : `${props.blogs.length} 篇`}
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <ViewToggle value={props.viewMode} onChange={props.onViewModeChange} />
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortBy)}
+            className="px-3 py-1.5 text-sm border border-gray-200 dark:border-dark-700 rounded-lg bg-white dark:bg-dark-800 text-gray-600 dark:text-gray-400 focus:outline-none focus:ring-1 focus:ring-primary-500"
+          >
+            <option value="updatedAt">更新时间↓</option>
+            <option value="createdAt">创建时间↓</option>
+            <option value="title">标题 A-Z</option>
+          </select>
+        </div>
       </div>
 
       {/* Filter Bar */}
@@ -156,17 +177,6 @@ export const PageList = view((props: PageListProps) => {
           </div>
         )}
 
-        {/* Sort */}
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value as SortBy)}
-          className="px-3 py-1.5 text-sm border border-gray-200 dark:border-dark-700 rounded-lg bg-white dark:bg-dark-800 text-gray-600 dark:text-gray-400 focus:outline-none focus:ring-1 focus:ring-primary-500"
-        >
-          <option value="updatedAt">更新时间↓</option>
-          <option value="createdAt">创建时间↓</option>
-          <option value="title">标题 A-Z</option>
-        </select>
-
         {/* Clear filters button */}
         {(statusFilter !== 'all' || selectedTags.length > 0) && (
           <button
@@ -205,6 +215,18 @@ export const PageList = view((props: PageListProps) => {
           >
             清除筛选
           </button>
+        </div>
+      ) : props.viewMode === 'list' ? (
+        <div className="flex-1 overflow-auto -mx-6 -mb-4">
+          {filteredBlogs.map((blog) => (
+            <BlogListItem
+              key={blog.id}
+              blog={blog}
+              directoryName={props.directoryName}
+              onClick={() => props.onSelectPage(blog.id)}
+              onEdit={props.onEditPage}
+            />
+          ))}
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
