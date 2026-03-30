@@ -60,17 +60,25 @@ export const ContentArea = view((props: ContentAreaProps) => {
   // Empty state - different text based on activeTab
   if (props.activeTab === 'directory') {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-gray-500">
-        <Folder className="w-12 h-12 mb-4 opacity-50" />
+      <div
+        role="status"
+        aria-label="请选择一个目录"
+        className="flex flex-col items-center justify-center h-full text-gray-500"
+      >
+        <Folder className="w-12 h-12 mb-4 opacity-50" aria-hidden="true" />
         <p>请选择一个目录</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-full text-gray-500">
-      <Clock className="w-12 h-12 mb-4 opacity-50" />
-      <p>请在侧边栏选择一个博客</p>
-    </div>
+    <div
+        role="status"
+        aria-label="请在侧边栏选择一个博客"
+        className="flex flex-col items-center justify-center h-full text-gray-500"
+      >
+        <Clock className="w-12 h-12 mb-4 opacity-50" aria-hidden="true" />
+        <p>请在侧边栏选择一个博客</p>
+      </div>
   );
 });
