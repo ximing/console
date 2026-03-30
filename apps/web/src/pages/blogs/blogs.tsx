@@ -10,7 +10,7 @@ import { ContentArea } from './components/content';
 import { SearchModal } from './components/search-modal';
 import type { BlogDto } from '@x-console/dto';
 
-type ContentMode = 'recent' | 'directory' | 'preview' | 'edit';
+type ContentMode = 'directory' | 'preview' | 'edit';
 
 /**
  * Blog List Page
@@ -24,7 +24,8 @@ export const BlogListPage = view(() => {
   const location = useLocation();
 
   // UI State
-  const [contentMode, setContentMode] = useState<ContentMode>('recent');
+  const [activeTab, setActiveTab] = useState<'directory' | 'recent'>('directory');
+  const [contentMode, setContentMode] = useState<ContentMode>('directory');
   const [selectedDirectoryId, setSelectedDirectoryId] = useState<string | null>(null);
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
   const [searchModalVisible, setSearchModalVisible] = useState(false);
@@ -42,18 +43,13 @@ export const BlogListPage = view(() => {
     const pathParts = location.pathname.split('/').filter(Boolean);
     // pathParts: ['blogs', 'pageId'] or ['blogs', 'pageId', 'edit']
 
-    // Check for query param: /blogs?dir=:directoryId
-    const searchParams = new URLSearchParams(location.search);
-    const dirParam = searchParams.get('dir');
-
     if (pathParts[0] === 'blogs' && pathParts.length >= 2) {
       // URL is /blogs/:blogId or /blogs/:blogId/edit
       const pageId = pathParts[1];
       const isEditMode = pathParts[2] === 'edit';
       const pathnameChanged = prevPathnameRef.current !== location.pathname;
 
-      // Update if pathname changed, or if pageId changed, or if in recent mode
-      if (pathnameChanged || selectedPageId !== pageId || contentMode === 'recent') {
+      if (pathnameChanged || selectedPageId !== pageId) {
         prevPathnameRef.current = location.pathname;
         setSelectedPageId(pageId);
         setInitialExpandedIds([]); // Reset expanded ids before loading
@@ -61,23 +57,21 @@ export const BlogListPage = view(() => {
           // After loading, expand the blog's directory if it has one
           if (blogService.currentBlog?.directoryId) {
             setInitialExpandedIds([blogService.currentBlog.directoryId]);
+            setActiveTab('directory');
+            setContentMode(isEditMode ? 'edit' : 'preview');
+          } else {
+            setActiveTab('recent');
+            setContentMode(isEditMode ? 'edit' : 'preview');
           }
-          setContentMode(isEditMode ? 'edit' : 'preview');
         });
       }
-    } else if (dirParam) {
-      // URL is /blogs?dir=:directoryId
-      if (selectedDirectoryId !== dirParam) {
-        setSelectedDirectoryId(dirParam);
-        setSelectedPageId(null);
-        setInitialExpandedIds([dirParam]);
-      }
     } else if (pathParts.length === 1 && pathParts[0] === 'blogs') {
-      // Root /blogs path - show recent list
+      // Root /blogs path - show directory tab
       const pathnameChanged = prevPathnameRef.current !== location.pathname;
-      if (pathnameChanged || contentMode !== 'recent') {
+      if (pathnameChanged || contentMode !== 'directory') {
         prevPathnameRef.current = location.pathname;
-        setContentMode('recent');
+        setActiveTab('directory');
+        setContentMode('directory');
         setSelectedDirectoryId(null);
         setSelectedPageId(null);
         setInitialExpandedIds([]);
@@ -155,7 +149,7 @@ export const BlogListPage = view(() => {
       toastService.success('目录删除成功');
       if (selectedDirectoryId === directoryId) {
         setSelectedDirectoryId(null);
-        setContentMode('recent');
+        setContentMode('directory');
       }
     } catch {
       toastService.error('删除目录失败');
@@ -169,7 +163,7 @@ export const BlogListPage = view(() => {
       toastService.success('博客删除成功');
       if (selectedPageId === blogId) {
         setSelectedPageId(null);
-        setContentMode(selectedDirectoryId ? 'directory' : 'recent');
+        setContentMode('directory');
         navigate('/blogs');
       }
     } catch {
@@ -191,14 +185,13 @@ export const BlogListPage = view(() => {
   const handleSelectDirectory = (directoryId: string | null) => {
     setSelectedDirectoryId(directoryId);
     if (!directoryId) {
-      setContentMode('recent');
+      setContentMode('directory');
       navigate('/blogs');
     }
   };
 
   // Select page (blog) - preview mode
   const handleSelectPage = (pageId: string) => {
-    setSelectedDirectoryId(null); // Clear directory selection when selecting a blog
     setSelectedPageId(pageId);
     setContentMode('preview');
     blogService.loadBlog(pageId);
@@ -221,27 +214,11 @@ export const BlogListPage = view(() => {
     }
   };
 
-  // Back to recent list
-  const handleBackToRecent = () => {
-    setContentMode('recent');
-    setSelectedDirectoryId(null);
+  // Back to directory list
+  const handleBack = () => {
     setSelectedPageId(null);
-    blogService.loadBlogs({ pageSize: 20 });
+    setContentMode('directory');
     navigate('/blogs');
-  };
-
-  // Back to directory
-  const handleBackToDirectory = () => {
-    if (selectedPageId) {
-      setContentMode('preview');
-      navigate(`/blogs/${selectedPageId}`);
-    } else if (selectedDirectoryId) {
-      setContentMode('directory');
-      navigate('/blogs');
-    } else {
-      setContentMode('recent');
-      navigate('/blogs');
-    }
   };
 
   // Expand directory (called from SearchModal)
@@ -255,11 +232,13 @@ export const BlogListPage = view(() => {
         {/* Left Sidebar */}
         <div className="w-[240px] flex-shrink-0">
           <Sidebar
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            selectedBlogId={selectedPageId}
+            onSelectBlog={handleSelectPage}
             initialExpandedIds={initialExpandedIds}
             selectedDirectoryId={selectedDirectoryId}
-            selectedPageId={selectedPageId}
             onSelectDirectory={handleSelectDirectory}
-            onSelectPage={handleSelectPage}
             onSearchClick={() => setSearchModalVisible(true)}
             onNewBlog={(dirId) => handleCreateBlog(dirId ?? selectedDirectoryId)}
             onNewDirectory={(parentId) => handleCreateDirectory(parentId)}
@@ -272,12 +251,12 @@ export const BlogListPage = view(() => {
         <div className="flex-1 overflow-hidden bg-gray-50 dark:bg-dark-900">
           <ContentArea
             mode={contentMode}
+            activeTab={activeTab}
+            onBack={handleBack}
             selectedDirectoryId={selectedDirectoryId}
             selectedPageId={selectedPageId}
             directoryBlogs={blogService.blogs}
             directoryLoading={directoryLoading}
-            onBackToRecent={handleBackToRecent}
-            onBackToDirectory={handleBackToDirectory}
             onSelectPage={handleSelectPage}
             onEditPage={handleEditPage}
           />
