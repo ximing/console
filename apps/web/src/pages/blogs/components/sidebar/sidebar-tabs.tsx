@@ -9,8 +9,11 @@ interface SidebarTabsProps {
 
 export const SidebarTabs = ({ activeTab, onTabChange }: SidebarTabsProps) => {
   return (
-    <div className="flex border-b border-gray-200 dark:border-dark-700">
+    <div role="tablist" className="flex border-b border-gray-200 dark:border-dark-700">
       <button
+        role="tab"
+        type="button"
+        aria-selected={activeTab === 'directory'}
         onClick={() => onTabChange('directory')}
         className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium transition-colors ${
           activeTab === 'directory'
@@ -22,6 +25,9 @@ export const SidebarTabs = ({ activeTab, onTabChange }: SidebarTabsProps) => {
         目录
       </button>
       <button
+        role="tab"
+        type="button"
+        aria-selected={activeTab === 'recent'}
         onClick={() => onTabChange('recent')}
         className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium transition-colors ${
           activeTab === 'recent'
