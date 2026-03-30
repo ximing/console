@@ -149,6 +149,38 @@ URL 用于分享和书签，始终指向当前博客：
 
 **实现：** 在 `blogs.tsx` 中维护 `lastSelectedBlogId` 和 `lastSelectedDirectoryId`，切换 Tab 时恢复对应选择。
 
+### 场景 6：Deep Linking（URL 到 Tab 的映射）
+当用户访问 `/blogs/:blogId` 时：
+1. 加载博客详情
+2. 根据博客的 `directoryId` 决定显示哪个 Tab：
+   - 如果博客有 `directoryId` → 自动切换到"目录" Tab，并选中该目录
+   - 如果博客没有 `directoryId`（根级博客）→ 自动切换到"最近" Tab
+3. ContentArea 显示 PagePreview
+
+### 场景 7：搜索行为
+- SearchButton 点击后打开 SearchModal
+- SearchModal 显示所有博客的搜索结果
+- 用户选择博客后：
+  - 如果博客在目录中 → 切换到"目录" Tab，选中对应目录，ContentArea 预览博客
+  - 如果博客是根级 → 切换到"最近" Tab，ContentArea 预览博客
+
+### 场景 8：空状态变体
+ContentArea 显示空状态时，根据当前 Tab 显示不同提示：
+
+```tsx
+// 目录 Tab，未选目录
+<div className="flex flex-col items-center justify-center h-full text-gray-500">
+  <Folder className="w-12 h-12 mb-4 opacity-50" />
+  <p>请选择一个目录</p>
+</div>
+
+// 最近 Tab，未选博客
+<div className="flex flex-col items-center justify-center h-full text-gray-500">
+  <Clock className="w-12 h-12 mb-4 opacity-50" />
+  <p>请在侧边栏选择一个博客</p>
+</div>
+```
+
 ## 文件变更
 
 | 操作 | 文件路径 |
@@ -193,13 +225,18 @@ URL 用于分享和书签，始终指向当前博客：
 ```tsx
 interface ContentAreaProps {
   mode: ContentMode;  // 'directory' | 'preview' | 'edit'
+  activeTab: 'directory' | 'recent';  // 用于决定空状态提示文字
   selectedDirectoryId: string | null;
   selectedPageId: string | null;
   directoryBlogs: BlogDto[];
   directoryLoading: boolean;
-  // 移除 onBackToRecent，因为不再有 'recent' 模式
-  onBackToDirectory: () => void;
+  onBack: () => void;  // 统一的返回处理
   onSelectPage: (pageId: string) => void;
   onEditPage?: (blog: BlogDto) => void;
 }
 ```
+
+**onBack 行为：**
+- 如果 `mode === 'preview'`：返回空状态（`selectedPageId` 置空）
+- 如果 `mode === 'directory'` 且 `selectedDirectoryId` 存在：返回空状态
+- ContentArea 不需要知道用户之前在哪个 Tab，只关心当前状态
