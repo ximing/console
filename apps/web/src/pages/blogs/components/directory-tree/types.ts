@@ -21,6 +21,12 @@ export interface TreeNodeProps {
   onContextMenuPage: (e: React.MouseEvent, blogId: string) => void;
   onNewBlog: (directoryId?: string) => void;
   onNewDirectory: (parentId?: string) => void;
+  // Drag and drop props
+  dragRef?: React.Ref<HTMLDivElement>;
+  dragAttributes?: Record<string, unknown>;
+  dragListeners?: Record<string, unknown>;
+  isDragging?: boolean;
+  isDropTarget?: boolean;
 }
 
 export interface DirectoryTreeProps {

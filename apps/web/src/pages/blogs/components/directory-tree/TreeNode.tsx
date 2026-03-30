@@ -1,8 +1,9 @@
-import { forwardRef, useState } from 'react';
+import { forwardRef, useState, type Ref } from 'react';
 import { ChevronRight, ChevronDown, Folder, FolderOpen, FileText, Plus, FolderPlus } from 'lucide-react';
-import type { TreeNodeProps } from './types';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
+import type { TreeNodeProps, TreeNodeData } from './types';
 
-interface Props extends Omit<TreeNodeProps, 'node'> {
+interface Props extends Omit<TreeNodeProps, 'node' | 'dragRef'> {
   node: TreeNodeData;
   depth: number;
 }
@@ -24,6 +25,11 @@ export const TreeNode = forwardRef<HTMLDivElement, Props>(
       onContextMenuPage,
       onNewBlog,
       onNewDirectory,
+      dragRef,
+      dragAttributes,
+      dragListeners,
+      isDragging,
+      isDropTarget,
     },
     ref
   ) => {
@@ -74,10 +80,14 @@ export const TreeNode = forwardRef<HTMLDivElement, Props>(
     return (
       <div>
         <div
-          ref={ref}
+          ref={dragRef}
+          {...dragAttributes}
+          {...dragListeners}
           className={`
             group flex items-center gap-1 px-2 py-1.5 cursor-pointer rounded
             ${isSelected ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' : 'hover:bg-gray-100 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300'}
+            ${isDragging ? 'opacity-50' : ''}
+            ${isDropTarget ? 'ring-2 ring-primary-500' : ''}
           `}
           style={{ paddingLeft: `${depth * DEPTH_INDENT + 8}px` }}
           onClick={handleClick}
@@ -163,3 +173,87 @@ export const TreeNode = forwardRef<HTMLDivElement, Props>(
 );
 
 TreeNode.displayName = 'TreeNode';
+
+// Helper to merge refs
+function mergeRefs<T>(
+  dragRef: React.Ref<T> | undefined,
+  nodeRef: React.Ref<T> | undefined
+): React.Ref<T> | undefined {
+  return (node: T) => {
+    // Handle callback refs
+    if (typeof dragRef === 'function') {
+      dragRef(node);
+    } else if (dragRef && 'current' in dragRef) {
+      (dragRef as React.MutableRefObject<T | null>).current = node;
+    }
+    if (typeof nodeRef === 'function') {
+      nodeRef(node);
+    } else if (nodeRef && 'current' in nodeRef) {
+      (nodeRef as React.MutableRefObject<T | null>).current = node;
+    }
+  };
+}
+
+interface DraggableTreeNodeProps extends Omit<TreeNodeProps, 'dragRef' | 'dragAttributes' | 'dragListeners' | 'isDragging' | 'isDropTarget'> {
+  node: TreeNodeData;
+  depth: number;
+}
+
+export const DraggableTreeNode = forwardRef<HTMLDivElement, DraggableTreeNodeProps>(
+  (props, ref) => {
+    const { node, ...treeNodeProps } = props;
+
+    const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
+      id: node.id,
+      data: node,
+    });
+
+    // Only directories can be drop targets
+    const isDirectory = node.type === 'directory';
+    const { isOver: isDropTarget, setNodeRef: setDropRef } = useDroppable({
+      id: node.id,
+      data: node,
+      disabled: !isDirectory,
+    });
+
+    // Merge drag and drop refs
+    const mergedRef = mergeRefs(ref, setDragRef);
+
+    // Also set the drop ref on the same element
+    const handleRef = (node: HTMLDivElement | null) => {
+      if (typeof mergedRef === 'function') {
+        mergedRef(node);
+      } else if (mergedRef && 'current' in mergedRef) {
+        (mergedRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+      }
+      if (setDropRef) {
+        setDropRef(node);
+      }
+    };
+
+    return (
+      <TreeNode
+        ref={handleRef as React.Ref<HTMLDivElement>}
+        node={node}
+        depth={props.depth}
+        expandedIds={treeNodeProps.expandedIds}
+        selectedDirectoryId={treeNodeProps.selectedDirectoryId}
+        selectedPageId={treeNodeProps.selectedPageId}
+        onToggle={treeNodeProps.onToggle}
+        onSelectDirectory={treeNodeProps.onSelectDirectory}
+        onSelectPage={treeNodeProps.onSelectPage}
+        onContextMenuDirectory={treeNodeProps.onContextMenuDirectory}
+        onContextMenuPage={treeNodeProps.onContextMenuPage}
+        onNewBlog={treeNodeProps.onNewBlog}
+        onNewDirectory={treeNodeProps.onNewDirectory}
+        dragRef={handleRef as React.Ref<HTMLDivElement>}
+        dragAttributes={attributes}
+        dragListeners={listeners}
+        isDragging={isDragging}
+        isDropTarget={isDropTarget}
+      />
+    );
+  }
+);
+
+DraggableTreeNode.displayName = 'DraggableTreeNode';
