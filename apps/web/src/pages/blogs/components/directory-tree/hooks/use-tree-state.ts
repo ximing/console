@@ -1,5 +1,4 @@
 import { useState, useMemo, useCallback } from 'react';
-import type { TreeNodeData } from '../types';
 
 export function useTreeState(initialOpenIds: string[] = []) {
   const [openIds, setOpenIds] = useState<Set<string>>(new Set(initialOpenIds));
