@@ -6,6 +6,7 @@ import { BlogService } from '../../services/blog.service';
 import { DirectoryService } from '../../services/directory.service';
 import { ToastService } from '../../services/toast.service';
 import { Sidebar } from './components/sidebar';
+import { ResizableSidebar } from './components/sidebar/resizable-sidebar';
 import { ContentArea } from './components/content';
 import { SearchModal } from './components/search-modal';
 import type { BlogDto } from '@x-console/dto';
@@ -37,6 +38,8 @@ export const BlogListPage = view(() => {
 
   // Track previous pathname to detect navigation back to same blog
   const prevPathnameRef = useRef<string | null>(null);
+  // Track if navigation was from user clicking a blog (should not switch tab)
+  const isNavigatingFromBlogClickRef = useRef(false);
 
   // Sync URL to state on mount and URL change
   useEffect(() => {
@@ -48,22 +51,31 @@ export const BlogListPage = view(() => {
       const pageId = pathParts[1];
       const isEditMode = pathParts[2] === 'edit';
       const pathnameChanged = prevPathnameRef.current !== location.pathname;
+      const wasFromBlogClick = isNavigatingFromBlogClickRef.current;
+      // Reset the ref immediately so future navigations (e.g., back/forward) don't think they were from click
+      isNavigatingFromBlogClickRef.current = false;
 
       if (pathnameChanged || selectedPageId !== pageId) {
         prevPathnameRef.current = location.pathname;
         setSelectedPageId(pageId);
-        setInitialExpandedIds([]); // Reset expanded ids before loading
-        blogService.loadBlog(pageId).then(() => {
-          // After loading, expand the blog's directory if it has one
-          if (blogService.currentBlog?.directoryId) {
-            setInitialExpandedIds([blogService.currentBlog.directoryId]);
-            setActiveTab('directory');
-            setContentMode(isEditMode ? 'edit' : 'preview');
-          } else {
-            setActiveTab('recent');
-            setContentMode(isEditMode ? 'edit' : 'preview');
-          }
-        });
+
+        // Skip loadBlog if we just came from a blog click (already loaded in handler)
+        if (!wasFromBlogClick) {
+          blogService.loadBlog(pageId).then(() => {
+            // After loading, set expanded state based on blog's directory
+            if (blogService.currentBlog?.directoryId) {
+              setInitialExpandedIds([blogService.currentBlog.directoryId]);
+              setActiveTab('directory');
+              setContentMode(isEditMode ? 'edit' : 'preview');
+            } else {
+              setActiveTab('recent');
+              setContentMode(isEditMode ? 'edit' : 'preview');
+            }
+          });
+        } else {
+          // From blog click - preserve content mode but don't switch tabs
+          setContentMode(isEditMode ? 'edit' : 'preview');
+        }
       }
     } else if (pathParts.length === 1 && pathParts[0] === 'blogs') {
       // Root /blogs path - show directory tab
@@ -192,9 +204,18 @@ export const BlogListPage = view(() => {
 
   // Select page (blog) - preview mode
   const handleSelectPage = (pageId: string) => {
+    // Skip if already viewing this blog in preview mode
+    if (selectedPageId === pageId && contentMode === 'preview' && blogService.currentBlog?.id === pageId) {
+      return;
+    }
     setSelectedPageId(pageId);
+    setSelectedDirectoryId(null); // Clear directory selection when blog is selected
     setContentMode('preview');
-    blogService.loadBlog(pageId);
+    // Only call loadBlog if not already on this page (to avoid loading flash)
+    if (blogService.currentBlog?.id !== pageId) {
+      blogService.loadBlog(pageId);
+    }
+    isNavigatingFromBlogClickRef.current = true;
     navigate(`/blogs/${pageId}`);
   };
 
@@ -230,7 +251,10 @@ export const BlogListPage = view(() => {
     <Layout>
       <div className="flex h-full">
         {/* Left Sidebar */}
-        <div className="w-[240px] flex-shrink-0">
+        <ResizableSidebar
+          onSearchClick={() => setSearchModalVisible(true)}
+          onNewBlog={() => handleCreateBlog(selectedDirectoryId)}
+        >
           <Sidebar
             activeTab={activeTab}
             onTabChange={setActiveTab}
@@ -245,7 +269,7 @@ export const BlogListPage = view(() => {
             onContextMenuDirectory={() => {}}
             onContextMenuPage={() => {}}
           />
-        </div>
+        </ResizableSidebar>
 
         {/* Right Content Area */}
         <div className="flex-1 overflow-hidden bg-gray-50 dark:bg-dark-900">
