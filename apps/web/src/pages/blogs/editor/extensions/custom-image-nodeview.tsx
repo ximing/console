@@ -188,6 +188,10 @@ export function CustomImageNodeView({ node, selected, updateAttributes }: Custom
 
   // Step 5: Add CSS styles for resize handles
   const resizeStyles = `
+    .image-resizer-wrapper {
+      user-select: none;
+      -webkit-user-select: none;
+    }
     .image-resizer-overlay {
       position: absolute;
       inset: 0;
@@ -348,10 +352,10 @@ export function CustomImageNodeView({ node, selected, updateAttributes }: Custom
     <NodeViewWrapper>
       <style>{resizeStyles}</style>
       <div
-        className="relative inline-block"
+        className="image-resizer-wrapper relative inline-block"
         style={{
-          width: localDimensions?.width ?? width ?? '100%',
-          height: localDimensions?.height ?? height ?? 'auto',
+          width: localDimensions?.width ?? (width ? `${width}px` : '100%'),
+          height: localDimensions?.height ?? (height ? `${height}px` : 'auto'),
           maxWidth: '100%',
         }}
       >
@@ -363,7 +367,15 @@ export function CustomImageNodeView({ node, selected, updateAttributes }: Custom
           width={localDimensions?.width ?? width}
           height={localDimensions?.height ?? height}
           className="max-w-full h-auto block"
-          draggable={true}
+          draggable={false}
+          onMouseDown={e => e.stopPropagation()}
+          onLoad={(e) => {
+            // When image loads naturally, ensure container has proper dimensions
+            const img = e.currentTarget;
+            if (!localDimensions && !width && img.naturalWidth > 0) {
+              // Image has natural dimensions, container will size automatically
+            }
+          }}
         />
         {selected && (
           <div className="image-resizer-overlay">
