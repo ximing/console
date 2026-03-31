@@ -1,5 +1,6 @@
 import { Node, mergeAttributes } from '@tiptap/core';
-import { Plugin, PluginKey } from '@tiptap/pm/state';
+import { ReactNodeViewRenderer } from '@tiptap/react';
+import { CustomImageNodeView } from './custom-image-nodeview';
 
 export interface CustomImageOptions {
   HTMLAttributes: Record<string, unknown>;
@@ -55,8 +56,7 @@ export const CustomImage = Node.create<CustomImageOptions>({
   },
 
   renderHTML({ HTMLAttributes }) {
-    // Render as img with data-path attribute for identification
-    // The actual rendering will be done by ImageWithPlaceholder in React
+    // Render with data attributes but no src (NodeView will handle rendering)
     return [
       'img',
       mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
@@ -67,6 +67,10 @@ export const CustomImage = Node.create<CustomImageOptions>({
         title: HTMLAttributes.title,
       }),
     ];
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(CustomImageNodeView);
   },
 
   addCommands() {
