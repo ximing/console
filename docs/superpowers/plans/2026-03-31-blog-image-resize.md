@@ -104,8 +104,7 @@ export function CustomImageNodeView({ node, selected, updateAttributes }: Custom
 Add ALL of the following after the existing `useEffect` for URL fetching, in this exact order:
 
 ```tsx
-  // imgRef must be declared first
-  const imgRef = useRef<HTMLImageElement>(null);
+  // imgRef already declared in Step 3
 
   // Refs for values accessed in callbacks to avoid stale closures
   const updateAttrsRef = useRef(updateAttributes);
