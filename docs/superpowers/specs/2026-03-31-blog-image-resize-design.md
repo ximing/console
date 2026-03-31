@@ -144,31 +144,31 @@ const imageExtensions = ImageWithResize.configure({
 
 | Case | Handling |
 |------|----------|
-| Animated GIFs | Do not apply resize handles; allow natural playback |
-| Images without width/height | On first click, get `naturalWidth`/`naturalHeight` for aspect ratio |
+| Animated GIFs | Allow resize on GIFs; animation continues at new size |
+| Images without width/height | On first handle mousedown, wait for `img.onload` if needed, else use `getBoundingClientRect()` |
 | Images at container max | Cap resize at the editor's content container width (`editor.view.dom.offsetWidth`) |
+| Images with float | Overlay renders but float layout may cause positioning issues; do not apply resize to floated images in v1 |
 | Resize cancelled (Escape) | Rollback to original dimensions, deselect |
 | Touch/mobile | Not in initial scope; handles are desktop-only |
 | Keyboard accessibility | Not in initial scope |
 | Images inside links | Resize the image, link remains intact |
 | Memory leaks | All document listeners removed on mouseup or component unmount |
 | Undo/redo | Dimensions stored in node attributes, naturally supported by ProseMirror |
+| Copy/paste | Width/height attributes preserved via parseHTML/renderHTML |
 
 ### Style Isolation
-The resize overlay styles should use a unique prefix to avoid conflicts. **Important:** The image element must have `position: relative` set via CSS for the overlay to position correctly relative to the image:
+The resize overlay styles should use a unique prefix. Handles are positioned at the image corners and edges, not extending beyond:
 ```css
-/* Image wrapper - set position relative on the img element */
-.ProseMirror img { position: relative; }
-
-/* Overlay container - positions itself relative to the image */
+/* Overlay container - positions itself relative to the image via CSS class on the img */
 .image-resizer-overlay {
   pointer-events: none;
   position: absolute;
-  inset: -4px;
+  inset: 0;
   z-index: 10;
+  outline: 1px dashed #333;
 }
 
-/* Individual handle styling */
+/* Individual handle styling - positioned at corners and edges */
 .image-resizer-handle {
   pointer-events: auto;
   position: absolute;
@@ -178,7 +178,21 @@ The resize overlay styles should use a unique prefix to avoid conflicts. **Impor
   border: 1px solid #333;
   box-sizing: border-box;
 }
+
+/* Handle positions */
+.image-resizer-handle.top-left { top: -5px; left: -5px; cursor: nwse-resize; }
+.image-resizer-handle.top-center { top: -5px; left: calc(50% - 5px); cursor: ns-resize; }
+.image-resizer-handle.top-right { top: -5px; right: -5px; cursor: nesw-resize; }
+.image-resizer-handle.middle-left { top: calc(50% - 5px); left: -5px; cursor: ew-resize; }
+.image-resizer-handle.middle-right { top: calc(50% - 5px); right: -5px; cursor: ew-resize; }
+.image-resizer-handle.bottom-left { bottom: -5px; left: -5px; cursor: nesw-resize; }
+.image-resizer-handle.bottom-center { bottom: -5px; left: calc(50% - 5px); cursor: ns-resize; }
+.image-resizer-handle.bottom-right { bottom: -5px; right: -5px; cursor: nwse-resize; }
 ```
+
+**Note:** Handles extend 5px outside the image bounds (from -5px to +5px) so they're easily clickable.
+
+**CSS Scope:** Do NOT apply global `position: relative` to all images. Instead, the NodeView wrapper applies `position: relative` to the image via inline style or a scoped class when the image is selected.
 
 ## Component Specs
 
@@ -188,11 +202,16 @@ The resize overlay styles should use a unique prefix to avoid conflicts. **Impor
 - `node`: ProseMirror Node
 - `selected`: boolean
 - `updateAttributes`: (attrs: object) => void
+- `editor`: Tiptap Editor instance (available via context or passed as prop)
+
+**Accessing Editor in NodeView:**
+The NodeView can access the editor instance via `useEditor` hook from `@tiptap/react` since the editor context is available. Alternatively, the extension can pass the editor via `ReactNodeViewRenderer` options.
 
 **Local State:**
 - `isResizing`: boolean
 - `startPos`: { x: number, y: number }
 - `startDim`: { width: number, height: number }
+- `aspectRatio`: number | null
 
 **Lifecycle:**
 1. `onMouseDown` on handle → start resize tracking, add document listeners
