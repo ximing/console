@@ -1,6 +1,5 @@
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
-import TiptapImage from '@tiptap/extension-image';
 import { Table as TiptapTable } from '@tiptap/extension-table';
 import { TableRow as TiptapTableRow } from '@tiptap/extension-table-row';
 import { TableHeader as TiptapTableHeader } from '@tiptap/extension-table-header';
@@ -14,12 +13,14 @@ import Highlight from '@tiptap/extension-highlight';
 import TextAlign from '@tiptap/extension-text-align';
 import FontFamily from '@tiptap/extension-font-family';
 import { ExternalVideo } from './extensions/external-video';
+import { CustomImage } from './extensions/custom-image';
 
 export const DEFAULT_YOUTUBE_WIDTH = 640;
 export const DEFAULT_YOUTUBE_HEIGHT = 360;
 export const MAX_EXCERPT_LENGTH = 200;
 
-const imageExtensions = TiptapImage.configure({
+// Replace the imageExtensions with custom image
+const imageExtensions = CustomImage.configure({
   HTMLAttributes: {
     class: 'max-w-full h-auto',
   },

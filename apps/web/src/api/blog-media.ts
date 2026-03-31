@@ -7,10 +7,12 @@ interface ApiResponse<T> {
 }
 
 export interface MediaUploadResponse {
-  url: string;
+  path: string;
   filename: string;
   size: number;
   type: 'image' | 'audio' | 'video';
+  width?: number;
+  height?: number;
 }
 
 export interface MediaUploadProgress {
