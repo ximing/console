@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Editor } from '@tiptap/react';
 import { Sketch } from '@uiw/react-color';
+import { useService } from '@rabjs/react';
+import { ToastService } from '../../../services/toast.service';
 import {
   Bold,
   Italic,
@@ -295,6 +297,7 @@ const HeadingSelect = ({ editor }: { editor: Editor }) => {
 };
 
 export const EditorToolbar = ({ editor, blogId }: EditorToolbarProps) => {
+  const toastService = useService(ToastService);
   const [pendingInsert, setPendingInsert] = useState<{ type: InsertType; url: string } | null>(
     null
   );
@@ -416,16 +419,56 @@ export const EditorToolbar = ({ editor, blogId }: EditorToolbarProps) => {
       // Validate file
       const validation = validateMediaFile(file);
       if (!validation.valid) {
-        setUploadModal({
-          filename: file.name,
-          progress: 0,
-          status: 'error',
-          error: validation.error,
+        toastService.error(validation.error || '文件验证失败');
+        return;
+      }
+
+      if (type === 'image' && editor) {
+        // Insert placeholder image node immediately
+        const tempId = `temp:${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        editor.chain().focus().setCustomImage({
+          path: tempId,
+          alt: file.name,
+          uploadStatus: 'uploading',
+        }).run();
+
+        // Upload in background and update node
+        uploadMedia(file, blogId).then((result) => {
+          // Find and update the temp node with real path
+          editor.chain().focus().command(({ tr, state }) => {
+            let found = false;
+            state.doc.descendants((node, pos) => {
+              if (node.type.name === 'customImage' && node.attrs.path === tempId) {
+                tr.setNodeMarkup(pos, undefined, {
+                  path: result.path,
+                  alt: result.filename,
+                  width: result.width,
+                  height: result.height,
+                  uploadStatus: 'uploaded',
+                });
+                found = true;
+              }
+            });
+            return found;
+          }).run();
+        }).catch(() => {
+          toastService.error('图片上传失败');
+          // Remove the placeholder node on error
+          editor.chain().focus().command(({ tr, state }) => {
+            let found = false;
+            state.doc.descendants((node, pos) => {
+              if (node.type.name === 'customImage' && node.attrs.path === tempId) {
+                tr.delete(pos, pos + node.nodeSize);
+                found = true;
+              }
+            });
+            return found;
+          }).run();
         });
         return;
       }
 
-      // Show uploading modal
+      // For audio/video, show modal (existing behavior)
       setUploadModal({
         filename: file.name,
         progress: 0,
@@ -442,19 +485,10 @@ export const EditorToolbar = ({ editor, blogId }: EditorToolbarProps) => {
         // Insert into editor
         if (editor) {
           switch (type) {
-            case 'image':
-              editor.chain().focus().setCustomImage({
-                path: result.path,
-                alt: result.filename,
-                width: result.width,
-                height: result.height,
-              }).run();
-              break;
             case 'audio':
               editor.chain().focus().setAudio({ src: result.path }).run();
               break;
             case 'video':
-              // For uploaded video files, use standard video HTML element
               editor.chain().focus().insertContent(`<video src="${result.path}" controls style="max-width: 100%; height: auto;" />`).run();
               break;
           }
@@ -468,10 +502,11 @@ export const EditorToolbar = ({ editor, blogId }: EditorToolbarProps) => {
         setTimeout(() => {
           setUploadModal(null);
         }, 1000);
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : '上传失败';
         setUploadModal((prev) =>
           prev
-            ? { ...prev, status: 'error', error: err?.message || '上传失败' }
+            ? { ...prev, status: 'error', error: message }
             : null
         );
       }
@@ -727,15 +762,12 @@ export const EditorToolbar = ({ editor, blogId }: EditorToolbarProps) => {
         {/* Local upload buttons */}
         <ToolbarButton onClick={() => handleFileUpload('image', blogId)} title="上传图片">
           <Image className="w-4 h-4" />
-          <span>图片</span>
         </ToolbarButton>
         <ToolbarButton onClick={() => handleFileUpload('audio', blogId)} title="上传音频">
           <Mic className="w-4 h-4" />
-          <span>音频</span>
         </ToolbarButton>
         <ToolbarButton onClick={() => handleFileUpload('video', blogId)} title="上传视频">
           <Youtube className="w-4 h-4" />
-          <span>视频</span>
         </ToolbarButton>
 
         <ToolbarDivider />
@@ -743,7 +775,6 @@ export const EditorToolbar = ({ editor, blogId }: EditorToolbarProps) => {
         {/* External link buttons */}
         <ToolbarButton onClick={() => handleInsertClick('youtube')} title="嵌入 YouTube">
           <Youtube className="w-4 h-4" />
-          <span>外链</span>
         </ToolbarButton>
         <ToolbarButton
           onClick={() => handleInsertClick('link')}
@@ -751,7 +782,6 @@ export const EditorToolbar = ({ editor, blogId }: EditorToolbarProps) => {
           title="插入链接"
         >
           <Link className="w-4 h-4" />
-          <span>链接</span>
         </ToolbarButton>
 
         {/* URL Input for Image/Audio/YouTube/Link insertion */}

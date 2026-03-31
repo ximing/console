@@ -1,7 +1,6 @@
 import { NodeViewWrapper } from '@tiptap/react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-// Step 2: Add types and interfaces
 type HandlePosition = 'top-left' | 'top-center' | 'top-right' | 'middle-left' | 'middle-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
 
 interface ResizeState {
@@ -20,10 +19,11 @@ interface CustomImageNodeViewProps {
       title?: string;
       width?: number;
       height?: number;
+      uploadStatus?: string | null;
     };
   };
-  selected: boolean;  // Tiptap provides this when node is selected
-  updateAttributes: (attrs: Record<string, number | null>) => void;  // Tiptap method to update node attrs
+  selected: boolean;
+  updateAttributes: (attrs: Record<string, number | string | null>) => void;
 }
 
 export function CustomImageNodeView({ node, selected, updateAttributes }: CustomImageNodeViewProps) {
@@ -32,12 +32,15 @@ export function CustomImageNodeView({ node, selected, updateAttributes }: Custom
   const title = node.attrs?.title;
   const width = node.attrs?.width;
   const height = node.attrs?.height;
+  const uploadStatus = node.attrs?.uploadStatus;
 
   const [loading, setLoading] = useState(true);
   const [url, setUrl] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
-  // Step 4: Add resize logic state and refs
+  // Check if this is a placeholder (temp path or uploading status)
+  const isPlaceholder = !path || path.startsWith('temp:') || uploadStatus === 'uploading';
+
   const imgRef = useRef<HTMLImageElement>(null);
   const [resizeState, setResizeState] = useState<ResizeState>({
     isResizing: false,
@@ -182,7 +185,6 @@ export function CustomImageNodeView({ node, selected, updateAttributes }: Custom
     [handleMouseMove, handleMouseUp, localDimensions]
   );
 
-  // Step 5: Add CSS styles for resize handles
   const resizeStyles = `
     .image-resizer-wrapper {
       user-select: none;
@@ -226,18 +228,6 @@ export function CustomImageNodeView({ node, selected, updateAttributes }: Custom
     };
   }, [handleMouseMove, handleMouseUp]);
 
-  // Debug: document-level mousedown to catch handle clicks
-  useEffect(() => {
-    const debugHandler = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.classList.contains('image-resizer-handle')) {
-        console.log('Document mousedown caught on handle:', target.className);
-      }
-    };
-    document.addEventListener('mousedown', debugHandler);
-    return () => document.removeEventListener('mousedown', debugHandler);
-  }, []);
-
   // Reset local dimensions when selection is lost
   useEffect(() => {
     if (!selected) {
@@ -274,9 +264,10 @@ export function CustomImageNodeView({ node, selected, updateAttributes }: Custom
   }, [handleMouseMove, handleMouseUp]);
 
   useEffect(() => {
-    if (!path) {
+    if (!path || isPlaceholder) {
       setLoading(false);
-      setFetchError('No path');
+      setUrl(null);
+      setFetchError(null);
       return;
     }
 
@@ -309,7 +300,7 @@ export function CustomImageNodeView({ node, selected, updateAttributes }: Custom
     return () => {
       cancelled = true;
     };
-  }, [path]);
+  }, [path, isPlaceholder]);
 
   // Error state
   if (fetchError) {
@@ -329,6 +320,32 @@ export function CustomImageNodeView({ node, selected, updateAttributes }: Custom
     );
   }
 
+  // Placeholder state (uploading or temp path)
+  if (isPlaceholder) {
+    return (
+      <NodeViewWrapper>
+        <style>{resizeStyles}</style>
+        <div
+          className="bg-gray-200 dark:bg-dark-700 flex items-center justify-center relative border-2 border-dashed border-gray-400"
+          style={{
+            width: width || 300,
+            height: height || 200,
+            maxWidth: '100%',
+          }}
+        >
+          <div className="text-center">
+            <div className="animate-pulse mb-2">
+              <svg className="w-8 h-8 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <span className="text-gray-500 text-sm">上传中...</span>
+          </div>
+        </div>
+      </NodeViewWrapper>
+    );
+  }
+
   // Loading state
   if (loading || !url) {
     return (
@@ -342,13 +359,12 @@ export function CustomImageNodeView({ node, selected, updateAttributes }: Custom
             maxWidth: '100%',
           }}
         >
-          <span className="text-gray-400 text-sm">{loading ? 'Loading...' : 'Waiting...'}</span>
+          <span className="text-gray-400 text-sm">Loading...</span>
         </div>
       </NodeViewWrapper>
     );
   }
 
-  // Step 6: Success state with resize handles
   const handlePositions: HandlePosition[] = [
     'top-left',
     'top-center',
@@ -381,13 +397,6 @@ export function CustomImageNodeView({ node, selected, updateAttributes }: Custom
           className="max-w-full h-auto block"
           draggable={false}
           onMouseDown={e => e.stopPropagation()}
-          onLoad={(e) => {
-            // When image loads naturally, ensure container has proper dimensions
-            const img = e.currentTarget;
-            if (!localDimensions && !width && img.naturalWidth > 0) {
-              // Image has natural dimensions, container will size automatically
-            }
-          }}
         />
         {selected && (
           <div className="image-resizer-overlay">
