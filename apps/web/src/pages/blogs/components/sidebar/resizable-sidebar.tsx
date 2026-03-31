@@ -150,12 +150,12 @@ export function ResizableSidebar({
       className="flex h-full relative"
       style={{ width: sidebarWidth }}
     >
-      {/* Sidebar content */}
-      <div className="flex-shrink-0 h-full">{children}</div>
+      {/* Sidebar content - fill available space */}
+      <div className="flex-1 h-full overflow-hidden">{children}</div>
 
       {/* Drag handle */}
       <div
-        className={`w-1 cursor ew-resize hover:bg-primary-500/50 active:bg-primary-500 transition-colors ${
+        className={`w-2 cursor ew-resize hover:bg-primary-500/50 active:bg-primary-500 transition-colors flex-shrink-0 ${
           isDragging ? 'bg-primary-500' : ''
         }`}
         onMouseDown={handleDragStart}

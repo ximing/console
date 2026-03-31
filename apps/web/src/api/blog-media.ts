@@ -28,13 +28,14 @@ export type UploadProgressCallback = (progress: MediaUploadProgress) => void;
  */
 export async function uploadMedia(
   file: File,
+  blogId: string,
   onProgress?: UploadProgressCallback
 ): Promise<MediaUploadResponse> {
   const formData = new FormData();
   formData.append('file', file);
 
   const response = await axios.post<ApiResponse<MediaUploadResponse>>(
-    '/api/v1/blogs/media/upload',
+    `/api/v1/blogs/media/upload?blogId=${encodeURIComponent(blogId)}`,
     formData,
     {
       headers: {

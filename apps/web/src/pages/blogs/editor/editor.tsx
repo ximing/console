@@ -341,7 +341,7 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
           </div>
 
           {/* Editor Toolbar */}
-          <EditorToolbar editor={editor} />
+          <EditorToolbar editor={editor} blogId={blogId || ''} />
 
           {/* Editor Content */}
           <EditorContent editor={editor} className="min-h-[400px]" />

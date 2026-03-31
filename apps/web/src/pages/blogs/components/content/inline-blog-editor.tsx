@@ -235,7 +235,7 @@ export const InlineBlogEditor = view(({ blog, onBack }: InlineBlogEditorProps) =
 
       {/* Editor Toolbar - Fixed */}
       <div className="shrink-0">
-        <EditorToolbar editor={editor} />
+        <EditorToolbar editor={editor} blogId={blog.id} />
       </div>
 
       {/* Scrollable Content Area */}

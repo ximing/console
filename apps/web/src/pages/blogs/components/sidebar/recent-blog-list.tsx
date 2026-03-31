@@ -40,7 +40,8 @@ export const RecentBlogList = view(
       return dir?.name;
     };
 
-    if (blogService.loading) {
+    // Only show loading spinner on initial load when no blogs exist yet
+    if (blogService.blogs.length === 0 && blogService.loading) {
       return (
         <div className="flex items-center justify-center py-8">
           <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
