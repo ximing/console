@@ -1,5 +1,6 @@
 import { NodeViewWrapper } from '@tiptap/react';
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { isTempPath } from '../../../../utils/editor';
 
 type HandlePosition = 'top-left' | 'top-center' | 'top-right' | 'middle-left' | 'middle-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
 
@@ -39,7 +40,7 @@ export function CustomImageNodeView({ node, selected, updateAttributes }: Custom
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   // Check if this is a placeholder (temp path or uploading status)
-  const isPlaceholder = !path || path.startsWith('temp:') || uploadStatus === 'uploading';
+  const isPlaceholder = isTempPath(path) || uploadStatus === 'uploading';
 
   const imgRef = useRef<HTMLImageElement>(null);
   const [resizeState, setResizeState] = useState<ResizeState>({

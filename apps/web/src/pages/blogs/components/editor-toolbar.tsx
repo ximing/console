@@ -3,6 +3,7 @@ import { Editor } from '@tiptap/react';
 import { Sketch } from '@uiw/react-color';
 import { useService } from '@rabjs/react';
 import { ToastService } from '../../../services/toast.service';
+import { uploadImagePlaceholder } from '../../../utils/editor';
 import {
   Bold,
   Italic,
@@ -424,47 +425,7 @@ export const EditorToolbar = ({ editor, blogId }: EditorToolbarProps) => {
       }
 
       if (type === 'image' && editor) {
-        // Insert placeholder image node immediately
-        const tempId = `temp:${Date.now()}-${Math.random().toString(36).slice(2)}`;
-        editor.chain().focus().setCustomImage({
-          path: tempId,
-          alt: file.name,
-          uploadStatus: 'uploading',
-        }).run();
-
-        // Upload in background and update node
-        uploadMedia(file, blogId).then((result) => {
-          // Find and update the temp node with real path
-          editor.chain().focus().command(({ tr, state }) => {
-            let found = false;
-            state.doc.descendants((node, pos) => {
-              if (node.type.name === 'customImage' && node.attrs.path === tempId) {
-                tr.setNodeMarkup(pos, undefined, {
-                  path: result.path,
-                  alt: result.filename,
-                  width: result.width,
-                  height: result.height,
-                  uploadStatus: 'uploaded',
-                });
-                found = true;
-              }
-            });
-            return found;
-          }).run();
-        }).catch(() => {
-          toastService.error('图片上传失败');
-          // Remove the placeholder node on error
-          editor.chain().focus().command(({ tr, state }) => {
-            let found = false;
-            state.doc.descendants((node, pos) => {
-              if (node.type.name === 'customImage' && node.attrs.path === tempId) {
-                tr.delete(pos, pos + node.nodeSize);
-                found = true;
-              }
-            });
-            return found;
-          }).run();
-        });
+        uploadImagePlaceholder(editor, file, blogId, (msg) => toastService.error(msg));
         return;
       }
 

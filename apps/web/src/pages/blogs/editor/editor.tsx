@@ -11,7 +11,7 @@ import { ToastService } from '../../../services/toast.service';
 import { EditorToolbar } from '../components/editor-toolbar';
 import { Select } from '../../../components/select';
 import { editableExtensions, MAX_EXCERPT_LENGTH } from './tiptap.config';
-import { uploadMedia, validateMediaFile } from '../../../api/blog-media';
+import { uploadImagePlaceholder } from '../../../utils/editor';
 
 interface BlogEditorProps {
   id?: string;
@@ -78,7 +78,7 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
 
       if (imageFile) {
         event.preventDefault();
-        handleImageUpload(imageFile);
+        uploadImagePlaceholder(editor, imageFile, blogId, (msg) => toastService.error(msg));
         return;
       }
 
@@ -92,7 +92,7 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
           let file = item.getAsFile();
           if (!file) {
             // Try using the async clipboard API if available
-            if (navigator.clipboard && navigator.clipboard.read) {
+            if (navigator.clipboard?.read) {
               try {
                 const clipboardItems = await navigator.clipboard.read();
                 for (const clipItem of clipboardItems) {
@@ -106,8 +106,8 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
                   }
                   if (file) break;
                 }
-              } catch {
-                // Clipboard API not permitted or failed
+              } catch (e) {
+                console.warn('Clipboard API not permitted or failed:', e);
               }
             }
           }
@@ -117,56 +117,10 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
             continue;
           }
 
-          handleImageUpload(file);
+          uploadImagePlaceholder(editor, file, blogId, (msg) => toastService.error(msg));
           break;
         }
       }
-    };
-
-    const handleImageUpload = (file: File) => {
-      const validation = validateMediaFile(file);
-      if (!validation.valid) {
-        toastService.error(validation.error || '图片格式不支持');
-        return;
-      }
-
-      const tempId = `temp:${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      editor.chain().focus().setCustomImage({
-        path: tempId,
-        alt: file.name,
-        uploadStatus: 'uploading',
-      }).run();
-
-      uploadMedia(file, blogId).then((result) => {
-        editor.chain().focus().command(({ tr, state }) => {
-          let found = false;
-          state.doc.descendants((node, pos) => {
-            if (node.type.name === 'customImage' && node.attrs.path === tempId) {
-              tr.setNodeMarkup(pos, undefined, {
-                path: result.path,
-                alt: result.filename,
-                width: result.width,
-                height: result.height,
-                uploadStatus: 'uploaded',
-              });
-              found = true;
-            }
-          });
-          return found;
-        }).run();
-      }).catch(() => {
-        toastService.error('图片上传失败');
-        editor.chain().focus().command(({ tr, state }) => {
-          let found = false;
-          state.doc.descendants((node, pos) => {
-            if (node.type.name === 'customImage' && node.attrs.path === tempId) {
-              tr.delete(pos, pos + node.nodeSize);
-              found = true;
-            }
-          });
-          return found;
-        }).run();
-      });
     };
 
     document.addEventListener('paste', handlePaste);
