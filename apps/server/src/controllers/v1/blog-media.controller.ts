@@ -19,6 +19,11 @@ import { logger } from '../../utils/logger.js';
 import { ResponseUtil as ResponseUtility } from '../../utils/response.js';
 import { MEDIA_UPLOAD_LIMITS, BLOG_MEDIA_PREFIX } from '../../config/upload.config.js';
 import { readImageDimensions } from '../../utils/image-dimensions.js';
+import { blogMedia } from '../../db/schema/blog-media.js';
+import { blogs } from '../../db/schema/blog.js';
+import { BlogService } from '../../services/blog.service.js';
+import { eq } from 'drizzle-orm';
+import { getDatabase } from '../../db/connection.js';
 
 import type { UserInfoDto } from '@x-console/dto';
 
@@ -42,16 +47,26 @@ function getMediaType(mimetype: string): MediaType | null {
 @Service()
 @JsonController('/api/v1/blogs/media')
 export class BlogMediaController {
-  constructor(private storageService: StorageService) {}
+  constructor(
+    private storageService: StorageService,
+    private blogService: BlogService
+  ) {}
 
   @Post('/upload')
   async uploadMedia(
     @CurrentUser() userDto: UserInfoDto,
-    @UploadedFile('file', { options: upload }) file: Express.Multer.File
+    @UploadedFile('file', { options: upload }) file: Express.Multer.File,
+    @QueryParams() params: { blogId: string }
   ) {
     try {
       if (!userDto?.id) {
         return ResponseUtility.error(ErrorCode.UNAUTHORIZED);
+      }
+
+      // Validate blogId and check ownership
+      const blog = await this.blogService.getBlog(params.blogId, userDto.id);
+      if (!blog) {
+        return ResponseUtility.error(ErrorCode.NOT_FOUND, 'Blog not found or access denied');
       }
 
       if (!file) {
@@ -93,11 +108,12 @@ export class BlogMediaController {
       // Generate unique filename with original extension
       const ext = path.extname(file.originalname);
       const filename = `${nanoid()}${ext}`;
+      const objectName = `${userDto.id}/${params.blogId}/${filename}`;
 
       // Upload to S3 using StorageService
-      const objectName = await this.storageService.uploadFile(
+      const s3Path = await this.storageService.uploadFile(
         file.buffer,
-        `${userDto.id}/${filename}`,
+        objectName,
         file.mimetype
       );
 
@@ -115,8 +131,21 @@ export class BlogMediaController {
         }
       }
 
+      // Insert media record
+      const db = getDatabase();
+      await db.insert(blogMedia).values({
+        id: `m${nanoid(22)}`,
+        blogId: params.blogId,
+        path: s3Path,
+        filename: file.originalname,
+        size: file.size,
+        type: mediaType,
+        width: width,
+        height: height,
+      });
+
       return ResponseUtility.success({
-        path: objectName,
+        path: s3Path,
         filename: file.originalname,
         size: file.size,
         type: mediaType,
@@ -152,19 +181,52 @@ export class BlogMediaController {
         return ResponseUtility.error(ErrorCode.PARAMS_ERROR, 'Path is required');
       }
 
-      // Verify the path belongs to this user
-      // Path format: {S3_PREFIX}/{userId}/{filename} e.g., dev/console/{userId}/abc.png
-      const pathParts = params.path.split('/');
-      if (!pathParts || pathParts.length < 2) {
-        return ResponseUtility.error(ErrorCode.PARAMS_ERROR, 'Invalid path format');
-      }
-      // Check that userId is in the path (path was created by our upload endpoint)
-      if (!pathParts.includes(userDto.id)) {
-        return ResponseUtility.error(ErrorCode.FORBIDDEN, 'Access denied');
-      }
       // Prevent path traversal
       if (params.path.includes('..') || params.path.startsWith('/')) {
         return ResponseUtility.error(ErrorCode.PARAMS_ERROR, 'Invalid path');
+      }
+
+      // Get blogId from path: {userId}/{blogId}/{filename}
+      const pathParts = params.path.split('/');
+      if (!pathParts || pathParts.length < 3) {
+        return ResponseUtility.error(ErrorCode.PARAMS_ERROR, 'Invalid path format');
+      }
+
+      // Query blog_media to get the blogId
+      const db = getDatabase();
+      const mediaResults = await db
+        .select()
+        .from(blogMedia)
+        .where(eq(blogMedia.path, params.path))
+        .limit(1);
+
+      if (mediaResults.length === 0) {
+        return ResponseUtility.error(ErrorCode.NOT_FOUND, 'Media not found');
+      }
+
+      const media = mediaResults[0];
+
+      // Query the blog to check status and ownership
+      const blogResults = await db
+        .select()
+        .from(blogs)
+        .where(eq(blogs.id, media.blogId))
+        .limit(1);
+
+      if (blogResults.length === 0) {
+        return ResponseUtility.error(ErrorCode.NOT_FOUND, 'Blog not found');
+      }
+
+      const blog = blogResults[0];
+
+      // If blog is published, allow access without auth check
+      if (blog.status === 'published') {
+        // OK - public access
+      } else {
+        // For drafts, check ownership
+        if (blog.userId !== userDto.id) {
+          return ResponseUtility.error(ErrorCode.FORBIDDEN, 'Access denied');
+        }
       }
 
       // Generate presigned URL
