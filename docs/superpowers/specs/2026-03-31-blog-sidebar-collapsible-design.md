@@ -16,7 +16,7 @@
 ### 2.2 拖动调整宽度
 
 - 侧边栏左侧显示 4px 宽的拖动手柄
-- 鼠标悬停时手柄高亮显示
+- 鼠标悬停时手柄高亮显示，光标变为 `ew-resize`
 - 拖动范围：200px - 400px（展开状态）
 - 拖动结束后自动持久化宽度
 
@@ -25,6 +25,8 @@
 - 使用 localStorage 存储，key: `blog-sidebar-state`
 - 存储内容：`{ isCollapsed: boolean, sidebarWidth: number }`
 - 页面加载时读取并恢复状态
+- **错误处理**：读取/写入失败时静默回退到默认值（不阻塞 UI）
+- **Schema 校验**：读取时验证数据类型，无效时回退到默认值
 
 ## 3. 实现方案
 
@@ -70,17 +72,18 @@ interface ResizableSidebarProps {
 
 ### 3.3 拖动实现
 
-使用原生 `mousedown/mousemove/mouseup` 事件：
+使用原生 `mousedown/mousemove/mouseup` 和 `touchstart/touchmove/touchend` 事件（兼容触屏设备）：
 
-1. `mousedown` 在手柄上：记录起始 X 坐标和当前宽度
-2. `mousemove`：计算差值，更新实时宽度（限制在 min/max 范围内）
-3. `mouseup`：写入最终宽度到 state，触发持久化
+1. `mousedown`/`touchstart` 在手柄上：记录起始 X 坐标和当前宽度
+2. `mousemove`/`touchmove`：计算差值，使用函数式更新 `setWidth(prev => Math.min(maxWidth, Math.max(minWidth, prev + delta)))` 确保原子性
+3. `mouseup`/`touchend`：写入最终宽度到 state，触发持久化
+4. **视口约束**：拖动时限制宽度不超过右侧视口剩余空间
 
 ### 3.4 折叠状态 UI
 
 折叠时侧边栏变为 48px 宽，内部图标垂直居中排列：
-- 搜索图标（点击触发搜索）
-- 新建博客图标（点击触发新建）
+- 搜索图标（点击展开侧边栏并触发搜索）
+- 新建博客图标（点击触发新建博客）
 - 展开按钮图标（点击展开侧边栏）
 
 ## 4. 设计决策
