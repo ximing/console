@@ -1,11 +1,10 @@
 import { NodeViewWrapper, NodeViewContent } from '@tiptap/react';
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 
 interface CustomImageNodeViewProps {
   node: {
     attrs: {
-      path: string;
+      path?: string;
       alt?: string;
       title?: string;
       width?: number;
@@ -15,37 +14,72 @@ interface CustomImageNodeViewProps {
 }
 
 export function CustomImageNodeView({ node }: CustomImageNodeViewProps) {
-  const { path, alt, title, width, height } = node.attrs;
+  console.log('CustomImageNodeView render, node.attrs:', node.attrs);
+
+  const path = node.attrs?.path;
+  const alt = node.attrs?.alt;
+  const title = node.attrs?.title;
+  const width = node.attrs?.width;
+  const height = node.attrs?.height;
+
   const [loading, setLoading] = useState(true);
   const [url, setUrl] = useState<string | null>(null);
-  const [error, setError] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!path) return;
+    if (!path) {
+      console.log('No path provided');
+      setLoading(false);
+      setFetchError('No path');
+      return;
+    }
 
     setLoading(true);
-    setError(false);
+    setFetchError(null);
 
-    // Use axios with withCredentials to send cookies/auth
-    axios
-      .get(`/api/v1/blogs/media/url?path=${encodeURIComponent(path)}`, {
-        withCredentials: true,
-      })
+    const url = `/api/v1/blogs/media/url?path=${encodeURIComponent(path)}`;
+    console.log('Fetching URL:', url);
+
+    fetch(url)
       .then((res) => {
-        if (res.data.code === 0 && res.data.data?.url) {
-          setUrl(res.data.data.url);
+        console.log('Fetch response status:', res.status);
+        return res.json();
+      })
+      .then((data) => {
+        console.log('Image URL response:', data);
+        if (data.code === 0 && data.data?.url) {
+          setUrl(data.data.url);
         } else {
-          setError(true);
+          setFetchError(data.msg || 'Failed to get URL');
         }
       })
-      .catch(() => {
-        setError(true);
+      .catch((err) => {
+        console.error('Image URL error:', err);
+        setFetchError(err.message);
       })
       .finally(() => {
         setLoading(false);
       });
   }, [path]);
 
+  // Error state
+  if (fetchError) {
+    return (
+      <NodeViewWrapper>
+        <div
+          className="bg-red-100 dark:bg-red-900/20 flex items-center justify-center p-4"
+          style={{
+            width: width || '100%',
+            height: height || 200,
+          }}
+        >
+          <span className="text-red-500 text-sm">Error: {fetchError}</span>
+        </div>
+      </NodeViewWrapper>
+    );
+  }
+
+  // Loading state
   if (loading || !url) {
     return (
       <NodeViewWrapper>
@@ -57,28 +91,13 @@ export function CustomImageNodeView({ node }: CustomImageNodeViewProps) {
             maxWidth: '100%',
           }}
         >
-          <span className="text-gray-400 text-sm">{loading ? 'Loading...' : 'Error'}</span>
+          <span className="text-gray-400 text-sm">{loading ? 'Loading...' : 'Waiting...'}</span>
         </div>
       </NodeViewWrapper>
     );
   }
 
-  if (error) {
-    return (
-      <NodeViewWrapper>
-        <div
-          className="bg-red-100 dark:bg-red-900/20 flex items-center justify-center"
-          style={{
-            width: width || '100%',
-            height: height || 200,
-          }}
-        >
-          <span className="text-red-500 text-sm">Failed to load image</span>
-        </div>
-      </NodeViewWrapper>
-    );
-  }
-
+  // Success state
   return (
     <NodeViewWrapper>
       <img
