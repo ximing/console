@@ -35,7 +35,7 @@ import {
 } from 'lucide-react';
 
 import { MediaUploadModal } from './media-upload-modal';
-import { uploadMedia, validateMediaFile } from '../../api/blog-media';
+import { uploadMedia, validateMediaFile } from '../../../api/blog-media';
 
 type InsertType = 'image' | 'audio' | 'youtube' | 'link';
 
