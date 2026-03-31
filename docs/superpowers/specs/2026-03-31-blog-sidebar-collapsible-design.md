@@ -9,13 +9,13 @@
 ### 2.1 折叠/展开
 
 - 侧边栏可完全折叠，仅显示 48px 宽的图标区域
-- 折叠时显示居中的图标按钮（搜索、新建博客）
+- 折叠时显示垂直居中排列的图标按钮（搜索、新建博客）
 - 点击最上方按钮展开侧边栏
 - 状态持久化到 localStorage
 
 ### 2.2 拖动调整宽度
 
-- 侧边栏左侧显示 4px 宽的拖动手柄
+- 侧边栏右侧边缘显示 4px 宽的拖动手柄（分隔线）
 - 鼠标悬停时手柄高亮显示，光标变为 `ew-resize`
 - 拖动范围：200px - 400px（展开状态）
 - 拖动结束后自动持久化宽度
@@ -35,9 +35,14 @@
 **`apps/web/src/pages/blogs/components/sidebar/hooks/useSidebarState.ts`**
 
 ```ts
-interface SidebarState {
+interface UseSidebarStateReturn {
   isCollapsed: boolean;
   sidebarWidth: number;
+  collapsedWidth: number;
+  minWidth: number;
+  maxWidth: number;
+  toggleCollapse: () => void;
+  setWidth: (width: number) => void;
 }
 
 const STORAGE_KEY = 'blog-sidebar-state';
@@ -46,9 +51,10 @@ const MIN_WIDTH = 200;
 const MAX_WIDTH = 400;
 const COLLAPSED_WIDTH = 48;
 
-export function useSidebarState() {
-  // State management with localStorage persistence
-  // Returns: { isCollapsed, sidebarWidth, toggleCollapse, setWidth }
+export function useSidebarState(): UseSidebarStateReturn {
+  // 从 localStorage 读取初始化状态，读取失败时使用默认值
+  // 返回 isCollapsed, sidebarWidth, toggleCollapse, setWidth
+  // setWidth 使用函数式更新确保原子性
 }
 ```
 
@@ -81,10 +87,12 @@ interface ResizableSidebarProps {
 
 ### 3.4 折叠状态 UI
 
-折叠时侧边栏变为 48px 宽，内部图标垂直居中排列：
-- 搜索图标（点击展开侧边栏并触发搜索）
+折叠时侧边栏变为 48px 宽，图标按钮垂直居中排列：
+- 搜索图标（点击展开侧边栏）
 - 新建博客图标（点击触发新建博客）
 - 展开按钮图标（点击展开侧边栏）
+
+展开后搜索按钮位于顶部，用户可继续操作。
 
 ## 4. 设计决策
 
