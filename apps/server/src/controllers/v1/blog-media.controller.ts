@@ -16,6 +16,7 @@ import { StorageService } from '../../services/storage.service.js';
 import { logger } from '../../utils/logger.js';
 import { ResponseUtil as ResponseUtility } from '../../utils/response.js';
 import { MEDIA_UPLOAD_LIMITS, BLOG_MEDIA_PREFIX } from '../../config/upload.config.js';
+import { readImageDimensions } from '../../utils/image-dimensions.js';
 
 import type { UserInfoDto } from '@x-console/dto';
 
@@ -98,14 +99,27 @@ export class BlogMediaController {
         file.mimetype
       );
 
-      // Generate presigned URL for access
-      const url = await this.storageService.getPresignedUrl(objectName);
+      // Get image dimensions if it's an image
+      let width: number | undefined;
+      let height: number | undefined;
+
+      if (mediaType === 'image' && file.mimetype !== 'image/svg+xml') {
+        try {
+          const dimensions = await readImageDimensions(file.buffer);
+          width = dimensions.width;
+          height = dimensions.height;
+        } catch (e) {
+          logger.warn('Failed to get image dimensions', { error: e });
+        }
+      }
 
       return ResponseUtility.success({
-        url,
+        path: objectName,
         filename: file.originalname,
         size: file.size,
         type: mediaType,
+        width,
+        height,
       });
     } catch (error: any) {
       logger.error('Upload media error:', error);
