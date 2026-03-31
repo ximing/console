@@ -22,8 +22,10 @@ Add drag-to-resize capability to images in the Tiptap-based blog editor. Users c
 - **Bounding box**: 1px dashed border (#333), offset 4px from image edges
 
 #### Handle Visibility
-- Handles appear on image click
-- Handles are hidden when clicking outside the image
+- Handles appear when image is selected (via click or selection)
+- Handles remain visible while image is selected
+- Clicking outside the image deselects it and hides handles
+- Clicking on an already-selected image does NOT deselect (prevents accidental deselection)
 - Handles are not shown for other media types (audio, video, tables)
 
 ## Technical Approach
@@ -46,47 +48,24 @@ apps/web/src/pages/blogs/editor/
 
 ### Integration with Tiptap
 
-#### Extend TiptapImage Configuration
-Modify `tiptap.config.ts` to pass resize-enabled flag:
-```typescript
-const imageExtensions = TiptapImage.configure({
-  HTMLAttributes: {
-    class: 'max-w-full h-auto',
-    'data-resizable': 'true',
-  },
-});
-```
-
-#### Custom Extension for Attributes
-Create `image-with-resize.ts` to extend image node with resize metadata:
+#### Custom Image Extension with NodeView
+Create `image-with-resize.ts` that extends TiptapImage with a NodeView for resize handles:
 ```typescript
 import TiptapImage from '@tiptap/extension-image';
+import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react';
+import { ImageResizer } from './components/image-resizer';
 
 export const ImageWithResize = TiptapImage.extend({
-  addAttributes() {
-    return {
-      ...this.parent(),
-      width: {
-        default: null,
-        parseHTML: element => element.getAttribute('width'),
-        renderHTML: attributes => ({
-          width: attributes.width,
-        }),
-      },
-      height: {
-        default: null,
-        parseHTML: element => element.getAttribute('height'),
-        renderHTML: attributes => ({
-          height: attributes.height,
-        }),
-      },
-    };
+  addNodeView() {
+    return ReactNodeViewRenderer(ImageResizer);
   },
 });
 ```
 
+**Note:** `TiptapImage` already provides `width` and `height` attributes by default, so no custom attribute extension is needed.
+
 #### NodeView Component Pattern
-Use standard Tiptap NodeView integration:
+The `ImageResizer` component uses standard Tiptap NodeView integration:
 ```typescript
 import { NodeViewWrapper } from '@tiptap/react';
 
@@ -94,6 +73,18 @@ export const ImageResizer = NodeViewWrapper(({ node, selected }) => {
   // Render handles when selected
   if (!selected) return null;
   // ... handle rendering and drag logic
+});
+```
+
+#### Update tiptap.config.ts
+Replace `TiptapImage` with the custom extension:
+```typescript
+import { ImageWithResize } from './extensions/image-with-resize';
+
+const imageExtensions = ImageWithResize.configure({
+  HTMLAttributes: {
+    class: 'max-w-full h-auto',
+  },
 });
 ```
 
