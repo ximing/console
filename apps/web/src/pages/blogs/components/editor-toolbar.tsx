@@ -34,6 +34,9 @@ import {
   RemoveFormatting,
 } from 'lucide-react';
 
+import { MediaUploadModal } from './media-upload-modal';
+import { uploadMedia, validateMediaFile } from '../../api/blog-media';
+
 type InsertType = 'image' | 'audio' | 'youtube' | 'link';
 
 interface EditorToolbarProps {
@@ -298,6 +301,13 @@ export const EditorToolbar = ({ editor }: EditorToolbarProps) => {
   const [textColor, setTextColor] = useState<string | null>(null);
   const [bgColor, setBgColor] = useState<string | null>(null);
 
+  const [uploadModal, setUploadModal] = useState<{
+    filename: string;
+    progress: number;
+    status: 'uploading' | 'success' | 'error';
+    error?: string;
+  } | null>(null);
+
   // Track table active state
   useEffect(() => {
     if (!editor) return;
@@ -380,6 +390,88 @@ export const EditorToolbar = ({ editor }: EditorToolbarProps) => {
     } else if (e.key === 'Escape') {
       handleInsertCancel();
     }
+  };
+
+  const handleFileUpload = async (type: 'image' | 'audio' | 'video') => {
+    const input = document.createElement('input');
+    input.type = 'file';
+
+    switch (type) {
+      case 'image':
+        input.accept = 'image/jpeg,image/png,image/gif,image/webp,image/svg+xml';
+        break;
+      case 'audio':
+        input.accept = 'audio/mpeg,audio/wav,audio/ogg,audio/aac,audio/flac';
+        break;
+      case 'video':
+        input.accept = 'video/mp4,video/webm,video/quicktime';
+        break;
+    }
+
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      // Validate file
+      const validation = validateMediaFile(file);
+      if (!validation.valid) {
+        setUploadModal({
+          filename: file.name,
+          progress: 0,
+          status: 'error',
+          error: validation.error,
+        });
+        return;
+      }
+
+      // Show uploading modal
+      setUploadModal({
+        filename: file.name,
+        progress: 0,
+        status: 'uploading',
+      });
+
+      try {
+        const result = await uploadMedia(file, (progress) => {
+          setUploadModal((prev) =>
+            prev ? { ...prev, progress: progress.percent } : null
+          );
+        });
+
+        // Insert into editor
+        if (editor) {
+          switch (type) {
+            case 'image':
+              editor.chain().focus().setImage({ src: result.url }).run();
+              break;
+            case 'audio':
+              editor.chain().focus().setAudio({ src: result.url }).run();
+              break;
+            case 'video':
+              // For uploaded video files, use standard video HTML element
+              editor.chain().focus().insertContent(`<video src="${result.url}" controls style="max-width: 100%; height: auto;" />`).run();
+              break;
+          }
+        }
+
+        setUploadModal((prev) =>
+          prev ? { ...prev, status: 'success' } : null
+        );
+
+        // Auto close after 1 second
+        setTimeout(() => {
+          setUploadModal(null);
+        }, 1000);
+      } catch (err: any) {
+        setUploadModal((prev) =>
+          prev
+            ? { ...prev, status: 'error', error: err?.message || '上传失败' }
+            : null
+        );
+      }
+    };
+
+    input.click();
   };
 
   const addTable = () => {
@@ -626,17 +718,26 @@ export const EditorToolbar = ({ editor }: EditorToolbarProps) => {
           <span>表格</span>
         </ToolbarButton>
 
-        <ToolbarButton onClick={() => handleInsertClick('image')} title="插入图片">
+        {/* Local upload buttons */}
+        <ToolbarButton onClick={() => handleFileUpload('image')} title="上传图片">
           <Image className="w-4 h-4" />
           <span>图片</span>
         </ToolbarButton>
-        <ToolbarButton onClick={() => handleInsertClick('audio')} title="插入音频">
+        <ToolbarButton onClick={() => handleFileUpload('audio')} title="上传音频">
           <Mic className="w-4 h-4" />
           <span>音频</span>
         </ToolbarButton>
-        <ToolbarButton onClick={() => handleInsertClick('youtube')} title="插入 YouTube 视频">
+        <ToolbarButton onClick={() => handleFileUpload('video')} title="上传视频">
           <Youtube className="w-4 h-4" />
           <span>视频</span>
+        </ToolbarButton>
+
+        <ToolbarDivider />
+
+        {/* External link buttons */}
+        <ToolbarButton onClick={() => handleInsertClick('youtube')} title="嵌入 YouTube">
+          <Youtube className="w-4 h-4" />
+          <span>外链</span>
         </ToolbarButton>
         <ToolbarButton
           onClick={() => handleInsertClick('link')}
@@ -754,6 +855,17 @@ export const EditorToolbar = ({ editor }: EditorToolbarProps) => {
           </ToolbarButton>
         </div>
       </div>
+
+      {/* Upload Modal */}
+      {uploadModal && (
+        <MediaUploadModal
+          filename={uploadModal.filename}
+          progress={uploadModal.progress}
+          status={uploadModal.status}
+          error={uploadModal.error}
+          onClose={() => setUploadModal(null)}
+        />
+      )}
     </div>
   );
 };
