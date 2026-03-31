@@ -99,15 +99,19 @@ export function CustomImageNodeView({ node, selected, updateAttributes }: Custom
   const [localDimensions, setLocalDimensions] = useState<{ width: number; height: number } | null>(null);
 ```
 
-- [ ] **Step 4: Add resize refs and sync effect**
+- [ ] **Step 4: Add resize refs, callbacks, and effects**
 
-Add after the existing `useEffect` for URL fetching:
+Add ALL of the following after the existing `useEffect` for URL fetching, in this exact order:
 
 ```tsx
+  // imgRef must be declared first
+  const imgRef = useRef<HTMLImageElement>(null);
+
   // Refs for values accessed in callbacks to avoid stale closures
   const updateAttrsRef = useRef(updateAttributes);
   const localDimRef = useRef(localDimensions);
 
+  // Keep refs in sync when values change
   useEffect(() => {
     updateAttrsRef.current = updateAttributes;
   }, [updateAttributes]);
@@ -116,64 +120,11 @@ Add after the existing `useEffect` for URL fetching:
     localDimRef.current = localDimensions;
   }, [localDimensions]);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMoveRef.current);
-      document.removeEventListener('mouseup', handleMouseUpRef.current);
-    };
-  }, []);
-
-  // Reset local dimensions when selection changes
-  useEffect(() => {
-    if (!selected) {
-      setLocalDimensions(null);
-      setResizeState(prev => ({ ...prev, isResizing: false, handle: null, totalMovement: 0 }));
-    }
-  }, [selected]);
-```
-
-- [ ] **Step 5: Add resize callbacks using refs**
-
-Add these callback refs before the component return:
-
-```tsx
-  // Store callbacks in refs to avoid dependency issues
+  // Resize event handlers stored in refs (initialized once)
   const handleMouseMoveRef = useRef<((e: MouseEvent) => void) | null>(null);
   const handleMouseUpRef = useRef<(() => void) | null>(null);
 
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent, handle: HandlePosition) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      const img = imgRef.current;
-      if (!img) return;
-
-      // Get current dimensions
-      const currentWidth = localDimRef.current?.width ?? width ?? img.naturalWidth ?? img.getBoundingClientRect().width;
-      const currentHeight = localDimRef.current?.height ?? height ?? img.naturalHeight ?? img.getBoundingClientRect().height;
-
-      // Guard against division by zero
-      const safeHeight = currentHeight || currentWidth || 1;
-      const aspectRatio = currentWidth / safeHeight;
-
-      setResizeState({
-        isResizing: true,
-        startPos: { x: e.clientX, y: e.clientY },
-        startDim: { width: currentWidth, height: currentHeight },
-        aspectRatio,
-        handle,
-        totalMovement: 0,
-      });
-
-      document.addEventListener('mousemove', handleMouseMoveRef.current!);
-      document.addEventListener('mouseup', handleMouseUpRef.current!);
-    },
-    [width, height]  // Only these change when node updates
-  );
-
-  // Initialize the callbacks
+  // Initialize handlers on first render
   if (!handleMouseMoveRef.current) {
     handleMouseMoveRef.current = (e: MouseEvent) => {
       setResizeState(prev => {
@@ -247,14 +198,55 @@ Add these callback refs before the component return:
       });
     };
   }
-```
 
-- [ ] **Step 6: Add escape key handling**
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent, handle: HandlePosition) => {
+      e.preventDefault();
+      e.stopPropagation();
 
-Add after the resize callbacks initialization:
+      const img = imgRef.current;
+      if (!img) return;
 
-```tsx
-  // Handle escape key
+      // Get current dimensions
+      const currentWidth = localDimRef.current?.width ?? width ?? img.naturalWidth ?? img.getBoundingClientRect().width;
+      const currentHeight = localDimRef.current?.height ?? height ?? img.naturalHeight ?? img.getBoundingClientRect().height;
+
+      // Guard against division by zero
+      const safeHeight = currentHeight || currentWidth || 1;
+      const aspectRatio = currentWidth / safeHeight;
+
+      setResizeState({
+        isResizing: true,
+        startPos: { x: e.clientX, y: e.clientY },
+        startDim: { width: currentWidth, height: currentHeight },
+        aspectRatio,
+        handle,
+        totalMovement: 0,
+      });
+
+      document.addEventListener('mousemove', handleMouseMoveRef.current!);
+      document.addEventListener('mouseup', handleMouseUpRef.current!);
+    },
+    [width, height]
+  );
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMoveRef.current!);
+      document.removeEventListener('mouseup', handleMouseUpRef.current!);
+    };
+  }, []);
+
+  // Reset local dimensions when selection changes
+  useEffect(() => {
+    if (!selected) {
+      setLocalDimensions(null);
+      setResizeState(prev => ({ ...prev, isResizing: false, handle: null, totalMovement: 0 }));
+    }
+  }, [selected]);
+
+  // Handle escape key - depends only on isResizing boolean
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && resizeState.isResizing) {
@@ -270,7 +262,7 @@ Add after the resize callbacks initialization:
   }, [resizeState.isResizing]);
 ```
 
-- [ ] **Step 7: Add CSS styles for resize handles**
+- [ ] **Step 5: Add CSS styles for resize handles**
 
 Add this CSS block to the file or to a CSS file imported by the component:
 
@@ -306,7 +298,7 @@ const resizeStyles = `
 `;
 ```
 
-- [ ] **Step 8: Update the image render section**
+- [ ] **Step 6: Update the image render section**
 
 Replace the existing `<img>` render with:
 
