@@ -26,7 +26,7 @@ export const SearchModal = view((props: SearchModalProps) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   // Debounce timer
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // Focus input when modal opens
   useEffect(() => {

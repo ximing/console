@@ -1,7 +1,7 @@
 import { Service } from '@rabjs/react';
 import { blogApi } from '../api/blog';
 import type { BlogDto, CreateBlogDto, UpdateBlogDto } from '@x-console/dto';
-import type { ToastService } from './types';
+import { toast } from './toast.service';
 
 // Constants
 const DEFAULT_PAGE_SIZE = 10;
@@ -22,22 +22,11 @@ export class BlogService extends Service {
   saving = false;
   lastSavedAt: Date | null = null;
 
-  // Toast service reference (lazy loaded to avoid circular dependency)
-  private toastService: ToastService | null = null;
-
   // Auto-save timer
   private autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
 
   // Previous blog state for rollback on failed saves
   private previousBlog: BlogDto | null = null;
-
-  private async getToastService(): Promise<ToastService> {
-    if (!this.toastService) {
-      const module = await import('./toast.service');
-      this.toastService = module.toastService;
-    }
-    return this.toastService;
-  }
 
   /**
    * Load blogs with pagination
@@ -79,7 +68,6 @@ export class BlogService extends Service {
       this.total = data.total;
     } catch (err) {
       console.error('Load blogs error:', err);
-      const toast = await this.getToastService();
       toast.error('Failed to load blogs');
     } finally {
       this.loading = false;
@@ -97,7 +85,6 @@ export class BlogService extends Service {
       this.currentBlog = blog;
     } catch (err) {
       console.error('Load blog error:', err);
-      const toast = await this.getToastService();
       toast.error('Failed to load blog');
     } finally {
       this.loading = false;
@@ -122,7 +109,6 @@ export class BlogService extends Service {
       return blog;
     } catch (err) {
       console.error('Create blog error:', err);
-      const toast = await this.getToastService();
       toast.error('Failed to create blog');
       return null;
     }
@@ -148,6 +134,7 @@ export class BlogService extends Service {
       this.currentBlog = {
         ...this.currentBlog,
         ...data,
+        directoryId: data.directoryId ?? undefined,
         updatedAt: new Date().toISOString(),
       };
     }
@@ -186,7 +173,6 @@ export class BlogService extends Service {
       this.lastSavedAt = new Date();
     } catch (err) {
       console.error('Save blog error:', err);
-      const toast = await this.getToastService();
       toast.error('Failed to save blog');
 
       // Rollback to previous state on failure
@@ -212,7 +198,6 @@ export class BlogService extends Service {
       return true;
     } catch (err) {
       console.error('Delete blog error:', err);
-      const toast = await this.getToastService();
       toast.error('Failed to delete blog');
       return false;
     }
@@ -235,7 +220,6 @@ export class BlogService extends Service {
       return blog;
     } catch (err) {
       console.error('Publish blog error:', err);
-      const toast = await this.getToastService();
       toast.error('Failed to publish blog');
       return null;
     }
@@ -258,7 +242,6 @@ export class BlogService extends Service {
       return blog;
     } catch (err) {
       console.error('Unpublish blog error:', err);
-      const toast = await this.getToastService();
       toast.error('Failed to unpublish blog');
       return null;
     }
@@ -267,9 +250,9 @@ export class BlogService extends Service {
   /**
    * Move a blog to a different directory
    */
-  async moveBlog(blogId: string, targetDirectoryId: string): Promise<boolean> {
+  async moveBlog(blogId: string, targetDirectoryId: string | null): Promise<boolean> {
     try {
-      const blog = await blogApi.updateBlog(blogId, { directoryId: targetDirectoryId });
+      const blog = await blogApi.updateBlog(blogId, { directoryId: targetDirectoryId ?? undefined });
       // Update in local state
       this.blogs = this.blogs.map((b) => (b.id === blogId ? blog : b));
       if (this.currentBlog?.id === blogId) {
@@ -278,7 +261,6 @@ export class BlogService extends Service {
       return true;
     } catch (err) {
       console.error('Move blog error:', err);
-      const toast = await this.getToastService();
       toast.error('Failed to move blog');
       return false;
     }

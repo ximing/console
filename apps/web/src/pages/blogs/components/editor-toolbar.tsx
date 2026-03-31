@@ -364,7 +364,7 @@ export const EditorToolbar = ({ editor }: EditorToolbarProps) => {
 
     switch (type) {
       case 'image':
-        editor.chain().focus().setImage({ src: url }).run();
+        editor.chain().focus().setCustomImage({ path: url }).run();
         break;
       case 'audio':
         editor.chain().focus().setAudio({ src: url }).run();
@@ -450,11 +450,11 @@ export const EditorToolbar = ({ editor }: EditorToolbarProps) => {
               }).run();
               break;
             case 'audio':
-              editor.chain().focus().setAudio({ src: result.url }).run();
+              editor.chain().focus().setAudio({ src: result.path }).run();
               break;
             case 'video':
               // For uploaded video files, use standard video HTML element
-              editor.chain().focus().insertContent(`<video src="${result.url}" controls style="max-width: 100%; height: auto;" />`).run();
+              editor.chain().focus().insertContent(`<video src="${result.path}" controls style="max-width: 100%; height: auto;" />`).run();
               break;
           }
         }

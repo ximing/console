@@ -3,7 +3,7 @@ import { view, useService } from '@rabjs/react';
 import { Folder, Clock } from 'lucide-react';
 import { DirectoryService } from '../../../../services/directory.service';
 import { BlogService } from '../../../../services/blog.service';
-import { ViewToggle, type ViewMode } from '../view-toggle';
+import { type ViewMode } from '../view-toggle';
 import { PageList } from './page-list';
 import { PagePreview } from './page-preview';
 import { InlineBlogEditor } from './inline-blog-editor';

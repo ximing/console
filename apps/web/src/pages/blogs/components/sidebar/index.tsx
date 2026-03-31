@@ -1,6 +1,5 @@
 import { view, useService } from '@rabjs/react';
 import { DirectoryService } from '../../../../services/directory.service';
-import { BlogService } from '../../../../services/blog.service';
 import { SearchButton } from './search-button';
 import { SidebarTabs } from './sidebar-tabs';
 import { RecentBlogList } from './recent-blog-list';
@@ -25,8 +24,8 @@ interface SidebarProps {
 
 export const Sidebar = view((props: SidebarProps) => {
   const directoryService = useService(DirectoryService);
-  const blogService = useService(BlogService);
-  const isLoading = blogService.loading || directoryService.loading;
+  // Only show loading for initial directory load, not for blog preview loads
+  const isLoading = directoryService.loading;
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-dark-800 border-r border-gray-200 dark:border-dark-700">
