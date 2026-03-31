@@ -394,7 +394,7 @@ Replace the existing `<img>` render with:
   );
 ```
 
-- [ ] **Step 9: Test manually**
+- [ ] **Step 7: Test manually**
 
 Run the app and:
 1. Insert an image into the blog editor
