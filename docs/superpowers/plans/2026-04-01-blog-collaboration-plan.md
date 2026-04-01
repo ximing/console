@@ -334,7 +334,7 @@ export function getUserColor(userId: string): string {
   let hash = 0;
   for (let i = 0; i < userId.length; i++) {
     hash = ((hash << 5) - hash) + userId.charCodeAt(i);
-    hash = hash & hash;
+    hash = hash | 0; // Keep within 32-bit integer bounds
   }
   return USER_COLORS[Math.abs(hash) % USER_COLORS.length];
 }
@@ -506,14 +506,73 @@ Find the `// Local state (UI-only, not duplicated in service)` section and add:
 const [collabProvider, setCollabProvider] = useState<ReturnType<typeof createCollaborationProvider> | null>(null);
 ```
 
-- [ ] **Step 3: Setup collaboration on mount**
+- [ ] **Step 3: Rewrite editor.tsx integration**
 
-Find the `// Load existing blog if editing` useEffect. After the content loading block, add a new effect for collaboration setup. Replace the editor initialization block to handle the Y.Doc from collaboration:
+**TipTap 3 constraint:** Extensions must be passed to `useEditor` at creation time — they cannot be dynamically added afterward. `editor.registerExtension()` does not exist in TipTap 3.
 
-The original `useEditor` call:
+**Correct approach:** Create Y.Doc + WebsocketProvider at component top level (not inside useEffect), then pass extensions to `useEditor` via `useMemo`. The `useEditor` hook must stay at the top level of the component.
+
+**Implementation:**
+
+1. **Add imports** (from Step 1) and **add state** (from Step 2) — already done.
+
+2. **Create collaboration infrastructure BEFORE useEditor** (at component top level, after state declarations):
+
+```ts
+// Determine blogId (available synchronously from params)
+const blogId = id || params.id;
+
+// Get JWT token — assumes token is available (non-httpOnly cookie or passed via server)
+// If token is httpOnly, this feature requires a separate collab token endpoint
+const token = localStorage.getItem('collab_token') || '';
+
+// Create Y.Doc + WebsocketProvider synchronously (blogId is known at this point)
+const ydoc = new Y.Doc();
+const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+const wsUrl = `${wsProtocol}//${window.location.host}`;
+const roomName = `blog:${blogId}`;
+const provider = new WebsocketProvider(wsUrl, roomName, ydoc, {
+  params: { token },
+});
+const awareness = provider.awareness;
+
+// Set local user awareness
+awareness.setLocalStateField('user', {
+  name: blogService.currentBlog?.userId || 'User',
+  color: '#f87171',
+  id: blogService.currentBlog?.userId || '',
+});
+```
+
+3. **Build extensions with useMemo** (includes Collaboration from the start):
+
+```ts
+// Build extensions — Collaboration is included from the start
+const extensions = useMemo(() => {
+  return [
+    ...editableExtensions,
+    Collaboration.configure({
+      document: ydoc,
+    }),
+    CollaborationCursor.configure({
+      provider: provider,
+      user: {
+        name: blogService.currentBlog?.userId || 'User',
+        color: '#f87171',
+      },
+    }),
+  ];
+}, [ydoc, provider]); // Only rebuild if ydoc/provider changes
+
+// Keep a ref to the provider for cleanup
+const providerRef = useRef(provider);
+```
+
+4. **Replace the useEditor call** — pass the extensions from useMemo:
+
 ```ts
 const editor = useEditor({
-  extensions: editableExtensions,
+  extensions,
   content: '',
   editorProps: {
     attributes: {
@@ -522,7 +581,6 @@ const editor = useEditor({
     },
   },
   onUpdate: ({ editor }) => {
-    // Trigger auto-save when content changes
     if (isEditing && blogService.currentBlog) {
       const content = editor.getJSON();
       blogService.updateBlog(blogId!, {
@@ -534,98 +592,45 @@ const editor = useEditor({
 });
 ```
 
-Replace the entire editor initialization with this collaborative version. The key changes are:
-1. Move `useEditor` call inside a useEffect that waits for `contentLoaded`
-2. Create the collaboration provider first
-3. Pass `Collaboration.configure({ document: ydoc })` and `CollaborationCursor.configure({ provider, user: {...} })` to the editor extensions
-4. On `provider.synced`, set initial content if Y.Doc is empty
+5. **Handle initial content sync** — in a useEffect that listens to `provider.synced`:
 
 ```ts
-// Collaboration setup effect
+// Set initial content after Y.Doc syncs
 useEffect(() => {
-  if (!isEditing || !blogId || !editor || !contentLoaded) return;
+  if (!editor || !contentLoaded) return;
 
-  // Get JWT token from cookie or localStorage
-  const token = document.cookie.match(/aimo_token=([^;]+)/)?.[1]
-    || localStorage.getItem('aimo_token')
-    || '';
-
-  // Get current user from blog service or localStorage
-  const currentUser = {
-    id: blogService.currentBlog?.userId || localStorage.getItem('user_id') || '',
-    name: blogService.currentBlog?.userId || 'Anonymous', // TODO: pass actual username
-  };
-
-  const provider = createCollaborationProvider(blogId, currentUser, token);
-  setCollabProvider(provider);
-
-  // Add collaboration extensions to the existing editor
-  editor.register(Collaboration);
-  editor.register(CollaborationCursor);
-
-  // Set up initial content after sync
-  provider.provider.on('synced', () => {
-    // If Y.Doc has no content yet and we have blog content, set it
-    const ytext = provider.ydoc.getText('prosemirror');
+  // After first sync, if Y.Doc is empty and we have blog content, load it
+  const handleSync = () => {
+    const ytext = ydoc.getText('prosemirror');
     if (ytext.length === 0 && blogService.currentBlog?.content) {
       editor.commands.setContent(blogService.currentBlog.content);
     }
-  });
+  };
+
+  provider.on('synced', handleSync);
+
+  // Also check immediately in case already synced
+  handleSync();
 
   return () => {
-    provider.destroy();
-    setCollabProvider(null);
+    provider.off('synced', handleSync);
   };
-}, [isEditing, blogId, editor, contentLoaded]);
+}, [editor, contentLoaded, ydoc, blogService.currentBlog]);
 ```
 
-**Note:** The `editor.register()` calls may not be the right API for TipTap. Instead, the collaboration extensions need to be passed to `useEditor` at creation time. Refactor to use a `useMemo` for extensions that includes Collaboration when `collabProvider` is set.
-
-Better approach — use a `useMemo` for extensions:
+6. **Cleanup on unmount** — add to the existing cleanup logic:
 
 ```ts
-// Build extensions with collaboration when provider is available
-const extensions = useMemo(() => {
-  const base = editableExtensions;
-  if (!collabProvider) return base;
-
-  return [
-    ...base,
-    Collaboration.configure({
-      document: collabProvider.ydoc,
-    }),
-    CollaborationCursor.configure({
-      provider: collabProvider.provider,
-      user: {
-        name: blogService.currentBlog?.userId || 'User',
-        color: '#f87171',
-      },
-    }),
-  ];
-}, [collabProvider, blogService.currentBlog?.userId]);
-
-// Replace the static useEditor call
-const editor = useEditor({
-  extensions,
-  // ... rest of config
-});
+// In the component's return cleanup (if any), or add:
+useEffect(() => {
+  return () => {
+    providerRef.current.destroy();
+    ydoc.destroy();
+  };
+}, []);
 ```
 
-And update the `useEffect` that creates the provider to also update the editor extensions:
-
-```ts
-// In the collab setup effect, after setting collabProvider:
-// Force editor to reconfigure with new extensions
-if (editor && collabProvider) {
-  editor.registerExtension(Collaboration.configure({ document: collabProvider.ydoc }));
-  editor.registerExtension(CollaborationCursor.configure({
-    provider: collabProvider.provider,
-    user: { name: 'User', color: '#f87171' },
-  }));
-}
-```
-
-**Important:** TipTap 3's `useEditor` with `extensions` prop only applies on initial creation. To add extensions dynamically after creation, use `editor.registerExtension()`. Verify TipTap 3 API for `registerExtension`.
+**Why this works:** TipTap 3's extensions are immutable after editor creation. By creating the Y.Doc and WebsocketProvider before `useEditor`, we can pass them to `Collaboration.configure()` at creation time. The `blogId` is known synchronously from props/params, so there's no chicken-and-egg problem.
 
 - [ ] **Step 4: Add CollabPresence to render**
 
