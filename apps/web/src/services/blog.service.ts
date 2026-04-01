@@ -310,6 +310,18 @@ export class BlogService extends Service {
   }
 
   /**
+   * Save a collaboration content snapshot to MySQL via server
+   */
+  async saveSnapshot(id: string, contentSnapshot: string): Promise<void> {
+    try {
+      await blogApi.saveSnapshot(id, contentSnapshot);
+    } catch (err) {
+      console.error('Save snapshot error:', err);
+      // Don't show toast — snapshot failure shouldn't interrupt user
+    }
+  }
+
+  /**
    * Update blog title (triggers auto-save)
    */
   updateTitle(title: string): void {
