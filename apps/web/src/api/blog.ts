@@ -105,6 +105,13 @@ export const blogApi = {
     );
     return response.data;
   },
+
+  /**
+   * Save collaboration snapshot for a blog
+   */
+  saveSnapshot: async (blogId: string, contentSnapshot: string): Promise<void> => {
+    await request.patch(`/api/v1/blogs/${blogId}/snapshot`, { contentSnapshot });
+  },
 };
 
 /**
