@@ -20,6 +20,8 @@
     "@rabjs/react": "^9.0.5",
     "@tiptap/core": "^3.21.0",
     "@tiptap/extension-audio": "^3.21.0",
+    "@tiptap/extension-collaboration": "3.21.0",
+    "@tiptap/extension-collaboration-cursor": "3.0.0",
     "@tiptap/extension-color": "^3.21.0",
     "@tiptap/extension-font-family": "^3.21.0",
     "@tiptap/extension-highlight": "^3.21.0",
@@ -51,7 +53,10 @@
     "react-router": "^7.13.0",
     "react-syntax-highlighter": "^16.1.1",
     "slugify": "^1.6.8",
-    "socket.io-client": "^4.8.3"
+    "socket.io-client": "^4.8.3",
+    "y-protocols": "^1.0.7",
+    "y-websocket": "^3.0.0",
+    "yjs": "^13.6.30"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

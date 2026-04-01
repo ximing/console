@@ -61,6 +61,7 @@
     "socket.io": "^4.8.3",
     "typedi": "^0.10.0",
     "urllib": "^2.44.0",
+    "y-websocket": "^2.1.0",
     "zod": "^3.22.0"
   },
   "devDependencies": {
