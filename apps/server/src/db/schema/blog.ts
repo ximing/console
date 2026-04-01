@@ -24,6 +24,9 @@ export const blogs = mysqlTable(
       .notNull()
       .defaultNow()
       .$onUpdate(() => new Date()),
+    // NEW COLUMNS:
+    contentSnapshot: text('content_snapshot'),
+    lastSnapshotAt: timestamp('last_snapshot_at', { mode: 'date', fsp: 3 }),
   },
   (table) => ({
     userIdIdx: index('user_id_idx').on(table.userId),
