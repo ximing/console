@@ -10,7 +10,6 @@ import NotFoundPage from './pages/not-found';
 import CommandPalettePage from './pages/command-palette';
 import GithubPage from './pages/github';
 import BlogPage from './pages/blogs';
-import { BlogEditorPage } from './pages/blogs/components/blog-editor-page';
 import { ProtectedRoute } from './components/protected-route';
 import { ToastContainer } from './components/toast';
 import { CommandPalette } from './components/command-palette/command-palette';
@@ -113,14 +112,6 @@ function App() {
           element={
             <ProtectedRoute>
               <BlogPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/blogs/editor/*"
-          element={
-            <ProtectedRoute>
-              <BlogEditorPage />
             </ProtectedRoute>
           }
         />

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { view, useService } from '@rabjs/react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import { Layout } from '../../components/layout';
 import { BlogService } from '../../services/blog.service';
 import { DirectoryService } from '../../services/directory.service';
@@ -8,6 +8,7 @@ import { ToastService } from '../../services/toast.service';
 import { Sidebar } from './components/sidebar';
 import { ResizableSidebar } from './components/sidebar/resizable-sidebar';
 import { PageList } from './components/content/page-list';
+import { BlogEditorPage } from './components/blog-editor-page';
 import { SearchModal } from './components/search-modal';
 import type { BlogDto } from '@x-console/dto';
 import type { ViewMode } from './components/view-toggle';
@@ -21,6 +22,10 @@ export const BlogListPage = view(() => {
   const directoryService = useService(DirectoryService);
   const toastService = useService(ToastService);
   const navigate = useNavigate();
+  const params = useParams();
+
+  // Get selected blog id from URL (e.g., /blogs/:id)
+  const selectedBlogId = params.id;
 
   // UI State
   const [activeTab, setActiveTab] = useState<'directory' | 'recent'>('directory');
@@ -62,7 +67,7 @@ export const BlogListPage = view(() => {
 
       if (blog) {
         toastService.success('博客创建成功');
-        navigate(`/blogs/editor/${blog.id}`);
+        navigate(`/blogs/${blog.id}`);
       }
     } catch {
       toastService.error('创建博客失败');
@@ -89,18 +94,22 @@ export const BlogListPage = view(() => {
   // Select page (blog) - navigate to editor page
   const handleSelectPage = (pageId: string) => {
     // Navigate to editor page (which shows preview mode by default)
-    navigate(`/blogs/editor/${pageId}`);
+    navigate(`/blogs/${pageId}`);
   };
 
   // Edit page (switch to inline edit mode)
   const handleEditPage = (blog: BlogDto) => {
     // Navigate to editor page
-    navigate(`/blogs/editor/${blog.id}`);
+    navigate(`/blogs/${blog.id}`);
   };
 
   // Back to directory list
   const handleBack = () => {
-    setSelectedDirectoryId(null);
+    if (selectedBlogId) {
+      navigate('/blogs');
+    } else {
+      setSelectedDirectoryId(null);
+    }
   };
 
   // Expand directory (called from SearchModal)
@@ -119,7 +128,7 @@ export const BlogListPage = view(() => {
           <Sidebar
             activeTab={activeTab}
             onTabChange={setActiveTab}
-            selectedBlogId={null}
+            selectedBlogId={selectedBlogId || null}
             onSelectBlog={handleSelectPage}
             initialExpandedIds={initialExpandedIds}
             selectedDirectoryId={selectedDirectoryId}
@@ -134,7 +143,12 @@ export const BlogListPage = view(() => {
 
         {/* Right Content Area */}
         <div className="flex-1 overflow-hidden bg-gray-50 dark:bg-dark-900">
-          {selectedDirectoryId ? (
+          {selectedBlogId ? (
+            <BlogEditorPage
+              pageId={selectedBlogId}
+              onBack={handleBack}
+            />
+          ) : selectedDirectoryId ? (
             <PageList
               directoryId={selectedDirectoryId}
               directoryName={directoryService.directories.find((d) => d.id === selectedDirectoryId)?.name || ''}
