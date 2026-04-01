@@ -46,11 +46,12 @@ export const BlogEditorPage = view(({ pageId: pageIdProp, onBack: onBackProp }: 
 
   // State
   const [isPreview, setIsPreview] = useState(true);
-  const [title, setTitle] = useState(blog?.title || '');
-  const [selectedTagIds, setSelectedTagIds] = useState<string[]>(blog?.tags.map((t) => t.id) || []);
+  const [title, setTitle] = useState('');
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [isPublishing, setIsPublishing] = useState(false);
   const [contentLoaded, setContentLoaded] = useState(false);
   const [localSaving, setLocalSaving] = useState(false);
+  const [blogLoading, setBlogLoading] = useState(false);
 
   // Refs for debounce
   const titleRef = useRef(blog?.title || '');
@@ -80,7 +81,10 @@ export const BlogEditorPage = view(({ pageId: pageIdProp, onBack: onBackProp }: 
   // Load blog and tags on mount
   useEffect(() => {
     if (pageId) {
-      blogService.loadBlog(pageId);
+      setBlogLoading(true);
+      blogService.loadBlog(pageId).finally(() => {
+        setBlogLoading(false);
+      });
     }
     tagService.loadTags();
   }, [pageId, blogService, tagService]);
@@ -104,6 +108,17 @@ export const BlogEditorPage = view(({ pageId: pageIdProp, onBack: onBackProp }: 
       setContentLoaded(true);
     }
   }, [blog, previewEditor, editEditor]);
+
+  // Also update when pageId changes (blog might not be loaded yet)
+  useEffect(() => {
+    if (pageId && blog && blog.id !== pageId) {
+      // Blog doesn't match the pageId, need to reload
+      setBlogLoading(true);
+      blogService.loadBlog(pageId).finally(() => {
+        setBlogLoading(false);
+      });
+    }
+  }, [pageId, blog, blogService]);
 
   // Debounced save function
   const debouncedSave = useCallback(() => {
@@ -248,7 +263,7 @@ export const BlogEditorPage = view(({ pageId: pageIdProp, onBack: onBackProp }: 
   }, [blog, blogService, toastService, onBack]);
 
   // Loading state
-  if (blogService.loading && !contentLoaded) {
+  if (blogLoading) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="w-6 h-6 animate-spin text-gray-500 dark:text-gray-400" />
