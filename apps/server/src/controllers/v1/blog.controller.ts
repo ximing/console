@@ -615,4 +615,26 @@ export class BlogController {
       return ResponseUtility.error(ErrorCode.DB_ERROR);
     }
   }
+
+  /**
+   * PATCH /api/v1/blogs/:id/snapshot - Save collaboration snapshot for a blog
+   */
+  @Patch('/:id/snapshot')
+  async saveSnapshot(
+    @CurrentUser() userDto: UserInfoDto,
+    @Param('id') id: string,
+    @Body() body: { contentSnapshot: string }
+  ) {
+    try {
+      if (!userDto?.id) {
+        return ResponseUtility.error(ErrorCode.UNAUTHORIZED);
+      }
+
+      await this.blogService.saveSnapshot(id, userDto.id, body.contentSnapshot);
+      return { success: true };
+    } catch (error) {
+      logger.error('Save snapshot error:', error);
+      return ResponseUtility.error(ErrorCode.DB_ERROR);
+    }
+  }
 }
