@@ -282,7 +282,7 @@ export const BlogEditorPage = view(({ pageId: pageIdProp, onBack: onBackProp }: 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-dark-900">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-gray-200 dark:border-dark-700 shrink-0">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-dark-700 shrink-0">
         <div className="flex items-center gap-2">
           <button
             onClick={onBack}

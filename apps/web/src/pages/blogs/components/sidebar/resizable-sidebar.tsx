@@ -169,7 +169,7 @@ export function ResizableSidebar({
       <button
         onClick={toggleCollapse}
         aria-label="收起侧边栏"
-        className="absolute top-2 right-2 p-1.5 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
+        className="absolute top-2 right-2 p-2 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
       >
         <PanelLeftClose className="w-4 h-4 text-gray-500 dark:text-gray-400" />
       </button>
