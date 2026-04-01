@@ -238,26 +238,27 @@ Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
 Add these imports near the top of the file (after existing imports):
 
 ```ts
-import { setupWSConnection } from 'y-websocket/bin/utils';
 import { collabAuthMiddleware } from './middlewares/collab-auth.js';
 import { logger } from './utils/logger.js';
 ```
 
-Find the section after `// Initialize Socket.IO` in `app.ts` and add the y-websocket route **before** the Socket.IO initialization:
+Find the section after `// Initialize Socket.IO` in `app.ts` and add the y-websocket route **before** the Socket.IO initialization. Since `y-websocket/bin/utils` is CommonJS and this project is ESM, use dynamic import:
 
 ```ts
 // y-websocket collaboration server at /collab-ws route
-app.use('/collab-ws', collabAuthMiddleware, (req: any, socket: any, head: any) => {
+app.use('/collab-ws', collabAuthMiddleware, async (req: any, socket: any, head: any) => {
   const room = req.collabRoom;
   const docName = room; // e.g. "blog:{id}"
 
   logger.info(`Collab WebSocket connecting`, { room, userId: req.collabUser.id });
 
+  // Dynamic import because y-websocket/bin/utils is CommonJS and this project is ESM
+  const { setupWSConnection } = await import('y-websocket/bin/utils');
   setupWSConnection(req, socket, { docName });
 });
 ```
 
-**Note:** The `setupWSConnection` from `y-websocket/bin/utils` expects `(req, socket, opts)` where opts can have `docName`. The `head` (Buffer) parameter is for WebSocket upgrade headers.
+**Note:** The `head` (Buffer) parameter is for WebSocket upgrade headers. The `setupWSConnection` function is called synchronously after the dynamic import resolves.
 
 - [ ] **Step 2: Commit**
 
