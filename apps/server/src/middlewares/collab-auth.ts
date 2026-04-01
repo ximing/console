@@ -24,8 +24,26 @@ export function verifyCollabToken(token: string): CollabUser | null {
 }
 
 /**
+ * Write a raw HTTP response to a Node.js socket (for WebSocket upgrade rejections).
+ */
+function writeHttpResponse(socket: any, status: number, message: string): void {
+  const body = JSON.stringify({ success: false, message });
+  const response = [
+    `HTTP/1.1 ${status} ${message}`,
+    'Content-Type: application/json',
+    `Content-Length: ${Buffer.byteLength(body)}`,
+    'Connection: close',
+    '',
+    body,
+  ].join('\r\n');
+  socket.write(response);
+  socket.destroy();
+}
+
+/**
  * Express middleware for y-websocket upgrade route.
  * Validates token query param and attaches user to request.
+ * Handles both regular HTTP and WebSocket upgrade contexts.
  */
 export function collabAuthMiddleware(req: Request, res: any, next: any): void {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -33,18 +51,18 @@ export function collabAuthMiddleware(req: Request, res: any, next: any): void {
   const room = url.searchParams.get('room');
 
   if (!token) {
-    res.status(401).json({ success: false, message: 'Token required' });
+    writeHttpResponse(res, 401, 'Token required');
     return;
   }
 
   if (!room) {
-    res.status(400).json({ success: false, message: 'Room required' });
+    writeHttpResponse(res, 400, 'Room required');
     return;
   }
 
   const user = verifyCollabToken(token);
   if (!user) {
-    res.status(401).json({ success: false, message: 'Invalid token' });
+    writeHttpResponse(res, 401, 'Invalid token');
     return;
   }
 
