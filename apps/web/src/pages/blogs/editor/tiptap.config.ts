@@ -48,7 +48,10 @@ export const createLinkExtension = (config: { openOnClick?: boolean }) =>
 
 /** 基础内容扩展 - 预览和编辑都需要的 */
 export const baseContentExtensions = [
-  StarterKit,
+  StarterKit.configure({
+    // Disable built-in undo/redo — Yjs UndoManager handles collaborative undo
+    undoRedo: false,
+  }),
   TiptapTable.configure({
     resizable: true,
   }),
