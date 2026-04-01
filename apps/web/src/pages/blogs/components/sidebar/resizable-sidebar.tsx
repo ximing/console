@@ -155,8 +155,8 @@ export function ResizableSidebar({
 
       {/* Drag handle */}
       <div
-        className={`w-2 cursor ew-resize hover:bg-primary-500/50 active:bg-primary-500 transition-colors flex-shrink-0 ${
-          isDragging ? 'bg-primary-500' : ''
+        className={`w-1 cursor ew-resize hover:bg-gray-300 dark:hover:bg-zinc-600 active:bg-gray-400 dark:active:bg-zinc-500 transition-colors flex-shrink-0 ${
+          isDragging ? 'bg-gray-300 dark:bg-zinc-600' : ''
         }`}
         onMouseDown={handleDragStart}
         onTouchStart={handleDragStart}

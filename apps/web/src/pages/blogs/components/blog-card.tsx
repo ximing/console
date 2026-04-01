@@ -54,7 +54,7 @@ export const BlogCard = view(({ blog, directoryName, onClick, onEdit }: BlogCard
         {onEdit && (
           <button
             onClick={handleEditClick}
-            className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded-lg transition-all duration-150 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+            className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded-lg transition-all duration-150 focus:opacity-100 focus:outline-none"
             title="编辑"
           >
             <Edit2 className="w-3.5 h-3.5 text-gray-500 dark:text-zinc-400" />

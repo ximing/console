@@ -112,7 +112,7 @@ export const PageList = view((props: PageListProps) => {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortBy)}
-            className="px-3 py-1.5 text-sm border border-gray-200/80 dark:border-zinc-800/60 rounded-lg bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500/50 transition-all"
+            className="px-3 py-1.5 text-sm border border-gray-200/80 dark:border-zinc-800/60 rounded-lg bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 focus:outline-none focus:border-gray-400 dark:focus:border-zinc-600 transition-all"
           >
             <option value="updatedAt">更新时间↓</option>
             <option value="createdAt">创建时间↓</option>
@@ -171,7 +171,7 @@ export const PageList = view((props: PageListProps) => {
                           setSelectedTags(selectedTags.filter(t => t !== tag));
                         }
                       }}
-                      className="rounded border-gray-300 dark:border-zinc-600 text-primary-600 dark:text-primary-400 focus:ring-primary-500/30"
+                      className="rounded border-gray-300 dark:border-zinc-600 text-primary-600 dark:text-primary-400"
                     />
                     <span className="text-sm text-gray-700 dark:text-zinc-300">{tag}</span>
                   </label>

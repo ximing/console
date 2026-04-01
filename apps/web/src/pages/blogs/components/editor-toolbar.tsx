@@ -757,7 +757,7 @@ export const EditorToolbar = ({ editor, blogId }: EditorToolbarProps) => {
               onChange={(e) => setPendingInsert({ ...pendingInsert, url: e.target.value })}
               onKeyDown={handleKeyDown}
               placeholder={getPlaceholder(pendingInsert.type)}
-              className="flex-1 min-w-[200px] px-2 py-1 text-sm bg-white dark:bg-zinc-700 border border-gray-300 dark:border-zinc-600 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 text-gray-900 dark:text-white placeholder:text-gray-400"
+              className="flex-1 min-w-[200px] px-2 py-1 text-sm bg-white dark:bg-zinc-700 border border-gray-300 dark:border-zinc-600 rounded focus:outline-none focus:border-gray-400 dark:focus:border-zinc-500 text-gray-900 dark:text-zinc-50 placeholder:text-gray-400"
               autoFocus
             />
             <ToolbarButton onClick={handleInsertConfirm} title="确认">
