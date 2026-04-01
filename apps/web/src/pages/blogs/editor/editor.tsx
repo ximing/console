@@ -238,6 +238,23 @@ export const BlogEditor = view(({ id }: BlogEditorProps) => {
     };
   }, [ydoc]);
 
+  // 30-second snapshot timer
+  useEffect(() => {
+    if (!provider || !ydoc || !blogId) return;
+
+    const SNAPSHOT_INTERVAL = 30000; // 30 seconds
+
+    const timer = setInterval(() => {
+      const content = editorRef.current?.getJSON();
+      if (content) {
+        const snapshot = JSON.stringify(content);
+        blogService.saveSnapshot(blogId, snapshot);
+      }
+    }, SNAPSHOT_INTERVAL);
+
+    return () => clearInterval(timer);
+  }, [provider, ydoc, blogId, blogService]);
+
   // Handle title change with auto-save
   const handleTitleChange = useCallback(
     (newTitle: string) => {
