@@ -537,7 +537,9 @@ const awareness = provider?.awareness;
 
 // Set local user awareness (deferred until blogService.currentUser is available)
 const userId = blogService.currentBlog?.userId || '';
-const userName = blogService.currentBlog?.userId || 'User'; // TODO: use actual username
+// TODO: get actual username — currentBlog.userId is the user's ID, not their name
+// For now, use a placeholder until user name is available from auth context
+const userName = blogService.currentBlog?.userId ? `User ${userId.slice(0, 6)}` : 'Guest';
 const userColor = USER_COLORS[Math.abs(userId.split('').reduce((h, c) => ((h << 5) - h) + c.charCodeAt(0), 0)) % USER_COLORS.length];
 
 useEffect(() => {
@@ -555,20 +557,26 @@ useEffect(() => {
 ```ts
 // Build extensions — Collaboration is included from the start
 const extensions = useMemo(() => {
-  return [
-    ...editableExtensions,
-    Collaboration.configure({
-      document: ydoc,
-    }),
-    CollaborationCursor.configure({
-      provider: provider,
-      user: {
-        name: userName,
-        color: userColor,
-      },
-    }),
-  ];
-}, [ydoc, provider, userName, userColor]); // rebuild when user info changes
+  const baseExtensions = [...editableExtensions];
+
+  // Collaboration extension always included (ydoc is always created)
+  baseExtensions.push(Collaboration.configure({ document: ydoc }));
+
+  // CollaborationCursor only when provider is available (blog is being edited)
+  if (provider) {
+    baseExtensions.push(
+      CollaborationCursor.configure({
+        provider: provider,
+        user: {
+          name: userName,
+          color: userColor,
+        },
+      })
+    );
+  }
+
+  return baseExtensions;
+}, [ydoc, provider, userName, userColor]); // rebuild when provider or user info changes
 ```
 
 4. **Replace the useEditor call** — pass the extensions from useMemo:
@@ -600,7 +608,7 @@ const editor = useEditor({
 ```ts
 // Set initial content after Y.Doc syncs
 useEffect(() => {
-  if (!editor || !contentLoaded) return;
+  if (!editor || !contentLoaded || !provider) return;
 
   // After first sync, if Y.Doc is empty and we have blog content, load it
   const handleSync = () => {
@@ -618,7 +626,7 @@ useEffect(() => {
   return () => {
     provider.off('synced', handleSync);
   };
-}, [editor, contentLoaded, ydoc, blogService.currentBlog]);
+}, [editor, contentLoaded, ydoc, provider, blogService.currentBlog]);
 ```
 
 6. **Cleanup on unmount** — add to the existing cleanup logic:
@@ -627,10 +635,11 @@ useEffect(() => {
 // In the component's return cleanup (if any), or add:
 useEffect(() => {
   return () => {
-    providerRef.current.destroy();
+    // provider may be null if blogId was falsy
+    provider?.destroy();
     ydoc.destroy();
   };
-}, []);
+}, [provider, ydoc]);
 ```
 
 **Why this works:** TipTap 3's extensions are immutable after editor creation. By creating the Y.Doc and WebsocketProvider before `useEditor`, we can pass them to `Collaboration.configure()` at creation time. The `blogId` is known synchronously from props/params, so there's no chicken-and-egg problem.
