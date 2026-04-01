@@ -116,29 +116,29 @@ export function ResizableSidebar({
   if (isCollapsed) {
     return (
       <div
-        className="flex flex-col h-full bg-white dark:bg-dark-800 border-r border-gray-200 dark:border-dark-700 items-center py-2"
+        className="flex flex-col h-full bg-white dark:bg-zinc-800 border-r border-gray-200 dark:border-zinc-700 items-center py-2"
         style={{ width: collapsedWidth }}
       >
         <button
           onClick={toggleCollapse}
           aria-label="展开侧边栏"
-          className="p-2 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
+          className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded-lg transition-colors"
         >
-          <PanelLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+          <PanelLeft className="w-5 h-5 text-gray-600 dark:text-zinc-400" />
         </button>
         <button
           onClick={onSearchClick}
           aria-label="搜索"
-          className="p-2 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors mt-2"
+          className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded-lg transition-colors mt-2"
         >
-          <Search className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+          <Search className="w-5 h-5 text-gray-600 dark:text-zinc-400" />
         </button>
         <button
           onClick={onNewBlog}
           aria-label="新建博客"
-          className="p-2 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors mt-2"
+          className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded-lg transition-colors mt-2"
         >
-          <Plus className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+          <Plus className="w-5 h-5 text-gray-600 dark:text-zinc-400" />
         </button>
       </div>
     );
@@ -169,9 +169,9 @@ export function ResizableSidebar({
       <button
         onClick={toggleCollapse}
         aria-label="收起侧边栏"
-        className="absolute top-2 right-2 p-2 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
+        className="absolute top-2 right-2 p-2 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded-lg transition-colors"
       >
-        <PanelLeftClose className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+        <PanelLeftClose className="w-4 h-4 text-gray-500 dark:text-zinc-400" />
       </button>
     </div>
   );

@@ -64,6 +64,7 @@ export const baseContentExtensions = [
 /** 只读预览扩展 */
 export const previewExtensions = [
   ...baseContentExtensions,
+  Highlight.configure({ multicolor: true }),
   createLinkExtension({ openOnClick: true }),
 ];
 

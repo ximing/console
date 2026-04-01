@@ -1,27 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  font-family:
-    Menlo,
-    'Meslo LG',
-    'Helvetica Neue',
-    Helvetica,
-    Arial,
-    sans-serif,
-    '微软雅黑',
-    monospace,
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto;
+  /* === DESIGN TOKENS: LIGHT THEME === */
+
+  /* Primary - Green Scale */
+  --color-primary-50: #f0fdf4;
+  --color-primary-100: #dcfce7;
+  --color-primary-200: #bbf7d0;
+  --color-primary-300: #86efac;
+  --color-primary-400: #4ade80;
+  --color-primary-500: #22c55e;
+  --color-primary-600: #16a34a;
+  --color-primary-700: #15803d;
+  --color-primary-800: #166534;
+  --color-primary-900: #145231;
+  --color-primary-950: #0d3422;
+
+  /* Semantic Surfaces */
+  --color-bg-primary: #ffffff;
+  --color-bg-surface: #f9fafb;
+  --color-bg-elevated: #ffffff;
+  --color-bg-overlay: rgba(249, 250, 251, 0.8);
+
+  /* Text */
+  --color-text-primary: #111827;
+  --color-text-secondary: #374151;
+  --color-text-muted: #6b7280;
+  --color-text-disabled: #9ca3af;
+
+  /* Borders */
+  --color-border-default: #e5e7eb;
+  --color-border-subtle: #f3f4f6;
+  --color-border-focus: #22c55e;
+
+  /* Status Colors */
+  --color-success-bg: #ecfdf5;
+  --color-success-text: #059669;
+  --color-warning-bg: #fffbeb;
+  --color-warning-text: #d97706;
+  --color-error-bg: #fef2f2;
+  --color-error-text: #dc2626;
+
+  /* Semantic Aliases */
+  --color-primary: var(--color-primary-500);
+  --color-primary-hover: var(--color-primary-600);
+
+  /* Typography */
+  font-family: 'Inter', 'Noto Sans JP', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: light;
-  color: #1f2937;
-  background-color: #f9fafb;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-surface);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -30,9 +65,36 @@
 }
 
 html.dark {
+  /* === DESIGN TOKENS: DARK THEME === */
+
+  /* Semantic Surfaces */
+  --color-bg-primary: #09090b;
+  --color-bg-surface: #18181b;
+  --color-bg-elevated: #27272a;
+  --color-bg-overlay: rgba(24, 24, 27, 0.8);
+
+  /* Text */
+  --color-text-primary: #fafafa;
+  --color-text-secondary: #a1a1aa;
+  --color-text-muted: #71717a;
+  --color-text-disabled: #52525b;
+
+  /* Borders */
+  --color-border-default: #27272a;
+  --color-border-subtle: #3f3f46;
+  --color-border-focus: #4ade80;
+
+  /* Status Colors */
+  --color-success-bg: rgba(16, 185, 129, 0.1);
+  --color-success-text: #34d399;
+  --color-warning-bg: rgba(245, 158, 11, 0.1);
+  --color-warning-text: #fbbf24;
+  --color-error-bg: rgba(239, 68, 68, 0.1);
+  --color-error-text: #f87171;
+
   color-scheme: dark;
-  color: #e5e7eb;
-  background-color: #0f1117;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-primary);
 }
 
 body {
@@ -72,11 +134,11 @@ body {
 }
 
 html.dark ::-webkit-scrollbar-thumb {
-  background: #4b5563;
+  background: #3f3f46;
 }
 
 html.dark ::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
+  background: #52525b;
 }
 
 /* Firefox */
@@ -86,7 +148,45 @@ html.dark ::-webkit-scrollbar-thumb:hover {
 }
 
 html.dark {
-  scrollbar-color: #4b5563 transparent;
+  scrollbar-color: #3f3f46 transparent;
+}
+
+/* Focus ring styles for accessibility */
+:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+html.dark :focus-visible {
+  outline-color: var(--color-border-focus);
+}
+
+/* Remove default focus outline and use custom */
+*:focus {
+  outline: none;
+}
+
+/* Smooth transitions for interactive elements */
+button,
+a,
+input,
+select,
+textarea {
+  transition: background-color 0.15s ease-in-out,
+              border-color 0.15s ease-in-out,
+              color 0.15s ease-in-out,
+              box-shadow 0.15s ease-in-out;
+}
+
+/* Prevent layout shift from animations */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Smooth theme transitions for elements with transition-colors */
@@ -126,11 +226,11 @@ table th {
 /* Dark mode table styles */
 html.dark table td,
 html.dark table th {
-  border-color: #374151;
+  border-color: #3f3f46;
 }
 
 html.dark table th {
-  background-color: #1f2937;
+  background-color: #27272a;
 }
 
 /* Selected cell in table */

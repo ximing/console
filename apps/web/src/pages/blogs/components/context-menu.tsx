@@ -49,7 +49,7 @@ export const ContextMenu = view(({ visible, x, y, items, onClose }: ContextMenuP
   return (
     <div
       ref={ref}
-      className="fixed z-50 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg shadow-lg py-1 min-w-[140px]"
+      className="fixed z-50 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg shadow-lg py-1 min-w-[140px]"
       style={{ left: adjustedX, top: adjustedY }}
     >
       {items.map((item, index) => (
@@ -62,7 +62,7 @@ export const ContextMenu = view(({ visible, x, y, items, onClose }: ContextMenuP
           className={`flex items-center gap-2 w-full px-3 py-1.5 text-sm text-left transition-colors ${
             item.danger
               ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
-              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-700'
+              : 'text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700'
           }`}
         >
           {item.icon && <span className="w-4 h-4">{item.icon}</span>}

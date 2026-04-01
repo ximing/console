@@ -72,7 +72,7 @@ const ToolbarButton = ({
       ${
         isActive
           ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
-          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700'
+          : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-dark-700'
       }
       ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
       disabled:opacity-50 disabled:cursor-not-allowed
@@ -82,7 +82,7 @@ const ToolbarButton = ({
   </button>
 );
 
-const ToolbarDivider = () => <div className="w-px h-6 bg-gray-200 dark:bg-dark-700 mx-1" />;
+const ToolbarDivider = () => <div className="w-px h-6 bg-gray-200 dark:bg-zinc-700 mx-1" />;
 
 const ColorPicker = ({
   color,
@@ -120,7 +120,7 @@ const ColorPicker = ({
           setIsOpen(!isOpen);
         }}
         title={title}
-        className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700"
+        className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors text-sm text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-dark-700"
       >
         {title === '字体颜色' ? (
           <Palette className="w-4 h-4" style={color ? { color } : {}} />
@@ -129,7 +129,7 @@ const ColorPicker = ({
         )}
       </button>
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 p-2 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg shadow-lg z-50">
+        <div className="absolute top-full left-0 mt-1 p-2 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg shadow-lg z-50">
           <Sketch
             color={color || '#000000'}
             onChange={(colorResult) => {
@@ -144,7 +144,7 @@ const ColorPicker = ({
                 onChange(null);
                 setIsOpen(false);
               }}
-              className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-gray-200"
             >
               清除
             </button>
@@ -189,13 +189,13 @@ const TableColorPicker = ({
           setIsOpen(!isOpen);
         }}
         title="单元格背景色"
-        className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700"
+        className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors text-sm text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-dark-700"
       >
         <Palette className="w-4 h-4" style={color ? { color } : {}} />
         <span>颜色</span>
       </button>
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 p-2 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg shadow-lg z-50">
+        <div className="absolute top-full left-0 mt-1 p-2 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg shadow-lg z-50">
           <Sketch
             color={color || '#000000'}
             onChange={(colorResult) => {
@@ -209,7 +209,7 @@ const TableColorPicker = ({
                 onChange(null);
                 setIsOpen(false);
               }}
-              className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-gray-200"
             >
               清除
             </button>
@@ -256,7 +256,7 @@ const FontSizeSelect = ({ editor }: { editor: Editor }) => {
         }
         editor.chain().focus().setFontSize(size).run();
       }}
-      className="px-2 py-1.5 text-sm bg-transparent dark:bg-transparent hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg focus:outline-none text-gray-700 dark:text-gray-300 cursor-pointer"
+      className="px-2 py-1.5 text-sm bg-transparent dark:bg-transparent hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg focus:outline-none text-gray-700 dark:text-zinc-300 cursor-pointer"
     >
       {fontSizes.map((s) => (
         <option key={s.value} value={s.value}>
@@ -287,7 +287,7 @@ const HeadingSelect = ({ editor }: { editor: Editor }) => {
           editor.chain().focus().toggleHeading({ level }).run();
         }
       }}
-      className="px-2 py-1.5 text-sm bg-transparent dark:bg-transparent hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg focus:outline-none text-gray-700 dark:text-gray-300 cursor-pointer min-w-[100px]"
+      className="px-2 py-1.5 text-sm bg-transparent dark:bg-transparent hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg focus:outline-none text-gray-700 dark:text-zinc-300 cursor-pointer min-w-[100px]"
     >
       <option value="paragraph">正文</option>
       <option value="h1">标题 1</option>
@@ -553,7 +553,7 @@ export const EditorToolbar = ({ editor, blogId }: EditorToolbarProps) => {
   return (
     <div className="flex flex-col relative">
       {/* Main Toolbar - Centered */}
-      <div className="flex flex-wrap items-center justify-center gap-1 p-1 border-b border-gray-200 dark:border-dark-700 bg-white dark:bg-dark-800">
+      <div className="flex flex-wrap items-center justify-center gap-1 p-1 border-b border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800">
         {/* Section 1: History & Format */}
         <ToolbarButton
           onClick={() => editor.chain().focus().undo().run()}
@@ -747,8 +747,8 @@ export const EditorToolbar = ({ editor, blogId }: EditorToolbarProps) => {
 
         {/* URL Input for Image/Audio/YouTube/Link insertion */}
         {pendingInsert && (
-          <div className="flex items-center gap-2 ml-2 pl-2 border-l border-gray-200 dark:border-dark-700">
-            <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+          <div className="flex items-center gap-2 ml-2 pl-2 border-l border-gray-200 dark:border-zinc-700">
+            <span className="text-xs text-gray-500 dark:text-zinc-400 whitespace-nowrap">
               {getInsertLabel(pendingInsert.type)}:
             </span>
             <input
@@ -757,7 +757,7 @@ export const EditorToolbar = ({ editor, blogId }: EditorToolbarProps) => {
               onChange={(e) => setPendingInsert({ ...pendingInsert, url: e.target.value })}
               onKeyDown={handleKeyDown}
               placeholder={getPlaceholder(pendingInsert.type)}
-              className="flex-1 min-w-[200px] px-2 py-1 text-sm bg-white dark:bg-dark-700 border border-gray-300 dark:border-dark-600 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 text-gray-900 dark:text-white placeholder:text-gray-400"
+              className="flex-1 min-w-[200px] px-2 py-1 text-sm bg-white dark:bg-zinc-700 border border-gray-300 dark:border-zinc-600 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 text-gray-900 dark:text-white placeholder:text-gray-400"
               autoFocus
             />
             <ToolbarButton onClick={handleInsertConfirm} title="确认">
@@ -777,9 +777,9 @@ export const EditorToolbar = ({ editor, blogId }: EditorToolbarProps) => {
         className={`absolute left-0 right-0 z-10 overflow-hidden transition-all duration-200 ease-in-out ${isTableActive ? 'top-full opacity-100' : 'top-0 -z-10 opacity-0 pointer-events-none'}`}
       >
         <div
-          className={`flex flex-wrap items-center justify-center gap-1 p-1 bg-gray-50 dark:bg-dark-800/50 border-b border-gray-200 dark:border-dark-700 ${isTableActive ? 'h-auto' : 'h-0 p-0 border-0 overflow-hidden'}`}
+          className={`flex flex-wrap items-center justify-center gap-1 p-1 bg-gray-50 dark:bg-zinc-800/50 border-b border-gray-200 dark:border-zinc-700 ${isTableActive ? 'h-auto' : 'h-0 p-0 border-0 overflow-hidden'}`}
         >
-          <span className="text-xs text-gray-500 dark:text-gray-400 mr-2">表格:</span>
+          <span className="text-xs text-gray-500 dark:text-zinc-400 mr-2">表格:</span>
 
           <ToolbarButton
             onClick={toggleHeaderRow}
@@ -790,7 +790,7 @@ export const EditorToolbar = ({ editor, blogId }: EditorToolbarProps) => {
             <span>表头</span>
           </ToolbarButton>
 
-          <div className="w-px h-6 bg-gray-300 dark:bg-dark-600 mx-1" />
+          <div className="w-px h-6 bg-gray-300 dark:bg-zinc-600 mx-1" />
 
           <ToolbarButton onClick={addRowBefore} title="上方插入行">
             <Plus className="w-4 h-4" />
@@ -805,7 +805,7 @@ export const EditorToolbar = ({ editor, blogId }: EditorToolbarProps) => {
             <span>删行</span>
           </ToolbarButton>
 
-          <div className="w-px h-6 bg-gray-300 dark:bg-dark-600 mx-1" />
+          <div className="w-px h-6 bg-gray-300 dark:bg-zinc-600 mx-1" />
 
           <ToolbarButton onClick={addColumnBefore} title="左侧插入列">
             <Plus className="w-4 h-4" />
@@ -820,7 +820,7 @@ export const EditorToolbar = ({ editor, blogId }: EditorToolbarProps) => {
             <span>删列</span>
           </ToolbarButton>
 
-          <div className="w-px h-6 bg-gray-300 dark:bg-dark-600 mx-1" />
+          <div className="w-px h-6 bg-gray-300 dark:bg-zinc-600 mx-1" />
 
           <ToolbarButton
             onClick={mergeCells}
@@ -837,14 +837,14 @@ export const EditorToolbar = ({ editor, blogId }: EditorToolbarProps) => {
             <span>拆分</span>
           </ToolbarButton>
 
-          <div className="w-px h-6 bg-gray-300 dark:bg-dark-600 mx-1" />
+          <div className="w-px h-6 bg-gray-300 dark:bg-zinc-600 mx-1" />
 
           <TableColorPicker
             color={editor.getAttributes('tableCell').backgroundColor || null}
             onChange={setCellBackground}
           />
 
-          <div className="w-px h-6 bg-gray-300 dark:bg-dark-600 mx-1" />
+          <div className="w-px h-6 bg-gray-300 dark:bg-zinc-600 mx-1" />
 
           <ToolbarButton onClick={deleteTable} title="删除表格">
             <Trash2 className="w-4 h-4 text-red-500" />

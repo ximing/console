@@ -327,7 +327,7 @@ export function CustomImageNodeView({ node, selected, updateAttributes }: Custom
       <NodeViewWrapper>
         <style>{resizeStyles}</style>
         <div
-          className="bg-gray-200 dark:bg-dark-700 flex items-center justify-center relative border-2 border-dashed border-gray-400"
+          className="bg-gray-200 dark:bg-zinc-700 flex items-center justify-center relative border-2 border-dashed border-gray-400"
           style={{
             width: width || 300,
             height: height || 200,
@@ -353,7 +353,7 @@ export function CustomImageNodeView({ node, selected, updateAttributes }: Custom
       <NodeViewWrapper>
         <style>{resizeStyles}</style>
         <div
-          className="bg-gray-200 dark:bg-dark-700 animate-pulse flex items-center justify-center relative"
+          className="bg-gray-200 dark:bg-zinc-700 animate-pulse flex items-center justify-center relative"
           style={{
             width: width || '100%',
             height: height || 200,

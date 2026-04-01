@@ -2,10 +2,12 @@ import { Service } from '@rabjs/react';
 import { blogApi } from '../api/blog';
 import type { BlogDto, CreateBlogDto, UpdateBlogDto } from '@x-console/dto';
 import { toast } from './toast.service';
+import slugify from 'slugify';
 
 // Constants
 const DEFAULT_PAGE_SIZE = 10;
 const AUTO_SAVE_DELAY_MS = 3000;
+const MAX_EXCERPT_LENGTH = 200;
 
 /**
  * Blog Service
@@ -27,6 +29,21 @@ export class BlogService extends Service {
 
   // Previous blog state for rollback on failed saves
   private previousBlog: BlogDto | null = null;
+
+  /**
+   * Search blogs by query string
+   * Returns matching blogs directly without modifying state
+   */
+  async searchBlogs(query: string, pageSize = 20): Promise<BlogDto[]> {
+    try {
+      const data = await blogApi.getBlogs({ search: query, pageSize });
+      return data.blogs;
+    } catch (err) {
+      console.error('Search blogs error:', err);
+      toast.error('Search failed');
+      return [];
+    }
+  }
 
   /**
    * Load blogs with pagination
@@ -276,6 +293,51 @@ export class BlogService extends Service {
     }
     this.currentBlog = null;
     this.lastSavedAt = null;
+  }
+
+  /**
+   * Generate URL-friendly slug from title
+   */
+  generateSlug(title: string): string {
+    return slugify(title, { lower: true, locale: 'zh', strict: false });
+  }
+
+  /**
+   * Generate excerpt from editor content
+   */
+  generateExcerpt(editor: { getText: () => string }): string {
+    return editor.getText().slice(0, MAX_EXCERPT_LENGTH);
+  }
+
+  /**
+   * Update blog title (triggers auto-save)
+   */
+  updateTitle(title: string): void {
+    if (!this.currentBlog) return;
+    this.updateBlog(this.currentBlog.id, {
+      title,
+      slug: this.generateSlug(title),
+    });
+  }
+
+  /**
+   * Update blog directory (triggers auto-save)
+   */
+  updateDirectory(directoryId: string | null): void {
+    if (!this.currentBlog) return;
+    this.updateBlog(this.currentBlog.id, {
+      directoryId: directoryId || null,
+    });
+  }
+
+  /**
+   * Update blog tags (triggers auto-save)
+   */
+  updateTags(tagIds: string[]): void {
+    if (!this.currentBlog) return;
+    this.updateBlog(this.currentBlog.id, {
+      tagIds,
+    });
   }
 }
 

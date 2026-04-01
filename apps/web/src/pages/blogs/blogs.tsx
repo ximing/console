@@ -88,6 +88,10 @@ export const BlogListPage = view(() => {
 
   // Select directory
   const handleSelectDirectory = (directoryId: string | null) => {
+    // If selecting a specific directory (not "all blogs"), navigate to /blogs to clear selectedBlogId
+    if (directoryId !== null && selectedBlogId) {
+      navigate('/blogs');
+    }
     setSelectedDirectoryId(directoryId);
   };
 
@@ -142,11 +146,10 @@ export const BlogListPage = view(() => {
         </ResizableSidebar>
 
         {/* Right Content Area */}
-        <div className="flex-1 overflow-hidden bg-gray-50 dark:bg-dark-900">
+        <div className="flex-1 overflow-hidden bg-gray-50 dark:bg-zinc-950">
           {selectedBlogId ? (
             <BlogEditorPage
               pageId={selectedBlogId}
-              onBack={handleBack}
             />
           ) : selectedDirectoryId ? (
             <PageList

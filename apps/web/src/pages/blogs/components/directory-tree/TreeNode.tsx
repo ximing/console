@@ -86,10 +86,11 @@ export const TreeNode = forwardRef<HTMLDivElement, Props>(
           {...dragAttributes}
           {...dragListeners}
           className={`
-            group flex items-center gap-1 px-2 py-1.5 cursor-pointer rounded
-            ${isSelected ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' : 'hover:bg-gray-100 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300'}
+            group flex items-center gap-1 px-2 py-1.5 cursor-pointer rounded-md mx-1
+            transition-all duration-100
+            ${isSelected ? 'bg-primary-50/80 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400' : 'hover:bg-gray-100/70 dark:hover:bg-zinc-800/50 text-gray-700 dark:text-zinc-300'}
             ${isDragging ? 'opacity-50' : ''}
-            ${isDropTarget ? 'ring-2 ring-primary-500' : ''}
+            ${isDropTarget ? 'ring-2 ring-primary-500/50' : ''}
           `}
           style={{ paddingLeft: `${depth * DEPTH_INDENT + 8}px` }}
           onClick={handleClick}
@@ -104,9 +105,9 @@ export const TreeNode = forwardRef<HTMLDivElement, Props>(
           >
             {isDirectory && hasChildren ? (
               isExpanded ? (
-                <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                <ChevronDown className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />
               ) : (
-                <ChevronRight className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                <ChevronRight className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />
               )
             ) : !isDirectory ? (
               <span className="w-4 h-4" />
@@ -116,35 +117,35 @@ export const TreeNode = forwardRef<HTMLDivElement, Props>(
           {/* Icon */}
           {isDirectory ? (
             isExpanded && hasChildren ? (
-              <FolderOpen className="w-4 h-4 text-yellow-500 flex-shrink-0" />
+              <FolderOpen className="w-4 h-4 text-yellow-500/80 flex-shrink-0" />
             ) : (
-              <Folder className="w-4 h-4 text-yellow-500 flex-shrink-0" />
+              <Folder className="w-4 h-4 text-yellow-500/80 flex-shrink-0" />
             )
           ) : (
-            <FileText className="w-4 h-4 text-blue-500 flex-shrink-0" />
+            <FileText className="w-4 h-4 text-blue-400/70 flex-shrink-0" />
           )}
 
           {/* Name */}
-          <span className="truncate text-sm flex-1">
+          <span className="truncate text-xs font-medium flex-1">
             {isDirectory ? node.name : node.title}
           </span>
 
           {/* Hover Actions - only for directories */}
           {isDirectory && isHovered && (
-            <div className="flex items-center gap-0.5">
+            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
                 onClick={handleNewBlog}
-                className="p-1 hover:bg-gray-200 dark:hover:bg-dark-600 rounded"
+                className="p-1 hover:bg-gray-200/80 dark:hover:bg-zinc-700 rounded transition-colors"
                 title="在当前目录创建博客"
               >
-                <Plus className="w-3 h-3 text-gray-500 dark:text-gray-400" />
+                <Plus className="w-3 h-3 text-gray-500 dark:text-zinc-400" />
               </button>
               <button
                 onClick={handleNewDirectory}
-                className="p-1 hover:bg-gray-200 dark:hover:bg-dark-600 rounded"
+                className="p-1 hover:bg-gray-200/80 dark:hover:bg-zinc-700 rounded transition-colors"
                 title="在当前目录下创建子目录"
               >
-                <FolderPlus className="w-3 h-3 text-gray-500 dark:text-gray-400" />
+                <FolderPlus className="w-3 h-3 text-gray-500 dark:text-zinc-400" />
               </button>
             </div>
           )}
