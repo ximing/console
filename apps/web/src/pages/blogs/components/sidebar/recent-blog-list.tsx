@@ -2,32 +2,12 @@ import { view, useService } from '@rabjs/react';
 import { Clock, FileText } from 'lucide-react';
 import { BlogService } from '../../../../services/blog.service';
 import { DirectoryService } from '../../../../services/directory.service';
+import { formatRelativeTime } from '../../../../utils/date';
 
 interface RecentBlogListProps {
   selectedBlogId: string | null;
   onSelectBlog: (blogId: string) => void;
 }
-
-const formatRelativeTime = (dateStr: string): string => {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffSecs = Math.floor(diffMs / 1000);
-  const diffMins = Math.floor(diffSecs / 60);
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
-
-  if (diffSecs < 60) return '刚刚';
-  if (diffMins < 60) return `${diffMins}分钟前`;
-  if (diffHours < 24) return `${diffHours}小时前`;
-  if (diffDays < 30) return `${diffDays}天前`;
-
-  return date.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-};
 
 export const RecentBlogList = view(
   ({ selectedBlogId, onSelectBlog }: RecentBlogListProps) => {
