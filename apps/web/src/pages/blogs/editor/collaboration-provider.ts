@@ -15,9 +15,6 @@ export function getUserColor(userId: string): string {
   return USER_COLORS[Math.abs(hash) % USER_COLORS.length];
 }
 
-export interface CollabUser {
-  name: string;
-  color: string;
-  id: string;
-}
+import type { CollabUser } from '../components/collab-avatars';
 
+export type { CollabUser };
