@@ -21,5 +21,3 @@ export interface CollabUser {
   id: string;
 }
 
-export { getUserColor };
-export type { CollabUser };
