@@ -8,6 +8,8 @@ import dayjs from 'dayjs';
 import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
+// expressWs removed - was causing conflicts with Socket.IO
+// import expressWs from 'express-ws';
 import { useExpressServer, Action, useContainer } from 'routing-controllers';
 import { Container } from 'typedi';
 
@@ -118,8 +120,7 @@ export async function createApp() {
     logger.info(`Server is running on port ${config.port}`);
   });
 
-  // Initialize Hocuspocus collaboration server
-  // This sets up WebSocket handling at /collaboration endpoint
+  // Initialize Hocuspocus collaboration WebSocket handler on main server
   initCollab(server);
 
   // Initialize Socket.IO

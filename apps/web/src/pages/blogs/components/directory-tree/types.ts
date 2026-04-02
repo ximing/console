@@ -19,8 +19,8 @@ export interface TreeNodeProps {
   onToggle: (id: string) => void;
   onSelectDirectory: (id: string) => void;
   onSelectPage: (id: string) => void;
-  onContextMenuDirectory: (e: React.MouseEvent, nodeId: string, nodeName: string) => void;
-  onContextMenuPage: (e: React.MouseEvent, blogId: string) => void;
+  onContextMenuDirectory?: (e: React.MouseEvent, nodeId: string, nodeName: string) => void;
+  onContextMenuPage?: (e: React.MouseEvent, blogId: string) => void;
   onNewBlog: (directoryId?: string) => void;
   onNewDirectory: (parentId?: string) => void;
   // drag props
@@ -36,8 +36,8 @@ export interface DirectoryTreeProps {
   selectedPageId: string | null;
   onSelectDirectory: (directoryId: string | null) => void;
   onSelectPage: (pageId: string) => void;
-  onContextMenuDirectory: (e: React.MouseEvent, nodeId: string, nodeName: string) => void;
-  onContextMenuPage: (e: React.MouseEvent, blogId: string) => void;
+  onContextMenuDirectory?: (e: React.MouseEvent, nodeId: string, nodeName: string) => void;
+  onContextMenuPage?: (e: React.MouseEvent, blogId: string) => void;
   onNewBlog: (directoryId?: string) => void;
   onNewDirectory: (parentId?: string) => void;
   initialExpandedIds?: string[];

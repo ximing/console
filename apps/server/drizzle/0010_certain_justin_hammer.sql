@@ -1,0 +1,2 @@
+ALTER TABLE `yjs_documents` MODIFY COLUMN `created_at` timestamp(3) NOT NULL DEFAULT (now());--> statement-breakpoint
+ALTER TABLE `yjs_documents` MODIFY COLUMN `updated_at` timestamp(3) NOT NULL DEFAULT (now());

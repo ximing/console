@@ -16,8 +16,8 @@ interface SidebarProps {
   onSearchClick: () => void;
   onNewBlog: (directoryId?: string) => void;
   onNewDirectory: (parentId?: string) => void;
-  onContextMenuDirectory: (e: React.MouseEvent, nodeId: string, nodeName: string) => void;
-  onContextMenuPage: (e: React.MouseEvent, blogId: string) => void;
+  onContextMenuDirectory?: (e: React.MouseEvent, nodeId: string, nodeName: string) => void;
+  onContextMenuPage?: (e: React.MouseEvent, blogId: string) => void;
   onExpandDirectory?: (directoryId: string) => void;
   initialExpandedIds?: string[];
 }

@@ -62,9 +62,9 @@ export const TreeNode = forwardRef<HTMLDivElement, Props>(
       e.preventDefault();
       e.stopPropagation();
       if (isDirectory) {
-        onContextMenuDirectory(e, node.id, node.name);
+        onContextMenuDirectory?.(e, node.id, node.name);
       } else {
-        onContextMenuPage(e, node.id);
+        onContextMenuPage?.(e, node.id);
       }
     };
 

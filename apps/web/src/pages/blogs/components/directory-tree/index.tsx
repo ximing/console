@@ -51,7 +51,7 @@ export const DirectoryTree = view(
     // Context menu handlers
     const handleContextMenuDirectory = useCallback((e: React.MouseEvent, nodeId: string, nodeName: string) => {
       e.preventDefault();
-      onContextMenuDirectory(e, nodeId, nodeName);
+      onContextMenuDirectory?.(e, nodeId, nodeName);
       setContextMenu({
         visible: true,
         x: e.clientX,
@@ -63,7 +63,7 @@ export const DirectoryTree = view(
 
     const handleContextMenuPage = useCallback((e: React.MouseEvent, blogId: string) => {
       e.preventDefault();
-      onContextMenuPage(e, blogId);
+      onContextMenuPage?.(e, blogId);
       setContextMenu({
         visible: true,
         x: e.clientX,
