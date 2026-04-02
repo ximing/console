@@ -26,7 +26,6 @@ export function useTreeState(initialExpandedIds: string[] = []) {
 
   return {
     expandedIds,
-    setExpandedIds,
     toggleNode,
   };
 }
