@@ -480,6 +480,12 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
               {connectionStatus === 'connected' ? '在线' : connectionStatus === 'connecting' ? '连接中...' : '离线'}
             </span>
           )}
+          {/* Collaboration avatars - in Header, after connection status */}
+          {awareness && (
+            <div className="mr-2">
+              <CollabAvatars awareness={awareness} currentUserId={userId} />
+            </div>
+          )}
           {/* Delete button */}
           <button
             onClick={handleDelete}
@@ -553,7 +559,6 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
       {!isPreview && (
         <div className="shrink-0">
           <EditorToolbar editor={editor} blogId={blog.id} />
-          <CollabAvatars awareness={awareness} currentUserId={userId} />
         </div>
       )}
 
