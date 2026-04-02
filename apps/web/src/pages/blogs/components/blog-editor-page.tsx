@@ -189,7 +189,7 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
     }, SNAPSHOT_INTERVAL);
 
     return () => clearInterval(timer);
-  }, [provider, ydoc, pageId, blogService, editor]);
+  }, [provider, ydoc, pageId, blogService]);
 
   // Refs for debounce
   const titleRef = useRef(blog?.title || '');
