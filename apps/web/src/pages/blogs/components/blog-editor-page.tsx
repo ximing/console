@@ -8,8 +8,6 @@ import * as Y from 'yjs';
 import { HocuspocusProvider } from '@hocuspocus/provider';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import Collaboration from '@tiptap/extension-collaboration';
-// CollaborationCursor is temporarily disabled due to awareness initialization timing issues
-// import { CollaborationCursor } from '@tiptap/extension-collaboration-cursor';
 import { BlogService } from '../../../services/blog.service';
 import { DirectoryService } from '../../../services/directory.service';
 import { TagService } from '../../../services/tag.service';
@@ -77,11 +75,6 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
   // Create Y.Doc with useMemo (stable across renders)
   const ydoc = useMemo(() => {
     const doc = new Y.Doc();
-    console.log('[Collab] Y.Doc created');
-    // Debug: observe all changes to the Y.Doc
-    doc.on('update', (update: Uint8Array, origin: any) => {
-      console.log('[Collab] Y.Doc update received, origin:', origin, 'update length:', update.length);
-    });
     return doc;
   }, []);
 
@@ -95,21 +88,18 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
       ? `ws://localhost:3100/collaboration`
       : `${location.origin.replace(/^http/, 'ws')}/collaboration`;
     const docName = `blog:${pageId}`;
-    console.log('[Collab] Creating HocuspocusProvider:', { wsUrl, docName, hasToken: !!token });
     return new HocuspocusProvider({
       url: wsUrl,
       name: docName,
       document: ydoc,
       token: token,
       onAuthenticated: () => {
-        console.log('[Collab] Authenticated:', docName);
       },
       onAuthenticationFailed: ({ reason }) => {
         console.error('[Collab] Auth failed:', reason);
         setConnectionStatus('disconnected');
       },
       onSynced() {
-        console.log('[Collab] Synced:', docName);
         setConnectionStatus('connected');
 
         // 内容初始化：如果 Y.Doc 为空且有 blog 内容，写入 Y.Doc
@@ -122,15 +112,12 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
         }
       },
       onDisconnect: () => {
-        console.log('[Collab] Disconnected:', docName);
         setConnectionStatus('disconnected');
       },
       onConnect: () => {
-        console.log('[Collab] Connecting:', docName);
         setConnectionStatus('connecting');
       },
-      onOutgoingMessage: ({ message }) => {
-        console.log('[Collab] Outgoing message:', message);
+      onOutgoingMessage: () => {
       },
       onMessage: () => {
         // Debug: log incoming messages
@@ -157,7 +144,6 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
     if (!provider) return;
 
     const handleStatus = ({ status }: { status: string }) => {
-      console.log('[Collab] Connection status:', status);
       setConnectionStatus(status as 'connected' | 'disconnected' | 'connecting');
     };
 
@@ -187,7 +173,6 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
 
     // 监听 awareness 变化
     const handleAwarenessChange = () => {
-      console.log('[Collab] Awareness changed');
     };
     awareness.on('change', handleAwarenessChange);
 
@@ -230,18 +215,14 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
   // Editor extensions - build with collaboration
   // CollaborationCursor is temporarily disabled until we fix the awareness initialization issue
   const editorExtensions = useMemo(() => {
-    console.log('[Collab] editorExtensions recomputing, provider:', !!provider, 'ydoc:', !!ydoc);
     if (!provider) {
-      console.log('[Collab] editorExtensions: no provider, returning base extensions');
       return [...(inlineEditableExtensions as any)];
     }
-    console.log('[Collab] editorExtensions: configuring with provider, ydoc:', ydoc, 'provider:', provider);
     const baseExtensions = [...(inlineEditableExtensions as any)];
     const collabExtension = Collaboration.configure({
       document: ydoc,
       provider: provider,
     });
-    console.log('[Collab] editorExtensions: Collaboration extension created:', collabExtension);
     baseExtensions.push(collabExtension);
     // CollaborationCursor requires provider.awareness.doc to exist at creation time
     // For now, we skip it and rely on basic Yjs sync for collaboration
@@ -315,7 +296,7 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
           excerpt: editor?.getText().slice(0, MAX_EXCERPT_LENGTH) || '',
           slug: slugify(titleRef.current, { lower: true, locale: 'zh', strict: false }),
         });
-      } catch (error) {
+      } catch {
         toastService.error('保存失败');
       } finally {
         setLocalSaving(false);

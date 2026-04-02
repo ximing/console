@@ -23,28 +23,9 @@ export function useTreeState(initialExpandedIds: string[] = []) {
     });
   }, []);
 
-  const expandNode = useCallback((id: string) => {
-    setExpandedIds(prev => new Set(prev).add(id));
-  }, []);
-
-  const collapseNode = useCallback((id: string) => {
-    setExpandedIds(prev => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
-  }, []);
-
-  const expandMultiple = useCallback((ids: string[]) => {
-    setExpandedIds(prev => new Set([...prev, ...ids]));
-  }, []);
-
   return {
     expandedIds,
     setExpandedIds,
     toggleNode,
-    expandNode,
-    collapseNode,
-    expandMultiple,
   };
 }

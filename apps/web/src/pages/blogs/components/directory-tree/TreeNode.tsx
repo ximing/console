@@ -32,8 +32,7 @@ export const TreeNode = forwardRef<HTMLDivElement, Props>(
       isDragging,
       isDropTarget,
       children,
-    },
-    _ref
+    }
   ) => {
     const isDirectory = node.type === 'directory';
     const isExpanded = expandedIds.has(node.id);

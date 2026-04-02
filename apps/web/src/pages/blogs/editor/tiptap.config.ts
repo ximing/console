@@ -64,26 +64,6 @@ export const baseContentExtensions = [
   ExternalVideo,
 ];
 
-/** 只读预览扩展 */
-export const previewExtensions = [
-  ...baseContentExtensions,
-  Highlight.configure({ multicolor: true }),
-  createLinkExtension({ openOnClick: true }),
-];
-
-/** 可编辑内容扩展 - 带完整格式工具 */
-export const editableExtensions = [
-  ...baseContentExtensions,
-  Underline,
-  TextStyle,
-  FontSize,
-  Color,
-  Highlight.configure({ multicolor: true }),
-  TextAlign.configure({ types: ['heading', 'paragraph'] }),
-  FontFamily.configure({ types: ['textStyle'] }),
-  createLinkExtension({ openOnClick: false }),
-];
-
 /** 内联编辑扩展 - 基础可编辑功能（无字号、颜色等） */
 export const inlineEditableExtensions = [
   ...baseContentExtensions,

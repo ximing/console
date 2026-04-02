@@ -1,6 +1,3 @@
-import { WebsocketProvider } from 'y-websocket';
-import * as Y from 'yjs';
-
 const USER_COLORS = [
   '#f87171', '#fb923c', '#facc15', '#4ade80',
   '#34d399', '#22d3ee', '#60a5fa', '#a78bfa', '#f472b6',
@@ -24,4 +21,5 @@ export interface CollabUser {
   id: string;
 }
 
-export { WebsocketProvider, Y };
+export { getUserColor };
+export type { CollabUser };
