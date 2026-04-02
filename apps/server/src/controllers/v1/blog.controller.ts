@@ -637,4 +637,22 @@ export class BlogController {
       return ResponseUtility.error(ErrorCode.DB_ERROR);
     }
   }
+
+  /**
+   * GET /api/v1/blogs/:id/snapshot - Get collaboration snapshot for a blog
+   */
+  @Get('/:id/snapshot')
+  async getSnapshot(@CurrentUser() userDto: UserInfoDto, @Param('id') id: string) {
+    try {
+      if (!userDto?.id) {
+        return ResponseUtility.error(ErrorCode.UNAUTHORIZED);
+      }
+
+      const snapshot = await this.blogService.getSnapshot(id, userDto.id);
+      return ResponseUtility.success(snapshot);
+    } catch (error) {
+      logger.error('Get snapshot error:', error);
+      return ResponseUtility.error(ErrorCode.DB_ERROR);
+    }
+  }
 }

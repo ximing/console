@@ -242,9 +242,9 @@ html.dark .selectedCell {
   background-color: #1e3a5f !important;
 }
 
-/* Prose table overrides */
+/* Prose table overrides - table-layout fixed needed for column resizing */
 .prose table {
-  table-layout: auto;
+  table-layout: fixed;
 }
 
 .prose table td,
@@ -336,4 +336,47 @@ html.dark .w-color-material {
 html.dark .w-color-alpha {
   --alpha-pointer-background-color: #6a6a6a !important;
   --alpha-pointer-box-shadow: rgb(0 0 0 / 37%) 0px 1px 4px 0px !important;
+}
+
+/* Tiptap Table Column Resize Handle */
+.column-resize-handle {
+  position: absolute;
+  right: -3px;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background-color: #3b82f6;
+  cursor: col-resize;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 10;
+  border-radius: 2px;
+}
+
+.column-resize-handle:hover {
+  opacity: 1;
+  background-color: #2563eb;
+}
+
+/* Show handle when cell is selected */
+table td.selectedCell .column-resize-handle,
+table th.selectedCell .column-resize-handle,
+td[data-selected-cell='true'] .column-resize-handle,
+th[data-selected-cell='true'] .column-resize-handle {
+  opacity: 1;
+}
+
+/* Dark mode */
+html.dark .column-resize-handle {
+  background-color: #60a5fa;
+}
+
+html.dark .column-resize-handle:hover {
+  background-color: #3b82f6;
+}
+
+/* Ensure table cells have relative positioning for handle */
+table td,
+table th {
+  position: relative;
 }

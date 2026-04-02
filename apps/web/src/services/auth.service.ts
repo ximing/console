@@ -32,15 +32,19 @@ export class AuthService extends Service {
   }
 
   /**
-   * Load authentication state from localStorage (user info only, no token)
+   * Load authentication state from localStorage (user info and token)
    */
   loadAuthState() {
     const savedUser = localStorage.getItem('aimo_user');
+    const savedToken = localStorage.getItem('aimo_token');
 
     if (savedUser) {
       try {
         this.user = JSON.parse(savedUser);
         this.isAuthenticated = true;
+        if (savedToken) {
+          this.token = savedToken;
+        }
       } catch (error) {
         console.error('Failed to parse saved user data:', error);
         this.clearAuthState();
@@ -60,6 +64,7 @@ export class AuthService extends Service {
     this.isAuthenticated = true;
 
     localStorage.setItem('aimo_user', JSON.stringify(user));
+    localStorage.setItem('aimo_token', token); // Persist token for WebSocket auth
   }
 
   /**
@@ -71,6 +76,7 @@ export class AuthService extends Service {
     this.isAuthenticated = false;
 
     localStorage.removeItem('aimo_user');
+    localStorage.removeItem('aimo_token');
   }
 
   /**

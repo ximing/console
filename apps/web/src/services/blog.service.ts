@@ -322,6 +322,18 @@ export class BlogService extends Service {
   }
 
   /**
+   * Get a collaboration snapshot from MySQL via server
+   */
+  async getSnapshot(id: string): Promise<{ contentSnapshot: string | null; lastSnapshotAt: string | null } | null> {
+    try {
+      return await blogApi.getSnapshot(id);
+    } catch (err) {
+      console.error('Get snapshot error:', err);
+      return null;
+    }
+  }
+
+  /**
    * Update blog title (triggers auto-save)
    */
   updateTitle(title: string): void {

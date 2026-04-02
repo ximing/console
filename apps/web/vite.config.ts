@@ -25,6 +25,11 @@ export default defineConfig(({ mode }) => {
           ws: true,
           changeOrigin: true,
         },
+        '/collaboration': {
+          target: 'http://localhost:3100',
+          ws: true,
+          changeOrigin: true,
+        },
       },
     },
     build: {

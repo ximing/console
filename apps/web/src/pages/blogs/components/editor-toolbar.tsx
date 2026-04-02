@@ -45,6 +45,7 @@ type InsertType = 'image' | 'audio' | 'youtube' | 'link';
 interface EditorToolbarProps {
   editor: Editor | null;
   blogId: string;
+  isCollaborating?: boolean;
 }
 
 interface ToolbarButtonProps {
@@ -297,7 +298,7 @@ const HeadingSelect = ({ editor }: { editor: Editor }) => {
   );
 };
 
-export const EditorToolbar = ({ editor, blogId }: EditorToolbarProps) => {
+export const EditorToolbar = ({ editor, blogId, isCollaborating = false }: EditorToolbarProps) => {
   const toastService = useService(ToastService);
   const [pendingInsert, setPendingInsert] = useState<{ type: InsertType; url: string } | null>(
     null
@@ -557,14 +558,14 @@ export const EditorToolbar = ({ editor, blogId }: EditorToolbarProps) => {
         {/* Section 1: History & Format */}
         <ToolbarButton
           onClick={() => editor.chain().focus().undo().run()}
-          disabled={!editor.can().undo()}
+          disabled={isCollaborating}
           title="撤销 (Ctrl+Z)"
         >
           <Undo2 className="w-4 h-4" />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().redo().run()}
-          disabled={!editor.can().redo()}
+          disabled={isCollaborating}
           title="重做 (Ctrl+Y)"
         >
           <Redo2 className="w-4 h-4" />

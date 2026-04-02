@@ -15,3 +15,4 @@ export * from './blog-media.js';
 export * from './directory.js';
 export * from './tag.js';
 export * from './blog-tag.js';
+export * from './yjs.js';
