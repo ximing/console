@@ -93,8 +93,6 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
       name: docName,
       document: ydoc,
       token: token,
-      onAuthenticated: () => {
-      },
       onAuthenticationFailed: ({ reason }) => {
         console.error('[Collab] Auth failed:', reason);
         setConnectionStatus('disconnected');
@@ -116,11 +114,6 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
       },
       onConnect: () => {
         setConnectionStatus('connecting');
-      },
-      onOutgoingMessage: () => {
-      },
-      onMessage: () => {
-        // Debug: log incoming messages
       },
     });
   }, [pageId, ydoc, token]);
@@ -170,15 +163,6 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
       color: userColor,
       id: userId,
     });
-
-    // 监听 awareness 变化
-    const handleAwarenessChange = () => {
-    };
-    awareness.on('change', handleAwarenessChange);
-
-    return () => {
-      awareness.off('change', handleAwarenessChange);
-    };
   }, [awareness, userId, userName, userColor]);
 
   // Cleanup: destroy providers on unmount
@@ -205,7 +189,7 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
     }, SNAPSHOT_INTERVAL);
 
     return () => clearInterval(timer);
-  }, [provider, ydoc, pageId, blogService]);
+  }, [provider, ydoc, pageId, blogService, editor]);
 
   // Refs for debounce
   const titleRef = useRef(blog?.title || '');
@@ -216,8 +200,10 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
   // CollaborationCursor is temporarily disabled until we fix the awareness initialization issue
   const editorExtensions = useMemo(() => {
     if (!provider) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return [...(inlineEditableExtensions as any)];
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const baseExtensions = [...(inlineEditableExtensions as any)];
     const collabExtension = Collaboration.configure({
       document: ydoc,
@@ -302,7 +288,7 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
         setLocalSaving(false);
       }
     }, 1000);
-  }, [blog?.id, blogService, editor, toastService]);
+  }, [blog, blogService, editor, toastService]);
 
   // Handle title change
   const handleTitleChange = useCallback(
@@ -420,7 +406,7 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
           toastService.error('删除失败');
         });
     }
-  }, [blog, blogService, toastService]);
+  }, [blog, blogService, toastService, navigate]);
 
   // Loading state
   if (blogLoading) {
@@ -608,16 +594,6 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
                     {tag.name}
                   </button>
                 )
-              )}
-              {!isPreview && tagService.tags.length > 0 && (
-                <button
-                  onClick={() => {
-                    /* TODO: Add tag creation */
-                  }}
-                  className="px-2 py-1 text-xs font-medium rounded-full border border-dashed border-gray-300 dark:border-zinc-600 text-gray-500 hover:border-primary-500 hover:text-primary-500 transition-colors"
-                >
-                  + 添加
-                </button>
               )}
               {tagService.tags.length === 0 && (
                 <span className="text-sm text-gray-400 dark:text-zinc-600">暂无标签</span>

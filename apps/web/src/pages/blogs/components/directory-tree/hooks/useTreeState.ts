@@ -9,6 +9,7 @@ export function useTreeState(initialExpandedIds: string[] = []) {
     if (newIds.length > 0) {
       setExpandedIds(prev => new Set([...prev, ...newIds]));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialExpandedIds]);
 
   const toggleNode = useCallback((id: string) => {
