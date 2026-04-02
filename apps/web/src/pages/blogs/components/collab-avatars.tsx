@@ -28,7 +28,7 @@ export function CollabAvatars({ awareness, currentUserId }: CollabAvatarsProps) 
       const states = awareness.getStates();
       const onlineUsers: CollabUser[] = [];
       states.forEach((state) => {
-        if (state.user && state.user.id !== currentUserId) {
+        if (state.user) {
           onlineUsers.push(state.user as CollabUser);
         }
       });
@@ -53,7 +53,7 @@ export function CollabAvatars({ awareness, currentUserId }: CollabAvatarsProps) 
       {visibleUsers.map((user) => (
         <div
           key={user.id}
-          className="relative group"
+          className={`relative group ${user.id === currentUserId ? 'ring-2 ring-primary-500 ring-offset-1 rounded-full' : ''}`}
           title={user.name}
         >
           {/* Avatar circle with user initial */}
