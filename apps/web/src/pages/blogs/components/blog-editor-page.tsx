@@ -34,7 +34,6 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
     isPreview,
     isPublishing,
     localSaving,
-    wordCount,
     handleTitleChange,
     toggleTag,
     handleSaveDraft,
@@ -42,6 +41,9 @@ export const BlogEditorPage = view(({ pageId: pageIdProp }: BlogEditorPageProps)
     handleDelete,
     setIsPreview,
   } = useBlogEditor({ pageId, editor: null });
+
+  // Compute wordCount from real editor (useBlogEditor can't access the real editor since it runs before useEditor)
+  const wordCount = editor?.getText().length || 0;
 
   // Collaboration hook - needs pageId and blogUserId
   const { ydoc, provider, indexeddbProvider, awareness, connectionStatus, editorExtensions, userId } =
