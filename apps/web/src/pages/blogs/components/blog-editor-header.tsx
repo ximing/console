@@ -54,12 +54,14 @@ export const BlogEditorHeader = ({
   onPublish,
   onDelete,
 }: BlogEditorHeaderProps) => {
+  const directoryPath = getDirectoryPath(blog, directories);
+
   return (
     <div className="flex items-center justify-between px-3 py-3 border-b border-gray-200 dark:border-zinc-700 shrink-0">
       <div className="flex items-center gap-2">
-        {getDirectoryPath(blog, directories) && (
+        {directoryPath && (
           <span className="text-xs text-gray-500 dark:text-zinc-400">
-            {getDirectoryPath(blog, directories)} / {blog.title}
+            {directoryPath} / {blog.title}
           </span>
         )}
         <div className="flex items-center gap-3 text-xs text-gray-400 dark:text-zinc-500">
@@ -101,7 +103,7 @@ export const BlogEditorHeader = ({
         {/* Button Group: Preview/Edit toggle */}
         <div className="flex items-center rounded overflow-hidden border border-gray-200 dark:border-zinc-600">
           <button
-            onClick={() => onTogglePreview()}
+            onClick={onTogglePreview}
             className={`px-2 py-1 text-xs font-medium transition-colors
               ${
                 isPreview
@@ -113,7 +115,7 @@ export const BlogEditorHeader = ({
             预览
           </button>
           <button
-            onClick={() => onTogglePreview()}
+            onClick={onTogglePreview}
             className={`px-2 py-1 text-xs font-medium transition-colors border-l border-gray-200 dark:border-zinc-600
               ${
                 !isPreview
