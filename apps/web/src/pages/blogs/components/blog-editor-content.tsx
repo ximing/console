@@ -1,37 +1,26 @@
+import { observer, useService } from '@rabjs/react';
 import { EditorContent, Editor } from '@tiptap/react';
-import type { TagDto } from '@x-console/dto';
+import { TagService } from '../../../services/tag.service';
+import { BlogEditorService } from '../blog-editor.service';
 
 interface BlogEditorContentProps {
-  title: string;
-  isPreview: boolean;
-  wordCount: number;
-  tags: TagDto[];
-  selectedTagIds: string[];
-  onTitleChange: (title: string) => void;
-  toggleTag: (tagId: string) => void;
   editor: Editor | null;
 }
 
-export function BlogEditorContent({
-  title,
-  isPreview,
-  wordCount,
-  tags,
-  selectedTagIds,
-  onTitleChange,
-  toggleTag,
-  editor,
-}: BlogEditorContentProps) {
+export const BlogEditorContent = observer(({ editor }: BlogEditorContentProps) => {
+  const blogEditor = useService(BlogEditorService);
+  const tagService = useService(TagService);
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 space-y-6 mt-6">
       {/* Title */}
-      {isPreview ? (
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-zinc-50">{title}</h1>
+      {blogEditor.isPreview ? (
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-zinc-50">{blogEditor.title}</h1>
       ) : (
         <input
           type="text"
-          value={title}
-          onChange={(e) => onTitleChange(e.target.value)}
+          value={blogEditor.title}
+          onChange={(e) => blogEditor.handleTitleChange(e.target.value)}
           placeholder="博客标题"
           className="w-full text-3xl font-bold bg-transparent border-none focus:outline-none placeholder:text-gray-400 dark:placeholder:text-zinc-600 text-gray-900 dark:text-zinc-50"
         />
@@ -39,14 +28,14 @@ export function BlogEditorContent({
 
       {/* Meta info row */}
       <div className="flex flex-wrap items-center gap-4">
-        <span className="text-sm text-gray-500 dark:text-zinc-400">{wordCount} 字</span>
+        <span className="text-sm text-gray-500 dark:text-zinc-400">{blogEditor.wordCount} 字</span>
 
         {/* Tags */}
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm text-gray-500 dark:text-zinc-400">标签:</span>
-          {tags.map((tag) => {
-            const isSelected = selectedTagIds.includes(tag.id);
-            return isPreview ? (
+          {tagService.tags.map((tag) => {
+            const isSelected = blogEditor.selectedTagIds.includes(tag.id);
+            return blogEditor.isPreview ? (
               <span
                 key={tag.id}
                 className={`px-2 py-1 text-xs font-medium rounded-full ${
@@ -61,7 +50,7 @@ export function BlogEditorContent({
             ) : (
               <button
                 key={tag.id}
-                onClick={() => toggleTag(tag.id)}
+                onClick={() => blogEditor.toggleTag(tag.id)}
                 className={`px-2 py-1 text-xs font-medium rounded-full transition-colors ${
                   isSelected
                     ? 'text-white'
@@ -73,23 +62,23 @@ export function BlogEditorContent({
               </button>
             );
           })}
-          {tags.length === 0 && (
+          {tagService.tags.length === 0 && (
             <span className="text-sm text-gray-400 dark:text-zinc-600">暂无标签</span>
           )}
         </div>
       </div>
 
       {/* Editor Content */}
-      <div className={isPreview ? 'prose dark:prose-invert max-w-none' : ''}>
-        <EditorContent editor={editor} className={isPreview ? '' : 'min-h-[400px]'} />
+      <div className={blogEditor.isPreview ? 'prose dark:prose-invert max-w-none' : ''}>
+        <EditorContent editor={editor} className={blogEditor.isPreview ? '' : 'min-h-[400px]'} />
       </div>
 
       {/* Empty state placeholder */}
-      {!isPreview && !editor?.getText() && (
+      {!blogEditor.isPreview && !editor?.getText() && (
         <div className="text-center py-12 text-gray-400 dark:text-zinc-600 pointer-events-none">
           开始写作...
         </div>
       )}
     </div>
   );
-}
+});
