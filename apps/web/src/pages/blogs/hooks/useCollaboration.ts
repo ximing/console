@@ -153,6 +153,7 @@ export function useCollaboration({
       indexeddbProvider?.destroy();
       ydoc.destroy();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Editor extensions - build with collaboration
