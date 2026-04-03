@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import * as Y from 'yjs';
 import { HocuspocusProvider } from '@hocuspocus/provider';
 import { IndexeddbPersistence } from 'y-indexeddb';
@@ -7,11 +7,10 @@ import { Awareness } from 'y-protocols/awareness';
 import type { Extension } from '@tiptap/react';
 import { inlineEditableExtensions } from '../editor/tiptap.config';
 import { getUserColor } from '../editor/collaboration-provider';
-import { authService } from '../../../services/auth.service';
+import { authService } from '../../../../../services/auth.service';
 
 export interface UseCollaborationOptions {
   pageId: string | undefined;
-  blogUserId?: string;
 }
 
 export interface UseCollaborationReturn {
@@ -20,113 +19,108 @@ export interface UseCollaborationReturn {
   indexeddbProvider: IndexeddbPersistence | null;
   awareness: Awareness | null;
   connectionStatus: 'connected' | 'disconnected' | 'connecting';
+  isSynced: boolean;
   editorExtensions: Extension[];
   userId: string;
   userName: string;
   userColor: string;
 }
 
-/**
- * Custom hook that encapsulates all collaboration-related logic from the blog editor page.
- *
- * Responsibilities:
- * - Y.Doc creation (useMemo)
- * - HocuspocusProvider initialization (useMemo)
- * - IndexedDB persistence initialization (useMemo)
- * - Awareness setup (useEffect)
- * - Connection status management
- * - Provider cleanup (useEffect return destroy)
- *
- * Note: 30-second snapshot timer is NOT in this hook (needs editor access which is owned by the page component).
- */
-export function useCollaboration({
-  pageId,
-  blogUserId,
-}: UseCollaborationOptions): UseCollaborationReturn {
-  // Connection status state
+const getCollaborationWsUrl = () => {
+  const isHttp = location.origin.includes('http://');
+
+  return isHttp
+    ? 'ws://localhost:3100/collaboration'
+    : `${location.origin.replace(/^http/, 'ws')}/collaboration`;
+};
+
+export function useCollaboration({ pageId }: UseCollaborationOptions): UseCollaborationReturn {
   const [connectionStatus, setConnectionStatus] = useState<
     'connected' | 'disconnected' | 'connecting'
   >('disconnected');
+  const [isSynced, setIsSynced] = useState(false);
 
-  // Get JWT token for collaboration
   const token = authService.token || localStorage.getItem('aimo_token') || '';
 
-  // Create Y.Doc with useMemo (stable across renders)
-  const ydoc = useMemo(() => {
-    return new Y.Doc();
-  }, []);
+  // Each page needs an isolated Y.Doc. Reusing the same doc across pages leaks state.
+  const ydoc = useMemo(() => new Y.Doc(), [pageId]);
 
-  // Create HocuspocusProvider with useMemo (null if no pageId)
   const provider = useMemo(() => {
-    if (!pageId) return null;
-    // In dev (http), use direct WebSocket to server port 3100
-    // In prod (https), use same origin with wss
-    const isHttp = location.origin.includes('http://');
-    const wsUrl = isHttp
-      ? `ws://localhost:3100/collaboration`
-      : `${location.origin.replace(/^http/, 'ws')}/collaboration`;
-    const docName = `blog:${pageId}`;
+    if (!pageId) {
+      return null;
+    }
+
     return new HocuspocusProvider({
-      url: wsUrl,
-      name: docName,
+      url: getCollaborationWsUrl(),
+      name: `blog:${pageId}`,
       document: ydoc,
-      token: token,
+      token,
       onAuthenticationFailed: () => {
+        setIsSynced(false);
         setConnectionStatus('disconnected');
         console.log('[Collab] Authentication failed');
-      },
-      onSynced() {
-        setConnectionStatus('connected');
-        console.log('[Collab] onSynced fired');
-      },
-      onDisconnect: () => {
-        setConnectionStatus('disconnected');
-        console.log('[Collab] Disconnected');
       },
       onConnect: () => {
         setConnectionStatus('connecting');
         console.log('[Collab] Connecting...');
       },
+      onDisconnect: () => {
+        setIsSynced(false);
+        setConnectionStatus('disconnected');
+        console.log('[Collab] Disconnected');
+      },
+      onSynced: () => {
+        setIsSynced(true);
+        setConnectionStatus('connected');
+        console.log('[Collab] Synced');
+      },
     });
-  }, [pageId, ydoc, token]);
+  }, [pageId, token, ydoc]);
 
-  // IndexedDB persistence - offline support
   const indexeddbProvider = useMemo(() => {
-    if (!pageId) return null;
+    if (!pageId) {
+      return null;
+    }
+
     return new IndexeddbPersistence(`blog-${pageId}`, ydoc);
   }, [pageId, ydoc]);
 
-  // Get awareness from provider
   const awareness = provider?.awareness ?? null;
-
-  // Compute user info - use blogUserId if provided, otherwise fall back to auth service user
-  const userId = blogUserId || authService.user?.id || '';
+  const userId = authService.user?.id || '';
   const userName = userId ? `User ${userId.slice(0, 6)}` : 'Guest';
   const userColor = getUserColor(userId);
 
-  // Track WebSocket connection status and awareness state
   useEffect(() => {
-    if (!provider) return;
+    setIsSynced(false);
+    setConnectionStatus(provider ? 'connecting' : 'disconnected');
+  }, [provider]);
 
-    console.log('[Collab] Provider attached, listening for events');
+  useEffect(() => {
+    if (!provider) {
+      return;
+    }
 
-    const handleStatus = ({ status }: { status: string }) => {
+    const handleStatus = ({ status }: { status: 'connected' | 'disconnected' | 'connecting' }) => {
       console.log('[Collab] Status event:', status);
-      setConnectionStatus(status as 'connected' | 'disconnected' | 'connecting');
+      setConnectionStatus(status);
     };
 
     const handleError = (error: unknown) => {
       console.error('[Collab] Error event:', error);
+      setIsSynced(false);
       setConnectionStatus('disconnected');
     };
 
     const handleSynced = () => {
       console.log('[Collab] Synced event received');
+      setIsSynced(true);
+      setConnectionStatus('connected');
     };
 
     provider.on('status', handleStatus);
     provider.on('error', handleError);
     provider.on('synced', handleSynced);
+
     return () => {
       provider.off('status', handleStatus);
       provider.off('error', handleError);
@@ -134,43 +128,43 @@ export function useCollaboration({
     };
   }, [provider]);
 
-  // Set awareness user info when awareness becomes available
   useEffect(() => {
-    if (!awareness || !userId) return;
+    if (!awareness || !userId) {
+      return;
+    }
 
-    console.log('[Collab] Setting awareness user:', { userName, userColor, userId });
     awareness.setLocalStateField('user', {
+      id: userId,
       name: userName,
       color: userColor,
-      id: userId,
     });
-  }, [awareness, userId, userName, userColor]);
+  }, [awareness, userColor, userId, userName]);
 
-  // Cleanup: destroy providers on unmount
   useEffect(() => {
     return () => {
       provider?.destroy();
       indexeddbProvider?.destroy();
       ydoc.destroy();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [indexeddbProvider, provider, ydoc]);
 
-  // Editor extensions - build with collaboration
   const editorExtensions = useMemo(() => {
-    if (!provider) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return [...(inlineEditableExtensions as any)];
-    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const baseExtensions = [...(inlineEditableExtensions as any)];
-    const collabExtension = Collaboration.configure({
-      document: ydoc,
-      provider: provider,
-    });
-    baseExtensions.push(collabExtension);
+
+    if (!provider) {
+      return baseExtensions;
+    }
+
+    baseExtensions.push(
+      Collaboration.configure({
+        document: ydoc,
+        provider,
+      })
+    );
+
     return baseExtensions;
-  }, [ydoc, provider]);
+  }, [provider, ydoc]);
 
   return {
     ydoc,
@@ -178,6 +172,7 @@ export function useCollaboration({
     indexeddbProvider,
     awareness,
     connectionStatus,
+    isSynced,
     editorExtensions,
     userId,
     userName,

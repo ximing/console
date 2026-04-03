@@ -1,6 +1,6 @@
 import { NodeViewWrapper } from '@tiptap/react';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { isTempPath } from '../../../../utils/editor';
+import { isTempPath } from '../../../../../../utils/editor';
 
 type HandlePosition = 'top-left' | 'top-center' | 'top-right' | 'middle-left' | 'middle-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
 

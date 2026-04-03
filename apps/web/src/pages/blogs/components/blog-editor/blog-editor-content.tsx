@@ -1,7 +1,7 @@
 import { observer, useService } from '@rabjs/react';
 import { EditorContent, Editor } from '@tiptap/react';
-import { TagService } from '../../../services/tag.service';
-import { BlogEditorService } from '../blog-editor.service';
+import { TagService } from '../../../../services/tag.service';
+import { BlogEditorService } from './blog-editor.service';
 
 interface BlogEditorContentProps {
   editor: Editor | null;

@@ -71,6 +71,7 @@
     "urllib": "^2.44.0",
     "ws": "^8.20.0",
     "y-websocket": "^3.0.0",
+    "yjs": "13.6.30",
     "zod": "^4.3.6"
   },
   "devDependencies": {

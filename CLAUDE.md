@@ -75,6 +75,31 @@ pnpm --filter @x-console/server migrate:studio    # Open Drizzle Studio
 - `services/` - API services
 - `api/` - API client utilities (Axios-based)
 
+### Component Organization Convention
+
+Components in `pages/*/components/` follow a consistent directory structure:
+
+```
+components/
+├── feature-name/                 # Feature module (all related code together)
+│   ├── index.ts                 # Barrel export for all public APIs
+│   ├── feature-name.ts          # Main component
+│   ├── feature-name.service.ts  # Service class (if using @rabjs/react)
+│   ├── feature-name-header.tsx  # Sub-components (header, footer, etc.)
+│   ├── feature-name-content.tsx
+│   ├── helper-component.tsx      # Helper components used only by this feature
+│   └── hooks/                   # Custom hooks
+│       └── useHook.ts
+```
+
+**Rules:**
+1. All components related to a feature go into a subdirectory named after the feature
+2. Use `index.ts` barrel exports for clean public APIs
+3. Keep hooks in a `hooks/` subdirectory within the feature folder
+4. Sub-components that are only used by the parent feature stay in the same directory
+5. When moving files, always update relative import paths (count `../` carefully from new location)
+6. Shared utilities (like `editor/`) go under the feature that owns them, not at the component root
+
 ## Key Technologies
 
 - **State Management**: @rabjs/react (reactive state management with observer pattern)

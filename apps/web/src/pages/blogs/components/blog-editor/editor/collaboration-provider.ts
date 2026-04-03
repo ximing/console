@@ -14,4 +14,3 @@ export function getUserColor(userId: string): string {
   }
   return USER_COLORS[Math.abs(hash) % USER_COLORS.length];
 }
-
