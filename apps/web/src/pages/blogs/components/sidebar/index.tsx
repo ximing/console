@@ -28,7 +28,7 @@ export const Sidebar = view((props: SidebarProps) => {
   const isLoading = directoryService.loading;
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-zinc-900 border-r border-gray-200/60 dark:border-zinc-800/50">
+    <div className="flex flex-col h-full bg-white dark:bg-zinc-900 shadow-[4px_0_24px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.4)]">
       {/* Search Button */}
       <div className="px-2 py-2 border-b border-gray-100/80 dark:border-zinc-800/50">
         <SearchButton onClick={props.onSearchClick} />
