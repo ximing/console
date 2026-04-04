@@ -116,7 +116,7 @@ export function ResizableSidebar({
   if (isCollapsed) {
     return (
       <div
-        className="flex flex-col h-full bg-white dark:bg-zinc-800 border-r border-gray-200 dark:border-zinc-700 items-center py-2"
+        className="flex flex-col h-full bg-white dark:bg-zinc-800 shadow-[4px_0_24px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.4)] items-center py-2"
         style={{ width: collapsedWidth }}
       >
         <button

@@ -74,8 +74,8 @@ const ToolbarButton = ({
       flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors text-sm
       ${
         isActive
-          ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
-          : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-dark-700'
+          ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+          : 'text-gray-600 dark:text-zinc-400 hover:bg-green-50/50 dark:hover:bg-green-900/20'
       }
       ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
       disabled:opacity-50 disabled:cursor-not-allowed
@@ -180,8 +180,8 @@ const AlignSelect = ({
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors text-sm ${
           currentAlign
-            ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
-            : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-dark-700'
+            ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+            : 'text-gray-600 dark:text-zinc-400 hover:bg-green-50/50 dark:hover:bg-green-900/20'
         }`}
       >
         {currentAlign?.icon ?? <AlignLeft className="w-4 h-4" />}
@@ -195,7 +195,7 @@ const AlignSelect = ({
               type="button"
               className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-dark-700 ${
                 editor.isActive({ textAlign: opt.value })
-                  ? 'text-primary-600 dark:text-primary-400'
+                  ? 'text-green-600 dark:text-green-400'
                   : 'text-gray-700 dark:text-zinc-300'
               }`}
               onClick={() => {
@@ -682,7 +682,7 @@ export const EditorToolbar = ({ editor, blogId, isCollaborating = false }: Edito
   return (
     <div className="flex flex-col relative">
       {/* Main Toolbar - Centered */}
-      <div className="flex flex-wrap items-center justify-center gap-1 p-1 border-b border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800">
+      <div className="flex flex-wrap items-center justify-center gap-1 p-1 bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.15)]">
         {/* Section 1: History & Format */}
         <ToolbarButton
           onClick={() => editor.chain().focus().undo().run()}
@@ -861,7 +861,7 @@ export const EditorToolbar = ({ editor, blogId, isCollaborating = false }: Edito
 
         {/* URL Input for Image/Audio/YouTube/Link insertion */}
         {pendingInsert && (
-          <div className="flex items-center gap-2 ml-2 pl-2 border-l border-gray-200 dark:border-zinc-700">
+          <div className="flex items-center gap-2 ml-2 pl-2">
             <span className="text-xs text-gray-500 dark:text-zinc-400 whitespace-nowrap">
               {getInsertLabel(pendingInsert.type)}:
             </span>
@@ -871,11 +871,11 @@ export const EditorToolbar = ({ editor, blogId, isCollaborating = false }: Edito
               onChange={(e) => setPendingInsert({ ...pendingInsert, url: e.target.value })}
               onKeyDown={handleKeyDown}
               placeholder={getPlaceholder(pendingInsert.type)}
-              className="flex-1 min-w-[200px] px-2 py-1 text-sm bg-white dark:bg-zinc-700 border border-gray-300 dark:border-zinc-600 rounded focus:outline-none focus:border-gray-400 dark:focus:border-zinc-500 text-gray-900 dark:text-zinc-50 placeholder:text-gray-400"
+              className="flex-1 min-w-[200px] px-2 py-1 text-sm bg-white dark:bg-zinc-700 border border-gray-200 dark:border-zinc-600 rounded focus:outline-none focus:border-green-400 dark:focus:border-green-500 text-gray-900 dark:text-zinc-50 placeholder:text-gray-400"
               autoFocus
             />
             <ToolbarButton onClick={handleInsertConfirm} title="确认">
-              <span className="text-xs font-medium text-primary-600 dark:text-primary-400">
+              <span className="text-xs font-medium text-green-600 dark:text-green-400">
                 确认
               </span>
             </ToolbarButton>
@@ -891,7 +891,7 @@ export const EditorToolbar = ({ editor, blogId, isCollaborating = false }: Edito
         className={`absolute left-0 right-0 z-10 overflow-hidden transition-all duration-200 ease-in-out ${isTableActive ? 'top-full opacity-100' : 'top-0 -z-10 opacity-0 pointer-events-none'}`}
       >
         <div
-          className={`flex flex-wrap items-center justify-center gap-1 p-1 bg-gray-50 dark:bg-zinc-800/50 border-b border-gray-200 dark:border-zinc-700 ${isTableActive ? 'h-auto' : 'h-0 p-0 border-0 overflow-hidden'}`}
+          className={`flex flex-wrap items-center justify-center gap-1 p-1 bg-gray-50/80 dark:bg-zinc-800/80 backdrop-blur-sm shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.15)] ${isTableActive ? 'h-auto' : 'h-0 p-0 border-0 overflow-hidden'}`}
         >
           <span className="text-xs text-gray-500 dark:text-zinc-400 mr-2">表格:</span>
 
