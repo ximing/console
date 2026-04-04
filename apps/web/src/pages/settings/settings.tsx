@@ -54,7 +54,7 @@ export const SettingsPage = view(() => {
     <Layout>
       <div className="flex-1 flex bg-gray-50 dark:bg-dark-900 overflow-hidden">
         {/* Left Sidebar - Menu */}
-        <div className="w-64 bg-white dark:bg-dark-800 border-r border-gray-200 dark:border-dark-700 overflow-y-auto">
+        <div className="w-64 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm overflow-y-auto">
           <div className="p-6">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-lg">
@@ -73,11 +73,10 @@ export const SettingsPage = view(() => {
                     key={item.id}
                     onClick={() => navigate(item.path)}
                     className={`
-                      w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors
-                      ${
-                        isActive
-                          ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
-                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-700'
+                      w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all
+                      ${isActive
+                        ? 'text-green-600 dark:text-green-400 font-medium'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-green-50/60 dark:hover:bg-green-900/15'
                       }
                     `}
                   >
@@ -91,7 +90,7 @@ export const SettingsPage = view(() => {
         </div>
 
         {/* Right Content Area */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-zinc-900/50">
           <Routes>
             <Route path="/" element={<Navigate to="/settings/user" replace />} />
             <Route path="/user" element={<UserSettings />} />
