@@ -45,6 +45,10 @@ export const TreeNode = forwardRef<HTMLDivElement, Props>(
 
     const handleClick = () => {
       if (isDirectory) {
+        // Toggle expand/collapse when clicking on directory with children
+        if (hasChildren) {
+          onToggle(node.id);
+        }
         onSelectDirectory(node.id);
       } else {
         onSelectPage(node.id);
@@ -87,11 +91,14 @@ export const TreeNode = forwardRef<HTMLDivElement, Props>(
           className={`
             group flex items-center gap-1 px-2 py-1.5 cursor-pointer rounded-md mx-1
             transition-all duration-100
-            ${isSelected ? 'bg-primary-50/80 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400' : 'hover:bg-gray-100/70 dark:hover:bg-zinc-800/50 text-gray-700 dark:text-zinc-300'}
+            ${isSelected
+              ? 'border-l-2 border-green-500 bg-green-50/60 dark:bg-green-900/20 dark:border-green-400 text-green-600 dark:text-green-400'
+              : 'hover:bg-green-50/80 dark:hover:bg-green-900/20 text-gray-700 dark:text-zinc-300'
+            }
             ${isDragging ? 'opacity-50' : ''}
-            ${isDropTarget ? 'ring-2 ring-primary-500/50' : ''}
+            ${isDropTarget ? 'ring-2 ring-green-500/50' : ''}
           `}
-          style={{ paddingLeft: `${depth * DEPTH_INDENT + 8}px` }}
+          style={{ paddingLeft: `${depth * DEPTH_INDENT + 6}px` }}
           onClick={handleClick}
           onContextMenu={handleContextMenu}
           onMouseEnter={() => setIsHovered(true)}
