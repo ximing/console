@@ -7,6 +7,8 @@ import jwt from 'jsonwebtoken';
 import { config } from './config/config.js';
 import { UserService } from './services/user.service.js';
 import { YjsService } from './services/yjs.service.js';
+import { YjsContentService } from './services/yjs-content.service.js';
+import { BlogService } from './services/blog.service.js';
 import { logger } from './utils/logger.js';
 
 /**
@@ -15,6 +17,9 @@ import { logger } from './utils/logger.js';
  */
 export const initCollab = (server: any) => {
   const hocuspocus = new Hocuspocus({
+    // Debounce 1 second for onStoreDocument
+    debounce: 1000,
+
     async onAuthenticate({ token, request, documentName }) {
       logger.info('Collab onAuthenticate called:', { hasToken: !!token, documentName });
 
@@ -32,18 +37,18 @@ export const initCollab = (server: any) => {
 
       try {
         // Verify JWT token
-        const decoded = jwt.verify(authToken, config.jwt.secret) as { uid: string };
-        logger.info('Collab token decoded:', { uid: decoded.uid });
+        const decoded = jwt.verify(authToken, config.jwt.secret) as { id: string };
+        logger.info('Collab token decoded:', { id: decoded.id });
         const userService = Container.get(UserService);
-        const user = await userService.getUserById(decoded.uid);
+        const user = await userService.getUserById(decoded.id);
 
         if (!user) {
-          logger.warn('Collab auth: user not found in DB, using token uid as fallback');
-          // Fallback: use the uid from token directly
-          return { user: { id: decoded.uid, email: 'unknown', nickname: 'Guest' } };
+          logger.warn('Collab auth: user not found in DB, using token id as fallback');
+          // Fallback: use the id from token directly
+          return { user: { id: decoded.id, email: 'unknown', nickname: 'Guest' } };
         }
 
-        logger.info('Collab auth success:', { userId: user.id });
+        logger.info('Collab auth success:', { userId: user.id, username: user.username });
         return { user: { id: user.id, email: user.email, nickname: user.username } };
       } catch (err) {
         logger.error('Collab auth error:', err);
@@ -122,7 +127,34 @@ export const initCollab = (server: any) => {
     ],
 
     async onStoreDocument({ documentName, document, context }) {
-      logger.info('Collab onStoreDocument:', { documentName, context });
+      logger.info('Collab onStoreDocument:', { documentName });
+
+      try {
+        // Extract blog ID from document name (format: "blog:{id}")
+        const blogId = documentName.replace('blog:', '');
+        if (!blogId) {
+          logger.warn('Invalid document name for blog sync', { documentName });
+          return;
+        }
+
+        // Convert Y.Doc to Tiptap JSON content
+        const yjsContentService = Container.get(YjsContentService);
+        const content = yjsContentService.extractTiptapContent(document);
+
+        // Update blogs.content
+        const blogService = Container.get(BlogService);
+        await blogService.updateBlogContent(blogId, content);
+
+        logger.info('Blog content synced from collaboration', {
+          documentName,
+          blogId,
+        });
+      } catch (err) {
+        logger.error('Failed to sync blog content from collaboration', {
+          documentName,
+          error: err,
+        });
+      }
     },
   });
 

@@ -84,19 +84,14 @@ const BlogEditorPageInner = observer(() => {
     initialContentSeedRef.current = blogEditor.blog.id;
   }, [editor, isSynced, blogEditor.blog]);
 
+  // Set collaboration mode when provider is connected
   useEffect(() => {
-    if (!provider || !ydoc || !pageId || !editor) {
-      return;
+    if (provider && connectionStatus === 'connected') {
+      blogEditor.setCollaborationMode(true);
+    } else {
+      blogEditor.setCollaborationMode(false);
     }
-
-    const snapshotInterval = 30000;
-    const timer = setInterval(() => {
-      const content = editor.getJSON();
-      blogEditor.blogService.saveSnapshot(pageId, JSON.stringify(content));
-    }, snapshotInterval);
-
-    return () => clearInterval(timer);
-  }, [provider, ydoc, pageId, editor, blogEditor.blogService]);
+  }, [provider, connectionStatus, blogEditor]);
 
   if (blogEditor.loading) {
     return (

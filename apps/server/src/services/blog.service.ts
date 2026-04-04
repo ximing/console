@@ -295,6 +295,21 @@ export class BlogService {
   }
 
   /**
+   * Update only the content field (used by collaboration sync)
+   */
+  async updateBlogContent(id: string, content: Record<string, unknown>): Promise<Blog | null> {
+    const db = getDatabase();
+    await db
+      .update(blogs)
+      .set({
+        content,
+        updatedAt: new Date(),
+      })
+      .where(eq(blogs.id, id));
+    return this.getBlog(id, '');
+  }
+
+  /**
    * Get blog by slug (for public access)
    */
   async getBlogBySlug(slug: string): Promise<Blog | null> {
