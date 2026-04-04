@@ -3,16 +3,19 @@ import { DirectoryService } from '../../../../services/directory.service';
 import { SearchButton } from './search-button';
 import { SidebarTabs } from './sidebar-tabs';
 import { RecentBlogList } from './recent-blog-list';
+import { TagPanel } from './tag-panel';
 import { DirectoryTree } from '../directory-tree';
 import { Plus, FolderPlus, Loader2 } from 'lucide-react';
 
 interface SidebarProps {
-  activeTab: 'directory' | 'recent';
-  onTabChange: (tab: 'directory' | 'recent') => void;
+  activeTab: 'directory' | 'recent' | 'tags';
+  onTabChange: (tab: 'directory' | 'recent' | 'tags') => void;
   selectedDirectoryId: string | null;
   selectedBlogId: string | null;
+  selectedTagId: string | null;
   onSelectDirectory: (directoryId: string | null) => void;
   onSelectBlog: (blogId: string) => void;
+  onSelectTag: (tagId: string | null) => void;
   onSearchClick: () => void;
   onNewBlog: (directoryId?: string) => void;
   onNewDirectory: (parentId?: string) => void;
@@ -58,10 +61,15 @@ export const Sidebar = view((props: SidebarProps) => {
             />
           )}
         </div>
-      ) : (
+      ) : props.activeTab === 'recent' ? (
         <RecentBlogList
           selectedBlogId={props.selectedBlogId}
           onSelectBlog={props.onSelectBlog}
+        />
+      ) : (
+        <TagPanel
+          selectedTagId={props.selectedTagId}
+          onSelectTag={props.onSelectTag}
         />
       )}
 
