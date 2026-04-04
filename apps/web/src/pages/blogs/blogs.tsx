@@ -5,6 +5,7 @@ import { Layout } from '../../components/layout';
 import { BlogService } from '../../services/blog.service';
 import { DirectoryService } from '../../services/directory.service';
 import { ToastService } from '../../services/toast.service';
+import { TagService } from '../../services/tag.service';
 import { Sidebar } from './components/sidebar';
 import { ResizableSidebar } from './components/sidebar/resizable-sidebar';
 import { PageList } from './components/content/page-list';
@@ -21,6 +22,7 @@ export const BlogListPage = view(() => {
   const blogService = useService(BlogService);
   const directoryService = useService(DirectoryService);
   const toastService = useService(ToastService);
+  const tagService = useService(TagService);
   const navigate = useNavigate();
   const params = useParams();
 
@@ -48,6 +50,7 @@ export const BlogListPage = view(() => {
   // Load directories on mount
   useEffect(() => {
     directoryService.loadDirectories();
+    tagService.loadTags(); // Load tags for sidebar
     blogService.loadBlogs({ pageSize: 20 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
