@@ -14,6 +14,7 @@ import TextAlign from '@tiptap/extension-text-align';
 import FontFamily from '@tiptap/extension-font-family';
 import { ExternalVideo } from './extensions/external-video';
 import { CustomImage } from './extensions/custom-image';
+import { CustomCodeBlock } from './extensions/custom-code-block';
 
 const DEFAULT_YOUTUBE_WIDTH = 640;
 const DEFAULT_YOUTUBE_HEIGHT = 360;
@@ -51,7 +52,10 @@ export const baseContentExtensions = [
   StarterKit.configure({
     // Disable built-in undo/redo — Yjs UndoManager handles collaborative undo
     undoRedo: false,
+    // Disable built-in codeBlock — use CustomCodeBlock instead for syntax highlighting
+    codeBlock: false,
   }),
+  CustomCodeBlock,
   TiptapTable.configure({
     resizable: true,
   }),

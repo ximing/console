@@ -13,6 +13,7 @@ import {
   ListOrdered,
   Quote,
   Code,
+  FileCode,
   Table,
   Image,
   Mic,
@@ -35,6 +36,7 @@ import {
   Palette,
   Highlighter,
   RemoveFormatting,
+  ChevronDown,
 } from 'lucide-react';
 
 import { MediaUploadModal } from './media-upload-modal';
@@ -84,6 +86,132 @@ const ToolbarButton = ({
 );
 
 const ToolbarDivider = () => <div className="w-px h-6 bg-gray-200 dark:bg-zinc-700 mx-1" />;
+
+const MediaInsertSelect = ({
+  onSelect,
+}: {
+  onSelect: (type: 'image' | 'audio' | 'video' | 'youtube') => void;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const options = [
+    { value: 'image', label: '图片', icon: <Image className="w-4 h-4" /> },
+    { value: 'audio', label: '音频', icon: <Mic className="w-4 h-4" /> },
+    { value: 'video', label: '视频', icon: <Youtube className="w-4 h-4" /> },
+    { value: 'youtube', label: '嵌入 YouTube', icon: <Youtube className="w-4 h-4" /> },
+  ];
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors text-sm text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-dark-700"
+      >
+        <span>插入</span>
+        <ChevronDown className="w-3 h-3" />
+      </button>
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-1 z-50 min-w-[140px] bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg shadow-lg overflow-hidden">
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-dark-700"
+              onClick={() => {
+                onSelect(opt.value as 'image' | 'audio' | 'video' | 'youtube');
+                setIsOpen(false);
+              }}
+            >
+              {opt.icon}
+              <span>{opt.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const AlignSelect = ({
+  editor,
+}: {
+  editor: Editor;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const alignOptions = [
+    { value: 'left', label: '左对齐', icon: <AlignLeft className="w-4 h-4" /> },
+    { value: 'center', label: '居中', icon: <AlignCenter className="w-4 h-4" /> },
+    { value: 'right', label: '右对齐', icon: <AlignRight className="w-4 h-4" /> },
+    { value: 'justify', label: '两端对齐', icon: <AlignJustify className="w-4 h-4" /> },
+  ];
+
+  const currentAlign = alignOptions.find((opt) =>
+    editor.isActive({ textAlign: opt.value })
+  );
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors text-sm ${
+          currentAlign
+            ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
+            : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-dark-700'
+        }`}
+      >
+        {currentAlign?.icon ?? <AlignLeft className="w-4 h-4" />}
+        <ChevronDown className="w-3 h-3" />
+      </button>
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-1 z-50 min-w-[120px] bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg shadow-lg overflow-hidden">
+          {alignOptions.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-dark-700 ${
+                editor.isActive({ textAlign: opt.value })
+                  ? 'text-primary-600 dark:text-primary-400'
+                  : 'text-gray-700 dark:text-zinc-300'
+              }`}
+              onClick={() => {
+                editor.chain().focus().setTextAlign(opt.value as 'left' | 'center' | 'right' | 'justify').run();
+                setIsOpen(false);
+              }}
+            >
+              {opt.icon}
+              <span>{opt.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const ColorPicker = ({
   color,
@@ -648,34 +776,7 @@ export const EditorToolbar = ({ editor, blogId, isCollaborating = false }: Edito
 
         <ToolbarDivider />
 
-        <ToolbarButton
-          onClick={() => editor.chain().focus().setTextAlign('left').run()}
-          isActive={editor.isActive({ textAlign: 'left' })}
-          title="左对齐"
-        >
-          <AlignLeft className="w-4 h-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().setTextAlign('center').run()}
-          isActive={editor.isActive({ textAlign: 'center' })}
-          title="居中对齐"
-        >
-          <AlignCenter className="w-4 h-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().setTextAlign('right').run()}
-          isActive={editor.isActive({ textAlign: 'right' })}
-          title="右对齐"
-        >
-          <AlignRight className="w-4 h-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().setTextAlign('justify').run()}
-          isActive={editor.isActive({ textAlign: 'justify' })}
-          title="两端对齐"
-        >
-          <AlignJustify className="w-4 h-4" />
-        </ToolbarButton>
+        <AlignSelect editor={editor} />
 
         <ToolbarDivider />
 
@@ -712,32 +813,44 @@ export const EditorToolbar = ({ editor, blogId, isCollaborating = false }: Edito
         >
           <Code className="w-4 h-4" />
         </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+          isActive={editor.isActive('codeBlock')}
+          title="代码块"
+        >
+          <FileCode className="w-4 h-4" />
+        </ToolbarButton>
 
         <ToolbarDivider />
 
-        {/* Section 5: Media & Links */}
+        {/* Section 5: Table */}
         <ToolbarButton onClick={addTable} isActive={isTableActive} title="插入表格">
           <Table className="w-4 h-4" />
-          <span>表格</span>
         </ToolbarButton>
 
-        {/* Local upload buttons */}
-        <ToolbarButton onClick={() => handleFileUpload('image', blogId)} title="上传图片">
-          <Image className="w-4 h-4" />
-        </ToolbarButton>
-        <ToolbarButton onClick={() => handleFileUpload('audio', blogId)} title="上传音频">
-          <Mic className="w-4 h-4" />
-        </ToolbarButton>
-        <ToolbarButton onClick={() => handleFileUpload('video', blogId)} title="上传视频">
-          <Youtube className="w-4 h-4" />
-        </ToolbarButton>
+        {/* Section 6: Media Insert */}
+        <MediaInsertSelect
+          onSelect={(type) => {
+            switch (type) {
+              case 'image':
+                handleFileUpload('image', blogId);
+                break;
+              case 'audio':
+                handleFileUpload('audio', blogId);
+                break;
+              case 'video':
+                handleFileUpload('video', blogId);
+                break;
+              case 'youtube':
+                handleInsertClick('youtube');
+                break;
+            }
+          }}
+        />
 
         <ToolbarDivider />
 
-        {/* External link buttons */}
-        <ToolbarButton onClick={() => handleInsertClick('youtube')} title="嵌入 YouTube">
-          <Youtube className="w-4 h-4" />
-        </ToolbarButton>
+        {/* Link button */}
         <ToolbarButton
           onClick={() => handleInsertClick('link')}
           isActive={editor.isActive('link')}

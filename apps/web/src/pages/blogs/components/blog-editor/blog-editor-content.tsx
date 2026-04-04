@@ -21,6 +21,7 @@ export const BlogEditorContent = observer(({ editor }: BlogEditorContentProps) =
           type="text"
           value={blogEditor.title}
           onChange={(e) => blogEditor.handleTitleChange(e.target.value)}
+          onBlur={() => blogEditor.saveTitleImmediately()}
           placeholder="博客标题"
           className="w-full text-3xl font-bold bg-transparent border-none focus:outline-none placeholder:text-gray-400 dark:placeholder:text-zinc-600 text-gray-900 dark:text-zinc-50"
         />

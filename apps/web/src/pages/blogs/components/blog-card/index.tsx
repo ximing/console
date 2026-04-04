@@ -37,14 +37,14 @@ export const BlogCard = view(({ blog, directoryName, onClick, onEdit }: BlogCard
   return (
     <div
       onClick={handleClick}
-      className="group relative bg-white dark:bg-zinc-900 rounded-xl border border-gray-200/80 dark:border-zinc-800/80 p-5 hover:border-primary-300/60 dark:hover:border-primary-700/50 hover:shadow-md dark:hover:shadow-md-dark transition-all duration-200 ease-out cursor-pointer"
+      className="group relative flex flex-col bg-white dark:bg-zinc-900 rounded-xl border border-gray-200/80 dark:border-zinc-800/80 p-5 hover:border-primary-300/60 dark:hover:border-primary-700/50 hover:shadow-md dark:hover:shadow-md-dark transition-all duration-200 ease-out cursor-pointer h-full"
     >
       {/* Subtle gradient overlay on hover */}
       <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
       {/* Title Row */}
       <div className="flex items-start gap-3 mb-3">
-        <div className="p-1.5 rounded-lg bg-gray-100 dark:bg-zinc-800/60">
+        <div className="p-1.5 rounded-lg bg-gray-100 dark:bg-zinc-800/60 shrink-0">
           <FileText className="w-4 h-4 text-gray-500 dark:text-zinc-400" />
         </div>
         <h3 className="text-base font-semibold text-gray-900 dark:text-zinc-50 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200 line-clamp-1 flex-1 leading-snug">
@@ -54,7 +54,7 @@ export const BlogCard = view(({ blog, directoryName, onClick, onEdit }: BlogCard
         {onEdit && (
           <button
             onClick={handleEditClick}
-            className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded-lg transition-all duration-150 focus:opacity-100 focus:outline-none"
+            className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded-lg transition-all duration-150 focus:opacity-100 focus:outline-none shrink-0"
             title="编辑"
           >
             <Edit2 className="w-3.5 h-3.5 text-gray-500 dark:text-zinc-400" />
@@ -64,13 +64,14 @@ export const BlogCard = view(({ blog, directoryName, onClick, onEdit }: BlogCard
 
       {/* Excerpt */}
       {blog.excerpt && (
-        <p className="text-sm text-gray-600 dark:text-zinc-400/80 mb-4 line-clamp-2 leading-relaxed">
+        <p className="text-sm text-gray-600 dark:text-zinc-400/80 mb-4 line-clamp-2 leading-relaxed flex-1">
           {blog.excerpt}
         </p>
       )}
+      {!blog.excerpt && <div className="flex-1" />}
 
       {/* Meta Info Row */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 mt-auto pt-2">
         {/* Directory Badge */}
         {directoryName && (
           <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-md bg-gray-100 dark:bg-zinc-800/60 text-gray-600 dark:text-zinc-400/80">

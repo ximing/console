@@ -1218,7 +1218,7 @@
         },
         "data": {
           "name": "data",
-          "type": "varbinary",
+          "type": "longblob",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false

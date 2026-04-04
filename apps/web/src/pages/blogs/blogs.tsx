@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { view, useService } from '@rabjs/react';
 import { useNavigate, useParams } from 'react-router';
 import { Layout } from '../../components/layout';
@@ -116,10 +116,23 @@ export const BlogListPage = view(() => {
     }
   };
 
-  // Expand directory (called from SearchModal)
-  const handleExpandDirectory = (directoryId: string) => {
-    setInitialExpandedIds((prev) => [...prev, directoryId]);
-  };
+  // Expand directory (called from SearchModal or when selecting a blog)
+  const handleExpandDirectory = useCallback((directoryId: string) => {
+    setInitialExpandedIds((prev) => {
+      if (prev.includes(directoryId)) return prev;
+      return [...prev, directoryId];
+    });
+  }, []);
+
+  // Auto-expand directory when selecting a blog
+  useEffect(() => {
+    if (selectedBlogId) {
+      const blog = blogService.blogs.find((b) => b.id === selectedBlogId);
+      if (blog?.directoryId) {
+        handleExpandDirectory(blog.directoryId);
+      }
+    }
+  }, [selectedBlogId, handleExpandDirectory]);
 
   return (
     <Layout>

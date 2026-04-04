@@ -5,6 +5,7 @@ export interface CollabUser {
   name: string;
   color: string;
   id: string;
+  avatar?: string;
 }
 
 interface CollabAvatarsProps {
@@ -49,29 +50,38 @@ export function CollabAvatars({ awareness, currentUserId }: CollabAvatarsProps) 
   const overflowCount = users.length - 5;
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-2">
       {visibleUsers.map((user) => (
         <div
           key={user.id}
-          className={`relative group ${user.id === currentUserId ? 'ring-2 ring-primary-500 ring-offset-1 rounded-full' : ''}`}
+          className="relative group rounded-full"
+          style={{ boxShadow: `0 0 0 2px ${user.color}` }}
           title={user.name}
         >
-          {/* Avatar circle with user initial */}
+          {/* Avatar circle - show image if available, otherwise show initial */}
           <div
-            className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium text-white border-2 border-white dark:border-zinc-800"
+            className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium text-white overflow-hidden"
             style={{ backgroundColor: user.color }}
           >
-            {user.name.charAt(0).toUpperCase()}
+            {user.avatar ? (
+              <img
+                src={user.avatar}
+                alt={user.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              user.name.charAt(0).toUpperCase()
+            )}
           </div>
-          {/* Tooltip on hover */}
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-zinc-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+          {/* Tooltip on hover - show below avatar */}
+          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-2 py-1 bg-zinc-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
             {user.name}
           </div>
         </div>
       ))}
       {overflowCount > 0 && (
         <div
-          className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium bg-gray-200 dark:bg-zinc-600 text-gray-600 dark:text-zinc-300 border-2 border-white dark:border-zinc-800"
+          className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium bg-gray-200 dark:bg-zinc-600 text-gray-600 dark:text-zinc-300"
           title={`${overflowCount} more users`}
         >
           +{overflowCount}
