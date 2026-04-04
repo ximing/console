@@ -92,29 +92,29 @@ export const BlogEditorHeader = observer(({
         </button>
 
         {/* Button Group: Preview/Edit toggle */}
-        <div className="flex items-center rounded overflow-hidden border border-gray-200 dark:border-zinc-600">
+        <div className="flex items-center rounded-lg bg-gray-100 dark:bg-zinc-800 p-0.5 gap-0.5">
           <button
             onClick={() => blogEditor.togglePreview()}
-            className={`px-2 py-1 text-xs font-medium transition-colors
+            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-150
               ${
                 blogEditor.isPreview
                   ? 'bg-white dark:bg-zinc-700 shadow-sm text-green-600 dark:text-green-400'
-                  : 'text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-300'
+                  : 'text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200'
               }`}
           >
-            <Eye className="w-3.5 h-3.5 inline mr-0.5" />
+            <Eye className="w-3.5 h-3.5 inline mr-1" />
             预览
           </button>
           <button
             onClick={() => blogEditor.togglePreview()}
-            className={`px-2 py-1 text-xs font-medium transition-colors border-l border-gray-200 dark:border-zinc-600
+            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-150
               ${
                 !blogEditor.isPreview
                   ? 'bg-white dark:bg-zinc-700 shadow-sm text-green-600 dark:text-green-400'
-                  : 'text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-300'
+                  : 'text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200'
               }`}
           >
-            <Edit2 className="w-3.5 h-3.5 inline mr-0.5" />
+            <Edit2 className="w-3.5 h-3.5 inline mr-1" />
             编辑
           </button>
         </div>
