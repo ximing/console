@@ -619,7 +619,7 @@ import { TagPanel } from './tag-panel';
 
 **Add to the component props destructuring:**
 ```tsx
-const TagPanelProps = {
+const tagPanelProps = {
   selectedTagId: props.selectedTagId,
   onSelectTag: props.onSelectTag,
 };
@@ -633,7 +633,7 @@ import { TagPanel } from './tag-panel';
 **Add TagPanel to conditional rendering (after RecentBlogList):**
 ```tsx
 ) : (
-  <TagPanel {...TagPanelProps} />
+  <TagPanel {...tagPanelProps} />
 )}
 ```
 
