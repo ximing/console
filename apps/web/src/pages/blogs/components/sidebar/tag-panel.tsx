@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
 import { view, useService } from '@rabjs/react';
 import { Search, Plus, Tag } from 'lucide-react';
-import { TagService } from '../../../../../services/tag.service';
-import { BlogService } from '../../../../../services/blog.service';
+import { TagService } from '../../../../services/tag.service';
+import { BlogService } from '../../../../services/blog.service';
 import type { TagDto } from '@x-console/dto';
 import { TagItem } from './tag-item';
 import { TagModal } from './tag-modal';
