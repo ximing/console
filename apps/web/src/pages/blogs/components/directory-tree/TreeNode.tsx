@@ -93,7 +93,7 @@ export const TreeNode = forwardRef<HTMLDivElement, Props>(
             transition-all duration-100
             ${isSelected
               ? 'border-l-2 border-green-500 bg-green-50/60 dark:bg-green-900/20 dark:border-green-400 text-green-600 dark:text-green-400'
-              : 'hover:bg-green-50/80 dark:hover:bg-green-900/20 text-gray-700 dark:text-zinc-300'
+              : 'hover:bg-green-50/80 dark:hover:bg-green-900/20 hover:text-green-600 dark:hover:text-green-400 text-gray-700 dark:text-zinc-300'
             }
             ${isDragging ? 'opacity-50' : ''}
             ${isDropTarget ? 'ring-2 ring-green-500/50' : ''}
