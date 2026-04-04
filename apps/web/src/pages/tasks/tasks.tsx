@@ -374,7 +374,7 @@ const TaskFormModal = view(({ isOpen, onClose, onSuccess, editTask }: TaskFormMo
                 <button
                   type="button"
                   onClick={() => setShowModelDropdown(!showModelDropdown)}
-                  className="w-full flex items-center justify-between px-3 py-2 border rounded-lg bg-white dark:bg-dark-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 border-gray-300 dark:border-dark-600"
+                  className="w-full flex items-center justify-between px-3 py-2 border rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 border-gray-300 dark:border-dark-600"
                 >
                   <span className={modelId ? 'text-gray-900 dark:text-white' : 'text-gray-400'}>
                     {modelId
@@ -431,7 +431,7 @@ const TaskFormModal = view(({ isOpen, onClose, onSuccess, editTask }: TaskFormMo
               onChange={(e) => setActionConfig(e.target.value)}
               placeholder='{"url": "https://api.example.com", "method": "GET"}'
               rows={4}
-              className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-dark-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 font-mono text-sm ${
+              className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 font-mono text-sm ${
                 errors.actionConfig ? 'border-red-500' : 'border-gray-300 dark:border-dark-600'
               }`}
             />
