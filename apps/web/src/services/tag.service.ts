@@ -76,6 +76,34 @@ export class TagService extends Service {
       return false;
     }
   }
+
+  /**
+   * Search tags by name (case-insensitive contains match)
+   */
+  searchTags(query: string): TagDto[] {
+    if (!query.trim()) return this.tags;
+    const lowerQuery = query.toLowerCase();
+    return this.tags.filter(tag =>
+      tag.name.toLowerCase().includes(lowerQuery)
+    );
+  }
+
+  /**
+   * Get tag by ID
+   */
+  getTagById(id: string): TagDto | undefined {
+    return this.tags.find(t => t.id === id);
+  }
+
+  /**
+   * Check if tag name already exists (for validation)
+   */
+  isTagNameTaken(name: string, excludeId?: string): boolean {
+    const lowerName = name.toLowerCase().trim();
+    return this.tags.some(t =>
+      t.name.toLowerCase() === lowerName && t.id !== excludeId
+    );
+  }
 }
 
 // Export singleton instance
