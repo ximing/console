@@ -9,34 +9,54 @@ interface SidebarTabsProps {
 
 export const SidebarTabs = ({ activeTab, onTabChange }: SidebarTabsProps) => {
   return (
-    <div role="tablist" className="flex border-b border-gray-100/80 dark:border-zinc-800/50 px-1">
+    <div role="tablist" className="flex gap-5 px-3 py-2">
       <button
         role="tab"
         type="button"
         aria-selected={activeTab === 'directory'}
         onClick={() => onTabChange('directory')}
-        className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium transition-all duration-150 rounded-t-lg ${
-          activeTab === 'directory'
-            ? 'border-b-2 border-primary-500 text-primary-600 dark:text-primary-400 bg-primary-50/50 dark:bg-primary-900/10 -mb-px'
-            : 'text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-300 hover:bg-gray-50/50 dark:hover:bg-zinc-800/30'
-        }`}
+        className="flex items-center gap-2 transition-all duration-150"
       >
-        <Folder className="w-4 h-4" />
-        目录
+        <div
+          className={`w-2 h-2 rounded-full ${
+            activeTab === 'directory'
+              ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]'
+              : 'bg-gray-300 dark:bg-zinc-600'
+          }`}
+        />
+        <span
+          className={`text-sm font-medium ${
+            activeTab === 'directory'
+              ? 'text-green-600 dark:text-green-400'
+              : 'text-gray-500 dark:text-zinc-500'
+          }`}
+        >
+          目录
+        </span>
       </button>
       <button
         role="tab"
         type="button"
         aria-selected={activeTab === 'recent'}
         onClick={() => onTabChange('recent')}
-        className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium transition-all duration-150 rounded-t-lg ${
-          activeTab === 'recent'
-            ? 'border-b-2 border-primary-500 text-primary-600 dark:text-primary-400 bg-primary-50/50 dark:bg-primary-900/10 -mb-px'
-            : 'text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-300 hover:bg-gray-50/50 dark:hover:bg-zinc-800/30'
-        }`}
+        className="flex items-center gap-2 transition-all duration-150"
       >
-        <Clock className="w-4 h-4" />
-        最近
+        <div
+          className={`w-2 h-2 rounded-full ${
+            activeTab === 'recent'
+              ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]'
+              : 'bg-gray-300 dark:bg-zinc-600'
+          }`}
+        />
+        <span
+          className={`text-sm font-medium ${
+            activeTab === 'recent'
+              ? 'text-green-600 dark:text-green-400'
+              : 'text-gray-500 dark:text-zinc-500'
+          }`}
+        >
+          最近
+        </span>
       </button>
     </div>
   );
