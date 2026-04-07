@@ -72,7 +72,7 @@ export interface UpdateVersionDto {
 /**
  * DTO for app list response
  */
-export interface AppListResult {
+export interface AppListDto {
   apps: AppDto[];
   total: number;
 }
@@ -80,7 +80,7 @@ export interface AppListResult {
 /**
  * DTO for version list response
  */
-export interface VersionListResult {
+export interface VersionListDto {
   versions: AppVersionDto[];
   total: number;
 }
