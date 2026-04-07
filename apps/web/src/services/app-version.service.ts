@@ -3,6 +3,7 @@ import { appApi } from '../api/app';
 import { AppVersionDto, CreateVersionDto, UpdateVersionDto } from '@x-console/dto';
 import { toast } from './toast.service';
 
+/** AppVersion Service - Manages app version state and operations */
 export class AppVersionService extends Service {
   versions: AppVersionDto[] = [];
   currentVersion: AppVersionDto | null = null;
@@ -24,6 +25,7 @@ export class AppVersionService extends Service {
       this.versions = [version, ...this.versions];
       return version;
     } catch (err) {
+      console.error('Create version error:', err);
       toast.error('Failed to create version');
       return null;
     }
@@ -45,6 +47,7 @@ export class AppVersionService extends Service {
       }
       return version;
     } catch (err) {
+      console.error('Update version error:', err);
       toast.error('Failed to update version');
       return null;
     }
@@ -59,6 +62,7 @@ export class AppVersionService extends Service {
       }
       return true;
     } catch (err) {
+      console.error('Delete version error:', err);
       toast.error('Failed to delete version');
       return false;
     }

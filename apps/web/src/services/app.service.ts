@@ -3,6 +3,7 @@ import { appApi } from '../api/app';
 import { AppDto, CreateAppDto, UpdateAppDto } from '@x-console/dto';
 import { toast } from './toast.service';
 
+/** App Service - Manages app state and operations */
 export class AppService extends Service {
   apps: AppDto[] = [];
   currentApp: AppDto | null = null;
@@ -24,6 +25,7 @@ export class AppService extends Service {
       this.apps = [app, ...this.apps];
       return app;
     } catch (err) {
+      console.error('Create app error:', err);
       toast.error('Failed to create app');
       return null;
     }
@@ -41,6 +43,7 @@ export class AppService extends Service {
       }
       return app;
     } catch (err) {
+      console.error('Update app error:', err);
       toast.error('Failed to update app');
       return null;
     }
@@ -55,6 +58,7 @@ export class AppService extends Service {
       }
       return true;
     } catch (err) {
+      console.error('Delete app error:', err);
       toast.error('Failed to delete app');
       return false;
     }
