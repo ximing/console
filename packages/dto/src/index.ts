@@ -11,3 +11,4 @@ export * from './user-model.js';
 export * from './api-token.js';
 export * from './github-repo.js';
 export * from './blog.js';
+export * from './app.js';
