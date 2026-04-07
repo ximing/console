@@ -1,5 +1,5 @@
 import { Service } from 'typedi';
-import { eq, and, count } from 'drizzle-orm';
+import { eq, and, count, desc } from 'drizzle-orm';
 
 import { getDatabase } from '../db/connection.js';
 import { appVersions, type AppVersion, type NewAppVersion } from '../db/schema/app-version.js';
@@ -25,7 +25,7 @@ export class AppVersionService {
       .select()
       .from(appVersions)
       .where(eq(appVersions.appId, appId))
-      .orderBy(appVersions.createdAt)
+      .orderBy(desc(appVersions.createdAt))
       .limit(pageSize)
       .offset(offset);
 
@@ -65,26 +65,29 @@ export class AppVersionService {
     const db = getDatabase();
     const id = generateUid();
 
-    // If this version should be latest, unset other latest versions for this app
-    if (data.isLatest) {
-      await db
-        .update(appVersions)
-        .set({ isLatest: false })
-        .where(and(eq(appVersions.appId, appId), eq(appVersions.isLatest, true)));
-    }
+    // Use transaction to prevent race condition when setting isLatest
+    await db.transaction(async (tx) => {
+      // If this version should be latest, unset other latest versions for this app
+      if (data.isLatest) {
+        await tx
+          .update(appVersions)
+          .set({ isLatest: false })
+          .where(and(eq(appVersions.appId, appId), eq(appVersions.isLatest, true)));
+      }
 
-    const newVersion: NewAppVersion = {
-      id,
-      appId,
-      version: data.version,
-      buildNumber: data.buildNumber ?? null,
-      changelog: data.changelog ?? null,
-      androidUrl: data.androidUrl ?? null,
-      iosUrl: data.iosUrl ?? null,
-      isLatest: data.isLatest ?? false,
-    };
+      const newVersion: NewAppVersion = {
+        id,
+        appId,
+        version: data.version,
+        buildNumber: data.buildNumber ?? null,
+        changelog: data.changelog ?? null,
+        androidUrl: data.androidUrl ?? null,
+        iosUrl: data.iosUrl ?? null,
+        isLatest: data.isLatest ?? false,
+      };
 
-    await db.insert(appVersions).values(newVersion);
+      await tx.insert(appVersions).values(newVersion);
+    });
 
     const [created] = await db.select().from(appVersions).where(eq(appVersions.id, id));
     return this.toDto(created);
@@ -111,28 +114,31 @@ export class AppVersionService {
 
     const existing = existingWithOwner.map((r) => r.app_versions);
 
-    // If setting isLatest to true, unset other latest versions for this app
-    if (data.isLatest === true) {
-      await db
-        .update(appVersions)
-        .set({ isLatest: false })
-        .where(
-          and(
-            eq(appVersions.appId, existing[0].appId),
-            eq(appVersions.isLatest, true)
-          )
-        );
-    }
+    // Use transaction to prevent race condition when setting isLatest
+    await db.transaction(async (tx) => {
+      // If setting isLatest to true, unset other latest versions for this app
+      if (data.isLatest === true) {
+        await tx
+          .update(appVersions)
+          .set({ isLatest: false })
+          .where(
+            and(
+              eq(appVersions.appId, existing[0].appId),
+              eq(appVersions.isLatest, true)
+            )
+          );
+      }
 
-    const updateData: Partial<AppVersion> = {};
-    if (data.version !== undefined) updateData.version = data.version;
-    if (data.buildNumber !== undefined) updateData.buildNumber = data.buildNumber ?? null;
-    if (data.changelog !== undefined) updateData.changelog = data.changelog ?? null;
-    if (data.androidUrl !== undefined) updateData.androidUrl = data.androidUrl ?? null;
-    if (data.iosUrl !== undefined) updateData.iosUrl = data.iosUrl ?? null;
-    if (data.isLatest !== undefined) updateData.isLatest = data.isLatest;
+      const updateData: Partial<AppVersion> = {};
+      if (data.version !== undefined) updateData.version = data.version;
+      if (data.buildNumber !== undefined) updateData.buildNumber = data.buildNumber ?? null;
+      if (data.changelog !== undefined) updateData.changelog = data.changelog ?? null;
+      if (data.androidUrl !== undefined) updateData.androidUrl = data.androidUrl ?? null;
+      if (data.iosUrl !== undefined) updateData.iosUrl = data.iosUrl ?? null;
+      if (data.isLatest !== undefined) updateData.isLatest = data.isLatest;
 
-    await db.update(appVersions).set(updateData).where(eq(appVersions.id, id));
+      await tx.update(appVersions).set(updateData).where(eq(appVersions.id, id));
+    });
 
     const [updated] = await db.select().from(appVersions).where(eq(appVersions.id, id));
     return this.toDto(updated);
