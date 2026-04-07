@@ -1,5 +1,5 @@
 import { Service } from 'typedi';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, count } from 'drizzle-orm';
 
 import { getDatabase } from '../db/connection.js';
 import { apps, type App, type NewApp } from '../db/schema/app.js';
@@ -24,14 +24,15 @@ export class AppService {
       .limit(pageSize)
       .offset(offset);
 
-    const totalResult = await db
-      .select({ count: apps.id })
+    const countResult = await db
+      .select({ count: count() })
       .from(apps)
       .where(eq(apps.userId, userId));
+    const total = countResult[0]?.count ?? 0;
 
     return {
       apps: results.map((app) => this.toDto(app)),
-      total: totalResult.length,
+      total,
     };
   }
 
