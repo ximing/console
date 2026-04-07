@@ -9,10 +9,12 @@ import { getEnvValue as getEnvironmentValue } from './utils/env';
  * - 对象: { key: value } - 将被 JSON 序列化
  * - Error: Error 实例 - 将包含堆栈信息
  * - 基本类型: string, number, boolean 等
+ * - unknown: 未知类型 - 将被转换为字符串
  */
 export type LogMetadata =
   | Record<string, unknown>
   | Error
+  | unknown
   | string
   | number
   | boolean
