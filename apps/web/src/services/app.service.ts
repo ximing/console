@@ -1,6 +1,6 @@
 import { Service } from '@rabjs/react';
 import { appApi } from '../api/app';
-import { AppDto, CreateAppDto, UpdateAppDto } from '@x-console/dto';
+import { type AppDto, type CreateAppDto, type UpdateAppDto } from '@x-console/dto';
 import { toast } from './toast.service';
 
 /** App Service - Manages app state and operations */

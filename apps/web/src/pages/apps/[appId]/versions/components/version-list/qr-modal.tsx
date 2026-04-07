@@ -30,7 +30,7 @@ export const QRModal = view((props: QRModalProps) => {
     }
   };
 
-  const handleDownloadQR = (url: string, platform: string) => {
+  const handleDownloadQR = (_url: string, platform: string) => {
     // Create a canvas to export the QR code
     const svg = document.getElementById(`qr-${platform}`);
     if (!svg) return;
@@ -51,7 +51,7 @@ export const QRModal = view((props: QRModalProps) => {
       }
 
       const link = document.createElement('a');
-      link.download = `qr-${platform}-${props.version?.version || 'unknown'}.png`;
+      link.download = `qr-${platform}-${version.version || 'unknown'}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
     };
@@ -65,8 +65,9 @@ export const QRModal = view((props: QRModalProps) => {
 
   if (!props.visible || !props.version) return null;
 
-  const hasAndroid = !!props.version.androidUrl;
-  const hasIos = !!props.version.iosUrl;
+  const version = props.version;
+  const hasAndroid = !!version.androidUrl;
+  const hasIos = !!version.iosUrl;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -82,10 +83,10 @@ export const QRModal = view((props: QRModalProps) => {
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-zinc-700">
           <div>
             <h3 className="font-medium text-gray-900 dark:text-zinc-50">
-              Version {props.version.version}
+              Version {version.version}
             </h3>
             <p className="text-xs text-gray-500 dark:text-zinc-500 mt-0.5">
-              Build {props.version.buildNumber}
+              Build {version.buildNumber}
             </p>
           </div>
           <button
@@ -113,7 +114,7 @@ export const QRModal = view((props: QRModalProps) => {
                 </span>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => props.version.androidUrl && handleCopyUrl(props.version.androidUrl, 'android')}
+                    onClick={() => version.androidUrl && handleCopyUrl(version.androidUrl, 'android')}
                     className="p-1.5 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded transition-all"
                     title="Copy URL"
                   >
@@ -124,7 +125,7 @@ export const QRModal = view((props: QRModalProps) => {
                     )}
                   </button>
                   <button
-                    onClick={() => props.version.androidUrl && handleDownloadQR(props.version.androidUrl, 'android')}
+                    onClick={() => version.androidUrl && handleDownloadQR(version.androidUrl, 'android')}
                     className="p-1.5 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded transition-all"
                     title="Download QR"
                   >
@@ -135,14 +136,14 @@ export const QRModal = view((props: QRModalProps) => {
               <div className="flex justify-center bg-white p-4 rounded-lg">
                 <QRCodeSVG
                   id="qr-android"
-                  value={props.version.androidUrl || ''}
+                  value={version.androidUrl || ''}
                   size={180}
                   level="H"
                   includeMargin={true}
                 />
               </div>
               <p className="text-xs text-gray-500 dark:text-zinc-500 truncate text-center">
-                {props.version.androidUrl}
+                {version.androidUrl}
               </p>
             </div>
           )}
@@ -156,7 +157,7 @@ export const QRModal = view((props: QRModalProps) => {
                 </span>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => props.version.iosUrl && handleCopyUrl(props.version.iosUrl, 'ios')}
+                    onClick={() => version.iosUrl && handleCopyUrl(version.iosUrl, 'ios')}
                     className="p-1.5 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded transition-all"
                     title="Copy URL"
                   >
@@ -167,7 +168,7 @@ export const QRModal = view((props: QRModalProps) => {
                     )}
                   </button>
                   <button
-                    onClick={() => props.version.iosUrl && handleDownloadQR(props.version.iosUrl, 'ios')}
+                    onClick={() => version.iosUrl && handleDownloadQR(version.iosUrl, 'ios')}
                     className="p-1.5 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded transition-all"
                     title="Download QR"
                   >
@@ -178,14 +179,14 @@ export const QRModal = view((props: QRModalProps) => {
               <div className="flex justify-center bg-white p-4 rounded-lg">
                 <QRCodeSVG
                   id="qr-ios"
-                  value={props.version.iosUrl || ''}
+                  value={version.iosUrl || ''}
                   size={180}
                   level="H"
                   includeMargin={true}
                 />
               </div>
               <p className="text-xs text-gray-500 dark:text-zinc-500 truncate text-center">
-                {props.version.iosUrl}
+                {version.iosUrl}
               </p>
             </div>
           )}

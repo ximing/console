@@ -1,5 +1,5 @@
 import { bindServices } from '@rabjs/react';
-import { Layout } from '../../../../../components/layout';
+import { Layout } from '../../../../components/layout';
 import { VersionList } from './components/version-list';
 
 /**

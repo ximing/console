@@ -1,7 +1,7 @@
 import { view } from '@rabjs/react';
 import { Edit2, Trash2, Eye, Loader2 } from 'lucide-react';
 import type { AppDto } from '@x-console/dto';
-import { formatRelativeTime } from '../../../../../utils/date';
+import { formatRelativeTime } from '../../../../utils/date';
 
 interface AppListContentProps {
   apps: AppDto[];

@@ -1,24 +1,21 @@
 import { useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { view, useService } from '@rabjs/react';
-import { AppVersionService } from '../../../../../../../services/app-version.service';
-import { AppService } from '../../../../../../../services/app.service';
+import { appVersionService } from '../../../../../../../services/app-version.service';
+import { appService } from '../../../../../../../services/app.service';
 import type { AppVersionDto, CreateVersionDto, UpdateVersionDto } from '@x-console/dto';
-import { toast } from '../../../../../../../components/toast/toast.service';
+import { toast } from '../../../../../../../services/toast.service';
 
 /**
  * Hook for managing version list operations
  */
-export const useVersionList = view(() => {
-  const appVersionService = useService(AppVersionService);
-  const appService = useService(AppService);
+export function useVersionList() {
   const navigate = useNavigate();
   const params = useParams();
   const appId = params.appId!;
 
   const loadVersions = useCallback(async () => {
     await appVersionService.loadVersions(appId);
-  }, [appId, appVersionService]);
+  }, [appId]);
 
   const loadApp = useCallback(async () => {
     // Try to find app in current list first
@@ -29,7 +26,7 @@ export const useVersionList = view(() => {
       app = appService.apps.find(a => a.id === appId);
     }
     return app;
-  }, [appId, appService]);
+  }, [appId]);
 
   const createVersion = useCallback(async (data: CreateVersionDto): Promise<AppVersionDto | null> => {
     const version = await appVersionService.createVersion(appId, data);
@@ -37,7 +34,7 @@ export const useVersionList = view(() => {
       toast.success('Version created successfully');
     }
     return version;
-  }, [appId, appVersionService]);
+  }, [appId]);
 
   const updateVersion = useCallback(async (versionId: string, data: UpdateVersionDto): Promise<AppVersionDto | null> => {
     const version = await appVersionService.updateVersion(appId, versionId, data);
@@ -45,7 +42,7 @@ export const useVersionList = view(() => {
       toast.success('Version updated successfully');
     }
     return version;
-  }, [appId, appVersionService]);
+  }, [appId]);
 
   const deleteVersion = useCallback(async (versionId: string): Promise<boolean> => {
     const confirmed = window.confirm('Are you sure you want to delete this version?');
@@ -56,7 +53,7 @@ export const useVersionList = view(() => {
       toast.success('Version deleted successfully');
     }
     return success;
-  }, [appId, appVersionService]);
+  }, [appId]);
 
   const navigateBack = useCallback(() => {
     navigate('/apps');
@@ -72,4 +69,4 @@ export const useVersionList = view(() => {
     deleteVersion,
     navigateBack,
   };
-});
+}
