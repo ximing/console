@@ -13,6 +13,7 @@ import { CommandPaletteIntentController } from './v1/command-palette-intent.cont
 import { GithubController } from './v1/github.controller.js';
 import { BlogController } from './v1/blog.controller.js';
 import { BlogMediaController } from './v1/blog-media.controller.js';
+import { AppController } from './v1/app.controller.js';
 import { StaticController } from './static.controller.js';
 
 export const controllers = [
@@ -30,5 +31,6 @@ export const controllers = [
   GithubController,
   BlogController,
   BlogMediaController,
+  AppController,
   StaticController,
 ];
