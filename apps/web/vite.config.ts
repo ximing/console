@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.d.ts'],
       alias: {
-        '@x-console/dto': path.resolve(__dirname, '../../packages/dto/dist/index.d.ts'),
+        '@x-console/dto': path.resolve(__dirname, '../../packages/dto/src'),
       },
     },
     server: {
