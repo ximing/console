@@ -99,4 +99,20 @@ export const notificationApi = {
     );
     return response.data;
   },
+
+  /**
+   * Create a new notification
+   */
+  create: async (data: {
+    type: string;
+    title: string;
+    content: string;
+    data?: Record<string, unknown>;
+  }): Promise<NotificationDto> => {
+    const response = await request.post<typeof data, ApiResponse<NotificationDto>>(
+      '/api/v1/notifications',
+      data
+    );
+    return response.data;
+  },
 };
