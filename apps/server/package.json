@@ -28,6 +28,7 @@
     "@hocuspocus/extension-database": "^3.4.4",
     "@hocuspocus/server": "^3.4.4",
     "@hocuspocus/transformer": "^3.4.4",
+    "@octokit/rest": "^22.0.0",
     "@langchain/core": "^1.1.38",
     "@langchain/langgraph": "^1.2.6",
     "@langchain/openai": "^1.4.1",

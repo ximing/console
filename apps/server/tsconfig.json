@@ -21,8 +21,8 @@
     "experimentalDecorators": true,
     "sourceMap": false,
     "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true
   },
@@ -33,7 +33,8 @@
     "files": true,
     "esm": true,
     "compilerOptions": {
-      "module": "NodeNext"
+      "module": "ESNext",
+      "moduleResolution": "Bundler"
     }
   }
 }

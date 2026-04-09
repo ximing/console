@@ -1,5 +1,5 @@
 import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight';
-import { ReactNodeViewRenderer, NodeViewWrapper, NodeViewContent } from '@tiptap/react';
+import { ReactNodeViewRenderer, NodeViewWrapper, NodeViewContent, type NodeViewProps } from '@tiptap/react';
 import { createLowlight, common } from 'lowlight';
 import { useState, useCallback, useRef } from 'react';
 import { Copy, Check, ChevronDown } from 'lucide-react';
@@ -11,9 +11,9 @@ const LANGUAGES = [
   'plaintext'
 ];
 
-export const lowlight = createLowlight(common);
+const lowlight = createLowlight(common);
 
-function CodeBlockComponent({ node, updateAttributes }: any) {
+function CodeBlockComponent({ node, updateAttributes }: NodeViewProps) {
   const language = node.attrs.language || 'plaintext';
   const [copied, setCopied] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
@@ -113,6 +113,6 @@ export const CustomCodeBlock = CodeBlockLowlight.extend({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(CodeBlockComponent as any);
+    return ReactNodeViewRenderer(CodeBlockComponent);
   },
 }).configure({ lowlight });

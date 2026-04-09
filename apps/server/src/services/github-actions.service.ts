@@ -4,15 +4,18 @@ import { GithubRepoService } from './github-repo.service.js';
 import { GithubSettingsService } from './github-settings.service.js';
 import { logger } from '../utils/logger.js';
 
+type WorkflowStatus = 'queued' | 'in_progress' | 'completed';
+type WorkflowConclusion = 'success' | 'failure' | 'cancelled' | 'skipped' | 'timed_out' | 'action_required' | null;
+
 interface WorkflowRunResult {
   id: number;
   name: string;
-  status: string;
-  conclusion: string | null;
+  status: WorkflowStatus;
+  conclusion: WorkflowConclusion;
   workflow_name: string;
   repository: string;
   repository_full_name: string;
-  head_branch: string | null;
+  head_branch: string;
   event: string;
   actor: string;
   created_at: string;
@@ -20,6 +23,23 @@ interface WorkflowRunResult {
   run_number: number;
   run_attempt: number;
   html_url: string;
+}
+
+// Helper to convert Octokit status to our status type
+function toWorkflowStatus(status: string | undefined | null): WorkflowStatus {
+  if (status === 'queued' || status === 'in_progress' || status === 'completed') {
+    return status;
+  }
+  return 'completed'; // default
+}
+
+// Helper to convert Octokit conclusion to our conclusion type
+function toWorkflowConclusion(conclusion: string | null | undefined): WorkflowConclusion {
+  if (conclusion === 'success' || conclusion === 'failure' || conclusion === 'cancelled' ||
+      conclusion === 'skipped' || conclusion === 'timed_out' || conclusion === 'action_required' || conclusion === null) {
+    return conclusion;
+  }
+  return null;
 }
 
 @Service()
@@ -48,24 +68,24 @@ export class GithubActionsService {
           owner,
           repo: repoName,
           per_page: params?.per_page || 30,
-          ...(params?.status && params.status !== 'all' && { status: params.status }),
+          ...(params?.status && params.status !== 'all' && { status: params.status as 'queued' | 'in_progress' | 'completed' | 'success' | 'failure' }),
         });
 
         const runs: WorkflowRunResult[] = response.data.workflow_runs.map((run) => ({
           id: run.id,
-          name: run.name,
-          status: run.status,
-          conclusion: run.conclusion,
-          workflow_name: run.name,
+          name: run.name ?? 'Unknown',
+          status: toWorkflowStatus(run.status),
+          conclusion: toWorkflowConclusion(run.conclusion),
+          workflow_name: run.name ?? 'Unknown',
           repository: repo.name,
           repository_full_name: repo.fullName,
-          head_branch: run.head_branch,
+          head_branch: run.head_branch ?? 'unknown',
           event: run.event,
-          actor: run.actor?.login || run.actor?.name || 'unknown',
+          actor: run.actor?.login ?? run.actor?.name ?? 'unknown',
           created_at: run.created_at,
           updated_at: run.updated_at,
           run_number: run.run_number,
-          run_attempt: run.run_attempt,
+          run_attempt: run.run_attempt ?? 1,
           html_url: run.html_url,
         }));
 
@@ -115,19 +135,19 @@ export class GithubActionsService {
 
         const runs: WorkflowRunResult[] = runsResponse.data.workflow_runs.map((run) => ({
           id: run.id,
-          name: run.name || 'Unknown',
-          status: run.status || 'unknown',
-          conclusion: run.conclusion,
-          workflow_name: run.name || 'Unknown',
+          name: run.name ?? 'Unknown',
+          status: toWorkflowStatus(run.status),
+          conclusion: toWorkflowConclusion(run.conclusion),
+          workflow_name: run.name ?? 'Unknown',
           repository: repo.name,
           repository_full_name: repo.full_name,
-          head_branch: run.head_branch,
+          head_branch: run.head_branch ?? 'unknown',
           event: run.event,
-          actor: run.actor?.login || 'unknown',
+          actor: run.actor?.login ?? 'unknown',
           created_at: run.created_at,
           updated_at: run.updated_at,
           run_number: run.run_number,
-          run_attempt: run.run_attempt,
+          run_attempt: run.run_attempt ?? 1,
           html_url: run.html_url,
         }));
 
