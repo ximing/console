@@ -6,7 +6,8 @@ import { ModelSettings } from './components/model-settings';
 import { CommandPaletteSettings } from './components/command-palette-settings';
 import { ApiTokenSettings } from './components/api-token-settings';
 import { LogSettings } from './components/log-settings';
-import { User, Settings as SettingsIcon, Bot, Key, FileText, Command } from 'lucide-react';
+import { GithubTokenSettings } from './components/github-token-settings';
+import { User, Settings as SettingsIcon, Bot, Key, FileText, Command, Github } from 'lucide-react';
 import { isElectron } from '../../electron/isElectron';
 
 const menuItems = [
@@ -33,6 +34,12 @@ const menuItems = [
     label: 'API Token',
     icon: Key,
     path: '/settings/api-tokens',
+  },
+  {
+    id: 'github',
+    label: 'GitHub',
+    icon: Github,
+    path: '/settings/github',
   },
 ];
 
@@ -97,6 +104,7 @@ export const SettingsPage = view(() => {
             <Route path="/models" element={<ModelSettings />} />
             <Route path="/command-palette" element={<CommandPaletteSettings />} />
             <Route path="/api-tokens" element={<ApiTokenSettings />} />
+            <Route path="/github" element={<GithubTokenSettings />} />
             <Route path="/logs" element={<LogSettings />} />
           </Routes>
         </div>

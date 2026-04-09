@@ -5,6 +5,7 @@ import type {
   GithubRepoListDto,
   GithubRepoTokenDto,
   WorkflowRunsResponseDto,
+  GithubSettingsDto,
 } from '@x-console/dto';
 import request from '../utils/request';
 
@@ -87,6 +88,27 @@ export const githubApi = {
     const response = await request.get<unknown, ApiResponse<WorkflowRunsResponseDto>>(
       '/api/v1/github/actions/runs',
       { params }
+    );
+    return response.data;
+  },
+
+  /**
+   * Get GitHub global token settings
+   */
+  getGithubSettings: async (): Promise<GithubSettingsDto> => {
+    const response = await request.get<unknown, ApiResponse<GithubSettingsDto>>(
+      '/api/v1/github/settings'
+    );
+    return response.data;
+  },
+
+  /**
+   * Update GitHub global token settings
+   */
+  updateGithubSettings: async (data: { pat?: string }): Promise<GithubSettingsDto> => {
+    const response = await request.put<{ pat?: string }, ApiResponse<GithubSettingsDto>>(
+      '/api/v1/github/settings',
+      data
     );
     return response.data;
   },

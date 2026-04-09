@@ -20,7 +20,7 @@ export class GithubActionsController {
         return ResponseUtil.error(401, 'Unauthorized');
       }
 
-      const runs = await this.githubActionsService.getWorkflowRuns(userDto.id, {
+      const runs = await this.githubActionsService.getWorkflowRunsForAllRepos(userDto.id, {
         status: query.status,
       });
 

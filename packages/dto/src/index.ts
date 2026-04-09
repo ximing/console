@@ -11,5 +11,6 @@ export * from './user-model';
 export * from './api-token';
 export * from './github-repo';
 export * from './github';
+export * from './github-settings';
 export * from './blog';
 export * from './app';

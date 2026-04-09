@@ -15,6 +15,7 @@ export class ActionsService extends Service {
   viewMode: ViewMode = 'list';
   filter: StatusFilter = 'all';
   pollInterval: number = 0;
+  hasToken: boolean = false;
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private previousFailedIds: Set<number> = new Set();
 
@@ -58,17 +59,27 @@ export class ActionsService extends Service {
   async loadRuns(): Promise<void> {
     this.isLoading = true;
     this.error = null;
+
     try {
+      // First check if token is configured
+      const settings = await githubApi.getGithubSettings();
+      this.hasToken = settings.has_token;
+
+      if (!this.hasToken) {
+        this.isLoading = false;
+        return;
+      }
+
       const data = await githubApi.getWorkflowRuns();
 
       // Detect new failures
       const newFailedIds = new Set<number>(
-        data.runs.filter((r: any) => r.status === 'completed' && r.conclusion === 'failure').map((r: any) => r.id as number)
+        data.runs.filter((r) => r.status === 'completed' && r.conclusion === 'failure').map((r) => r.id as number)
       );
 
       for (const id of newFailedIds) {
         if (!this.previousFailedIds.has(id)) {
-          const run = data.runs.find((r: any) => r.id === id) as any;
+          const run = data.runs.find((r) => r.id === id);
           if (run) {
             try {
               await notificationApi.create({
