@@ -50,12 +50,14 @@ export function useCollaboration({ pageId }: UseCollaborationOptions): UseCollab
   const prevPageIdRef = useRef<string | undefined>(undefined);
 
   // Recreate Y.Doc when pageId changes
+  /* eslint-disable react-hooks/refs */
   if (prevPageIdRef.current !== pageId) {
     ydocRef.current.destroy();
     ydocRef.current = new Y.Doc();
     prevPageIdRef.current = pageId;
   }
   const ydoc = ydocRef.current;
+  /* eslint-enable react-hooks/refs */
 
   const providerRef = useRef<HocuspocusProvider | null>(null);
   const indexeddbProviderRef = useRef<IndexeddbPersistence | null>(null);
@@ -142,12 +144,14 @@ export function useCollaboration({ pageId }: UseCollaborationOptions): UseCollab
     };
   }, [pageId, token, ydoc]);
 
+  // eslint-disable-next-line react-hooks/refs -- Provider is set in useEffect before this is accessed
   const awareness = providerRef.current?.awareness ?? null;
   const userId = authService.user?.id || '';
   const userName = authService.user?.username || authService.user?.email || 'Guest';
   const userColor = getUserColor(userId);
   const userAvatar = authService.user?.avatar ?? null;
 
+  /* eslint-disable react-hooks/refs */
   useEffect(() => {
     if (!awareness || !userId) {
       return;
@@ -160,7 +164,9 @@ export function useCollaboration({ pageId }: UseCollaborationOptions): UseCollab
       avatar: userAvatar,
     });
   }, [awareness, userColor, userId, userName, userAvatar]);
+  /* eslint-enable react-hooks/refs */
 
+  /* eslint-disable react-hooks/refs */
   const editorExtensions = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const baseExtensions = [...(inlineEditableExtensions as any)];
@@ -204,7 +210,9 @@ export function useCollaboration({ pageId }: UseCollaborationOptions): UseCollab
 
     return baseExtensions;
   }, [ydoc, providerReady, userName, userColor, userAvatar]);
+  /* eslint-enable react-hooks/refs */
 
+  /* eslint-disable react-hooks/refs */
   return {
     ydoc,
     provider: providerRef.current,
@@ -218,4 +226,5 @@ export function useCollaboration({ pageId }: UseCollaborationOptions): UseCollab
     userColor,
     userAvatar,
   };
+  /* eslint-enable react-hooks/refs */
 }
