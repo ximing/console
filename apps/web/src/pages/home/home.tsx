@@ -5,7 +5,7 @@ import { Layout } from '../../components/layout';
 import { AuthService } from '../../services/auth.service';
 import { MiniMaxTokenService } from '../../services/minimax-token.service';
 import { NotificationService } from '../../services/notification.service';
-import { Clock, Sun, Moon, Sunrise, Sunset, RefreshCw, Zap, Bell } from 'lucide-react';
+import { Sun, Moon, Sunrise, Sunset, RefreshCw, Zap } from 'lucide-react';
 import { NotificationList } from './components/notification-list';
 import { TaskStatsCard } from './components/task-stats-card';
 import { QuickActions } from './components/quick-actions';
@@ -187,7 +187,7 @@ export const HomePage = view(() => {
                 return (
                   <div
                     key={model.model_name}
-                    className={`bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-lg p-3 hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 ${isEmpty ? 'opacity-50' : ''}`}
+                    className={`bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-lg p-3 transition-all duration-150 ${isEmpty ? 'opacity-50' : 'hover:shadow-md hover:-translate-y-0.5'}`}
                   >
                     <div className="text-xs text-gray-500 dark:text-gray-400 truncate mb-1" title={model.model_name}>
                       {model.model_name}
