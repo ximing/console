@@ -1,13 +1,20 @@
 import { view, useService } from '@rabjs/react';
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router';
 import { Layout } from '../../components/layout';
 import { AuthService } from '../../services/auth.service';
 import { MiniMaxTokenService } from '../../services/minimax-token.service';
-import { Clock, Calendar, User, Mail, Sun, Moon, Sunrise, Sunset, RefreshCw, Zap, Activity } from 'lucide-react';
+import { NotificationService } from '../../services/notification.service';
+import { Clock, Sun, Moon, Sunrise, Sunset, RefreshCw, Zap, Bell } from 'lucide-react';
+import { NotificationList } from './components/notification-list';
+import { TaskStatsCard } from './components/task-stats-card';
+import { QuickActions } from './components/quick-actions';
 
 export const HomePage = view(() => {
   const authService = useService(AuthService);
   const tokenService = useService(MiniMaxTokenService);
+  const notificationService = useService(NotificationService);
+  const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // Update time every second
@@ -59,12 +66,6 @@ export const HomePage = view(() => {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-  });
-  const dateString = currentTime.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    weekday: 'long',
   });
 
   // Get greeting based on time
@@ -119,149 +120,92 @@ export const HomePage = view(() => {
             </div>
           </div>
 
-          {/* Main Dashboard Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Time Card */}
-            <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-xl shadow-sm p-6 hover:shadow-md hover:-translate-y-0.5 hover:bg-green-50/50 dark:hover:bg-green-900/15 transition-all duration-150">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                  <Clock className="w-6 h-6 text-green-600 dark:text-green-400" />
+          {/* Stats Grid - 4 columns */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {/* Time Card (compact) */}
+            <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-xl shadow-sm p-4 hover:shadow-md hover:-translate-y-0.5 hover:bg-green-50/50 dark:hover:bg-green-900/15 transition-all duration-150">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                  <Clock className="w-4 h-4 text-green-600 dark:text-green-400" />
                 </div>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">当前时间</h2>
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">时间</span>
               </div>
-              <div className="space-y-2">
-                <div className="text-4xl font-bold text-green-600 dark:text-green-400 font-mono">
-                  {timeString}
-                </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">{dateString}</div>
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400 font-mono">
+                {timeString}
               </div>
             </div>
 
-            {/* Date Card */}
-            <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-xl shadow-sm p-6 hover:shadow-md hover:-translate-y-0.5 hover:bg-green-50/50 dark:hover:bg-green-900/15 transition-all duration-150">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                  <Calendar className="w-6 h-6 text-green-600 dark:text-green-400" />
-                </div>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">今日日期</h2>
-              </div>
-              <div className="space-y-2">
-                <div className="text-3xl font-bold text-green-600 dark:text-green-400">
-                  {currentTime.getDate()}
-                </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  {currentTime.toLocaleDateString('zh-CN', {
-                    year: 'numeric',
-                    month: 'long',
-                  })}
-                </div>
-                <div className="text-xs text-gray-400 dark:text-gray-500">
-                  {currentTime.toLocaleDateString('zh-CN', { weekday: 'long' })}
-                </div>
-              </div>
-            </div>
-            {/* MiniMax Token Card */}
-            <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-xl shadow-sm p-6 hover:shadow-md hover:-translate-y-0.5 hover:bg-green-50/50 dark:hover:bg-green-900/15 transition-all duration-150">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                    <Zap className="w-6 h-6 text-green-600 dark:text-green-400" />
+            {/* Token Card (compact) */}
+            <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-xl shadow-sm p-4 hover:shadow-md hover:-translate-y-0.5 hover:bg-green-50/50 dark:hover:bg-green-900/15 transition-all duration-150">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                    <Zap className="w-4 h-4 text-green-600 dark:text-green-400" />
                   </div>
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    MiniMax 配额
-                  </h2>
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Token</span>
                 </div>
                 <button
                   onClick={() => tokenService.refresh()}
                   disabled={tokenService.refreshing}
-                  className="p-1.5 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors disabled:opacity-50"
+                  className="p-1 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors disabled:opacity-50"
                 >
-                  <RefreshCw className={`w-4 h-4 text-green-600 dark:text-green-400 ${tokenService.refreshing ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`w-3 h-3 text-green-600 dark:text-green-400 ${tokenService.refreshing ? 'animate-spin' : ''}`} />
                 </button>
               </div>
-              <div className="space-y-3">
-                {/* Main Model - MiniMax-M* */}
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {(() => {
                   const mainModel = tokenService.getMainModelRemain();
-                  if (!mainModel && !tokenService.error) {
-                    return (
-                      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                        <Activity className="w-4 h-4" />
-                        <span>加载中...</span>
-                      </div>
-                    );
-                  }
-                  if (tokenService.error) {
-                    return (
-                      <div className="flex items-center gap-2 text-sm text-red-500">
-                        <span>加载失败</span>
-                      </div>
-                    );
-                  }
-                  if (mainModel) {
-                    const intervalUsed = mainModel.current_interval_usage_count;
-                    const intervalTotal = mainModel.current_interval_total_count;
-                    const intervalPercent = intervalTotal > 0
-                      ? Math.round((intervalUsed / intervalTotal) * 100)
-                      : 0;
-                    return (
-                      <>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
-                            本小时额度
-                          </span>
-                          <span className="text-sm font-medium text-gray-900 dark:text-white">
-                            {intervalUsed} / {intervalTotal}
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                          <div
-                            className="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${intervalPercent}%` }}
-                          />
-                        </div>
-                        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                          <span>剩余时间: {tokenService.formatRemainsTime(mainModel.remains_time)}</span>
-                          <span>{intervalPercent}% 已用</span>
-                        </div>
-                      </>
-                    );
-                  }
-                  return null;
-                })()}
-
-                {/* Weekly Stats */}
-                {(() => {
-                  const mainModel = tokenService.getMainModelRemain();
-                  if (!mainModel) return null;
-                  const weeklyUsed = mainModel.current_weekly_usage_count;
-                  const weeklyTotal = mainModel.current_weekly_total_count;
-                  const weeklyPercent = weeklyTotal > 0
-                    ? Math.round((weeklyUsed / weeklyTotal) * 100)
+                  const tokenRemaining = mainModel
+                    ? mainModel.current_interval_total_count - mainModel.current_interval_usage_count
                     : 0;
-                  return (
-                    <>
-                      <div className="border-t border-gray-100 dark:border-gray-700 pt-3 mt-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
-                            本周额度
-                          </span>
-                          <span className="text-sm font-medium text-gray-900 dark:text-white">
-                            {weeklyUsed} / {weeklyTotal}
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mt-2">
-                          <div
-                            className="bg-gradient-to-r from-green-400 to-green-500 h-1.5 rounded-full transition-all duration-300"
-                            style={{ width: `${weeklyPercent}%` }}
-                          />
-                        </div>
-                      </div>
-                    </>
-                  );
+                  return tokenRemaining.toLocaleString();
                 })()}
-
               </div>
+            </div>
+
+            {/* Task Stats Card (clickable) */}
+            <button
+              onClick={() => navigate('/tasks')}
+              className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-xl shadow-sm p-4 hover:shadow-md hover:-translate-y-0.5 hover:bg-green-50/50 dark:hover:bg-green-900/15 transition-all duration-150 text-left"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                  <Zap className="w-4 h-4 text-green-600 dark:text-green-400" />
+                </div>
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">任务</span>
+              </div>
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                待处理
+              </div>
+            </button>
+
+            {/* Notification Count (clickable) */}
+            <button
+              onClick={() => navigate('/notifications')}
+              className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-xl shadow-sm p-4 hover:shadow-md hover:-translate-y-0.5 hover:bg-green-50/50 dark:hover:bg-green-900/15 transition-all duration-150 text-left"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                  <Bell className="w-4 h-4 text-green-600 dark:text-green-400" />
+                </div>
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">通知</span>
+              </div>
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                {notificationService.unreadCount}
+              </div>
+            </button>
+          </div>
+
+          {/* Dual-column content area */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            {/* 60% - Notification list */}
+            <div className="lg:col-span-3">
+              <NotificationList />
+            </div>
+            {/* 40% - Right panel */}
+            <div className="lg:col-span-2 space-y-4">
+              <TaskStatsCard />
+              <QuickActions />
             </div>
           </div>
         </div>
