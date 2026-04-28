@@ -194,7 +194,7 @@ export const HomePage = view(() => {
             </div>
 
             {/* 其他模型小卡片网格 */}
-            <div className="lg:col-span-3 grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 content-start">
+            <div className="lg:col-span-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 content-start">
               {tokenService.getOtherModelRemains().map((model) => {
                 const remaining = model.current_interval_total_count - model.current_interval_usage_count;
                 const percentage = tokenService.getProgressPercentage(model);
@@ -203,7 +203,7 @@ export const HomePage = view(() => {
                 return (
                   <div
                     key={model.model_name}
-                    className={`bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-lg p-3 transition-all duration-150 ${isEmpty ? 'opacity-50' : 'hover:shadow-md hover:-translate-y-0.5'}`}
+                    className={`bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-lg p-2 transition-all duration-150 ${isEmpty ? 'opacity-50' : 'hover:shadow-md hover:-translate-y-0.5'}`}
                   >
                     <div className="text-xs text-gray-500 dark:text-gray-400 truncate mb-1" title={model.model_name}>
                       {model.model_name}
