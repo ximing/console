@@ -16,8 +16,10 @@ import { GithubSettingsController } from './v1/github-settings.controller.js';
 import { BlogController } from './v1/blog.controller.js';
 import { BlogMediaController } from './v1/blog-media.controller.js';
 import { AppController } from './v1/app.controller.js';
+import { MiniMaxController } from './v1/minimax.controller.js';
 import { StaticController } from './static.controller.js';
 
+// StaticController 必须在最后
 export const controllers = [
   AuthV1Controller,
   UserV1Controller,
@@ -36,5 +38,6 @@ export const controllers = [
   BlogController,
   BlogMediaController,
   AppController,
+  MiniMaxController,
   StaticController,
 ];

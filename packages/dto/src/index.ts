@@ -14,3 +14,4 @@ export * from './github';
 export * from './github-settings';
 export * from './blog';
 export * from './app';
+export * from './minimax';
