@@ -61,13 +61,6 @@ export const HomePage = view(() => {
   const userName = authService.user?.username || authService.user?.email?.split('@')[0] || 'User';
   const userAvatar = authService.user?.avatar;
 
-  // Format time and date
-  const timeString = currentTime.toLocaleTimeString('zh-CN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  });
-
   // Get greeting based on time
   const hour = currentTime.getHours();
   let greeting = '早上好';
