@@ -1,10 +1,8 @@
 import { view, useService } from '@rabjs/react';
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
 import { Layout } from '../../components/layout';
 import { AuthService } from '../../services/auth.service';
 import { MiniMaxTokenService } from '../../services/minimax-token.service';
-import { NotificationService } from '../../services/notification.service';
 import { Sun, Moon, Sunrise, Sunset, RefreshCw, Zap } from 'lucide-react';
 import { NotificationList } from './components/notification-list';
 import { TaskStatsCard } from './components/task-stats-card';
@@ -13,8 +11,6 @@ import { QuickActions } from './components/quick-actions';
 export const HomePage = view(() => {
   const authService = useService(AuthService);
   const tokenService = useService(MiniMaxTokenService);
-  const notificationService = useService(NotificationService);
-  const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // Update time every second
