@@ -160,35 +160,6 @@ export const HomePage = view(() => {
                 </div>
               </div>
             </div>
-
-            {/* User Info Card */}
-            <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-xl shadow-sm p-6 hover:shadow-md hover:-translate-y-0.5 hover:bg-green-50/50 dark:hover:bg-green-900/15 transition-all duration-150">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                  <User className="w-6 h-6 text-green-600 dark:text-green-400" />
-                </div>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">用户信息</h2>
-              </div>
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <User className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">用户名：</span>
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
-                    {userName}
-                  </span>
-                </div>
-                {authService.user?.email && (
-                  <div className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">邮箱：</span>
-                    <span className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                      {authService.user.email}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-
             {/* MiniMax Token Card */}
             <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-xl shadow-sm p-6 hover:shadow-md hover:-translate-y-0.5 hover:bg-green-50/50 dark:hover:bg-green-900/15 transition-all duration-150">
               <div className="flex items-center justify-between mb-4">
