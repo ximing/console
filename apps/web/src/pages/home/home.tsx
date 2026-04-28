@@ -125,9 +125,14 @@ export const HomePage = view(() => {
                 if (!mainModel) {
                   return <div className="text-gray-400">加载中...</div>;
                 }
-                const remaining = mainModel.current_interval_total_count - mainModel.current_interval_usage_count;
-                const percentage = tokenService.getProgressPercentage(mainModel);
-                const color = tokenService.getProgressColor(percentage);
+                const intervalRemaining = mainModel.current_interval_total_count - mainModel.current_interval_usage_count;
+                const intervalPercentage = tokenService.getProgressPercentage(mainModel);
+                const intervalColor = tokenService.getProgressColor(intervalPercentage);
+                const weeklyRemaining = mainModel.current_weekly_total_count - mainModel.current_weekly_usage_count;
+                const weeklyPercentage = mainModel.current_weekly_total_count > 0
+                  ? Math.round((weeklyRemaining / mainModel.current_weekly_total_count) * 100)
+                  : 0;
+                const weeklyColor = tokenService.getProgressColor(weeklyPercentage);
                 return (
                   <>
                     <div className="flex items-center justify-between mb-3">
@@ -145,25 +150,43 @@ export const HomePage = view(() => {
                         <RefreshCw className={`w-3 h-3 text-green-600 dark:text-green-400 ${tokenService.refreshing ? 'animate-spin' : ''}`} />
                       </button>
                     </div>
-                    <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">
-                      {remaining.toLocaleString()}
-                    </div>
+                    {/* 当前配额 */}
                     <div className="mb-3">
-                      <div className="flex justify-between text-xs text-gray-500 mb-1">
-                        <span>剩余 {percentage}%</span>
+                      <div className="flex justify-between items-baseline mb-1">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">当前配额</span>
+                        <span className={mainModel.remains_time < 3600000 ? 'text-xs text-red-500' : 'text-xs text-gray-400'}>
+                          剩余 {tokenService.formatRemainsTime(mainModel.remains_time)}
+                        </span>
+                      </div>
+                      <div className="text-2xl font-bold text-green-600 dark:text-green-400 mb-1">
+                        {intervalRemaining.toLocaleString()}
                       </div>
                       <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                         <div
-                          className={`h-full ${color} transition-all duration-300`}
-                          style={{ width: `${percentage}%` }}
+                          className={`h-full ${intervalColor} transition-all duration-300`}
+                          style={{ width: `${intervalPercentage}%` }}
                         />
                       </div>
+                      <div className="text-xs text-gray-400 mt-1">{intervalPercentage}% 剩余</div>
                     </div>
-                    <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-                      <span>本周: {(mainModel.current_weekly_total_count - mainModel.current_weekly_usage_count).toLocaleString()} / {mainModel.current_weekly_total_count.toLocaleString()}</span>
-                      <span className={mainModel.remains_time < 3600000 ? 'text-red-500' : ''}>
-                        剩余 {tokenService.formatRemainsTime(mainModel.remains_time)}
-                      </span>
+                    {/* 本周配额 */}
+                    <div>
+                      <div className="flex justify-between items-baseline mb-1">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">本周配额</span>
+                        <span className="text-xs text-gray-400">
+                          剩余 {tokenService.formatRemainsTime(mainModel.weekly_remains_time)}
+                        </span>
+                      </div>
+                      <div className="text-2xl font-bold text-gray-700 dark:text-gray-200 mb-1">
+                        {weeklyRemaining.toLocaleString()}
+                      </div>
+                      <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${weeklyColor} transition-all duration-300`}
+                          style={{ width: `${weeklyPercentage}%` }}
+                        />
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1">{weeklyPercentage}% 剩余</div>
                     </div>
                   </>
                 );
