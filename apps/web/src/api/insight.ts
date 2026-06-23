@@ -6,6 +6,9 @@ export interface PillarDetail {
   canggan?: { gan: string; shishen: string }[];
   nayin?: string;
   shenshas?: string[];
+  xiyun?: string;
+  zizuo?: string;
+  kongwang?: string;
 }
 
 export interface DayunDto {
@@ -36,6 +39,7 @@ export interface InsightProfileDto {
   shenshas: string[] | null;
   birthYear: number;
   birthDate?: string | null;
+  birthTime?: string | null;
   customAspects: string[] | null;
   sortOrder: number;
   dayunList: DayunDto[];
@@ -54,10 +58,11 @@ export interface ParsedBaziResult {
   hourZhi: string;
   birthYear: number | null;
   birthDate: string | null;
-  yearDetail: Record<string, unknown> | null;
-  monthDetail: Record<string, unknown> | null;
-  dayDetail: Record<string, unknown> | null;
-  hourDetail: Record<string, unknown> | null;
+  birthTime: string | null;
+  yearDetail: PillarDetail | null;
+  monthDetail: PillarDetail | null;
+  dayDetail: PillarDetail | null;
+  hourDetail: PillarDetail | null;
   shenshas: string[];
 }
 

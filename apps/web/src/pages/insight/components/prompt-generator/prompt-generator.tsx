@@ -66,6 +66,10 @@ export const PromptGenerator = view(() => {
           monthGan={profile.monthGan} monthZhi={profile.monthZhi}
           dayGan={profile.dayGan} dayZhi={profile.dayZhi}
           hourGan={profile.hourGan} hourZhi={profile.hourZhi}
+          yearDetail={profile.yearDetail}
+          monthDetail={profile.monthDetail}
+          dayDetail={profile.dayDetail}
+          hourDetail={profile.hourDetail}
         />
         {dayun ? (
           <p className="text-xs text-gray-500 dark:text-zinc-500">

@@ -6,6 +6,9 @@ export interface PillarDetail {
   canggan?: { gan: string; shishen: string }[];
   nayin?: string;
   shenshas?: string[];
+  xiyun?: string;
+  zizuo?: string;
+  kongwang?: string;
 }
 
 export const insightProfiles = mysqlTable(
@@ -29,6 +32,7 @@ export const insightProfiles = mysqlTable(
     shenshas: json('shenshas').$type<string[]>(),
     birthYear: int('birth_year').notNull().default(1990),
     birthDate: varchar('birth_date', { length: 10 }),
+    birthTime: varchar('birth_time', { length: 8 }),
     customAspects: json('custom_aspects').$type<string[]>(),
     sortOrder: int('sort_order').notNull().default(0),
     createdAt: timestamp('created_at', { mode: 'date', fsp: 3 }).notNull().defaultNow(),

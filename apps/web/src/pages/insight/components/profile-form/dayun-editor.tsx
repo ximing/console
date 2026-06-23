@@ -1,5 +1,6 @@
 import { Plus, Trash2 } from 'lucide-react';
 import type { DayunInput } from '../../../../api/insight';
+import { TIAN_GAN, DI_ZHI } from '../../utils/ganzhi';
 
 interface DayunEditorProps {
   value: DayunInput[];
@@ -37,20 +38,22 @@ export function DayunEditor({ value, onChange }: DayunEditorProps) {
       {value.map((item, i) => (
         <div key={i} className="flex items-center gap-2">
           <span className="text-xs text-gray-400 w-4">{i + 1}</span>
-          <input
-            className="w-10 rounded-md border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm px-2 py-1 text-center"
-            placeholder="干"
+          <select
+            className="w-14 rounded-md border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm px-1 py-1 text-center"
             value={item.gan}
             onChange={(e) => update(i, 'gan', e.target.value)}
-            maxLength={2}
-          />
-          <input
-            className="w-10 rounded-md border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm px-2 py-1 text-center"
-            placeholder="支"
+          >
+            <option value="">干</option>
+            {TIAN_GAN.map((g) => <option key={g} value={g}>{g}</option>)}
+          </select>
+          <select
+            className="w-14 rounded-md border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm px-1 py-1 text-center"
             value={item.zhi}
             onChange={(e) => update(i, 'zhi', e.target.value)}
-            maxLength={2}
-          />
+          >
+            <option value="">支</option>
+            {DI_ZHI.map((z) => <option key={z} value={z}>{z}</option>)}
+          </select>
           <input
             type="number"
             className="w-20 rounded-md border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm px-2 py-1"

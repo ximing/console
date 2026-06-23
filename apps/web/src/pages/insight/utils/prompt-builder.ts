@@ -1,5 +1,5 @@
 import type { InsightProfileDto } from '../../../api/insight';
-import type { TimePeriod, DayGanzhi } from './ganzhi';
+import type { TimePeriod } from './ganzhi';
 import { getGanzhiForPeriod, getCurrentDayun } from './ganzhi';
 
 export const TIME_PERIOD_LABELS: Record<TimePeriod, string> = {
@@ -22,23 +22,47 @@ export const PRESET_ASPECTS = [
 const SHORT_PERIODS: TimePeriod[] = ['today', 'tomorrow', 'day-after-tomorrow'];
 const WEEK_PERIOD: TimePeriod = 'next-week';
 
-function formatDay(g: DayGanzhi): string {
-  return `流年：天干 ${g.yearGan}，地支 ${g.yearZhi}\n流月：天干 ${g.monthGan}，地支 ${g.monthZhi}\n流日：天干 ${g.dayGan}，地支 ${g.dayZhi}`;
-}
 
-function formatWeek(days: DayGanzhi[]): string {
-  const header = `流年：天干 ${days[0].yearGan}，地支 ${days[0].yearZhi}\n流月：天干 ${days[0].monthGan}，地支 ${days[0].monthZhi}`;
-  const dayLines = days
-    .map((d) => `  ${d.date}  流日：天干 ${d.dayGan}，地支 ${d.dayZhi}`)
-    .join('\n');
-  return `${header}\n未来七日流日：\n${dayLines}`;
-}
+function buildBaziSection(profile: InsightProfileDto): string {
+  const gans = [profile.yearGan, profile.monthGan, profile.dayGan, profile.hourGan];
+  const zhis = [profile.yearZhi, profile.monthZhi, profile.dayZhi, profile.hourZhi];
+  const details = [profile.yearDetail, profile.monthDetail, profile.dayDetail, profile.hourDetail];
+  const labels = ['年', '月', '日', '时'];
+  const hasDetail = details.some(Boolean);
 
-function formatMonths(months: DayGanzhi[]): string {
-  const lines = months.map(
-    (m) => `  ${m.date.slice(0, 7)}  流年：天干 ${m.yearGan}，地支 ${m.yearZhi}  流月：天干 ${m.monthGan}，地支 ${m.monthZhi}`
-  );
-  return lines.join('\n');
+  if (!hasDetail) {
+    return `  天干：${gans.join('  ')}
+  地支：${zhis.join('  ')}`;
+  }
+
+  const shishenRow = labels.map((l, i) => `${l}(${details[i]?.shishen_gan ?? '—'})`).join('  ');
+  const ganRow = labels.map((l, i) => `${l}干：${gans[i]}`).join('  ');
+  const zhiRow = labels.map((l, i) => `${l}支：${zhis[i]}`).join('  ');
+
+  let section = `  主星：${shishenRow}
+  ${ganRow}
+  ${zhiRow}`;
+
+  const nayinParts = details.map((d, i) => d?.nayin ? `${labels[i]}(${d.nayin})` : null).filter(Boolean);
+  if (nayinParts.length > 0) section += `\n  纳音：${nayinParts.join('  ')}`;
+
+  const xiyunParts = details.map((d, i) => d?.xiyun ? `${labels[i]}(${d.xiyun})` : null).filter(Boolean);
+  if (xiyunParts.length > 0) section += `\n  星运：${xiyunParts.join('  ')}`;
+
+  const cangganLines = details.map((d, i) => {
+    if (!d?.canggan?.length) return null;
+    const cg = d.canggan.map(c => `${c.gan}${c.shishen ? `(${c.shishen})` : ''}`).join(' ');
+    return `    ${labels[i]}${zhis[i]}：${cg}`;
+  }).filter(Boolean);
+  if (cangganLines.length > 0) section += `\n  藏干十神：\n${cangganLines.join('\n')}`;
+
+  const shenshasLines = details.map((d, i) => {
+    if (!d?.shenshas?.length) return null;
+    return `    ${labels[i]}柱：${d.shenshas.join(' ')}`;
+  }).filter(Boolean);
+  if (shenshasLines.length > 0) section += `\n  神煞：\n${shenshasLines.join('\n')}`;
+
+  return section;
 }
 
 export function buildPrompt(
@@ -49,37 +73,73 @@ export function buildPrompt(
   const dayun = getCurrentDayun(profile.dayunList);
   const ganzhiList = getGanzhiForPeriod(period);
   const periodLabel = TIME_PERIOD_LABELS[period];
-
-  let timeSection: string;
-  if (SHORT_PERIODS.includes(period)) {
-    timeSection = formatDay(ganzhiList[0]);
-  } else if (period === WEEK_PERIOD) {
-    timeSection = formatWeek(ganzhiList);
-  } else {
-    timeSection = formatMonths(ganzhiList);
-  }
-
-  const dayunLine = dayun
-    ? `当前大运：天干 ${dayun.gan}，地支 ${dayun.zhi}（${dayun.startYear}年起）`
-    : '当前大运：未录入';
-
+  const isShortPeriod = SHORT_PERIODS.includes(period);
   const aspectLine = aspects.length > 0 ? aspects.join('、') : '综合运势';
 
-  const birthDateLine = profile.birthDate ? `阳历生日：${profile.birthDate}\n` : '';
+  // 命主信息
+  const birthInfo = profile.birthDate
+    ? `阳历生日：${profile.birthDate}${profile.birthTime ? ' ' + profile.birthTime : ''}`
+    : '';
+  const dayunLine = dayun
+    ? `当前大运：${dayun.gan}${dayun.zhi}（${dayun.startYear}年起）`
+    : '当前大运：（请 AI 根据出生信息推算目前所处的大运干支，若无法精确推算，请重点分析原局与流年流月的关系）';
 
-  return `【命主信息】
-八字：
-  天干：${profile.yearGan}  ${profile.monthGan}  ${profile.dayGan}  ${profile.hourGan}
-  地支：${profile.yearZhi}  ${profile.monthZhi}  ${profile.dayZhi}  ${profile.hourZhi}
-${birthDateLine}${dayunLine}
+  // 时间背景
+  const g = ganzhiList[0];
+  const yearGz = `${g.yearGan}${g.yearZhi}`;
+  const monthGz = `${g.monthGan}${g.monthZhi}`;
 
-【时间背景 - ${periodLabel}】
-${timeSection}
+  let timeBackground: string;
+  let part2TimeDesc: string;
+  let part3Label: string;
 
-【分析请求】
-请结合八字原局、当前大运、流年流月流日，重点从以下方面进行详细分析和建议：
-${aspectLine}
+  if (isShortPeriod) {
+    const dayGz = `${g.dayGan}${g.dayZhi}`;
+    timeBackground = `流年：${yearGz}\n流月：${monthGz}\n流日：${dayGz}`;
+    part2TimeDesc = `流年(${yearGz})、流月(${monthGz})、流日(${dayGz})`;
+    part3Label = periodLabel;
+  } else if (period === WEEK_PERIOD) {
+    const dayLines = ganzhiList.map((d) => `  ${d.date}  流日：${d.dayGan}${d.dayZhi}`).join('\n');
+    timeBackground = `流年：${yearGz}\n流月：${monthGz}\n未来七日流日：\n${dayLines}`;
+    part2TimeDesc = `流年(${yearGz})、流月(${monthGz})`;
+    part3Label = periodLabel;
+  } else {
+    const monthLines = ganzhiList.map(
+      (m) => `  ${m.date.slice(0, 7)}  流年：${m.yearGan}${m.yearZhi}  流月：${m.monthGan}${m.monthZhi}`
+    ).join('\n');
+    timeBackground = `流年：${yearGz}\n${monthLines}`;
+    part2TimeDesc = `流年(${yearGz})及各流月`;
+    part3Label = periodLabel;
+  }
 
-时间范围：${periodLabel}
-请给出具体、有操作性的分析和行动建议。`;
+  return `# 角色设定
+你是一位精通中国传统命理学的八字大师，深谙子平法、旺衰派、调候派及盲派命理，能够客观、严谨地拆解八字，并提供切实可行的建议。请严格按照要求，各流派分别论述，切勿将不同流派的理论混杂（例如不要在盲派分析中谈论日主旺衰），各流派有分歧之处如实呈现，不强行统一。
+
+# 命主信息
+【八字原局】
+${buildBaziSection(profile)}
+${birthInfo ? birthInfo + '\n' : ''}【${dayunLine}】
+
+# 时间背景 - ${periodLabel}
+${timeBackground}
+
+# 分析框架与执行路径
+
+## 第一部分：原局宏观拆解（四大流派独立分析）
+请勿强行统一结论，如实呈现各派分歧：
+1. 子平法：判定正格或变格，分析格局的清浊成败，取用神与喜忌。
+2. 旺衰派：分析日主的客观旺衰（得令、得地、得势情况），判断是扶弱还是抑强，明确喜、用、忌、仇五行。
+3. 调候派：结合月令气候特点，判断命局寒暖燥湿，提取调候用神。
+4. 盲派（重点防混淆）：严格摒弃旺衰逻辑。明确划分"宾主"与"体用"；分析主要做功神与废神；阐述各字之间的做功方式与效率（谁在做功？用什么方式制/化？效率高低？）。
+
+## 第二部分：五行刑冲合害与气势流通（动态分析）
+- 剖析原局地支之间的刑冲合害关系。
+- 重点分析：${part2TimeDesc} 的介入，对原局产生了哪些具体的"引动"（如刑冲合害破、暗合、墓库开启等）？
+- 生克制化：五行生克是否有情，制化是否得力。
+- 命局整体气势是否流通顺畅，${periodLabel}有无郁结滞塞之处。
+
+## 第三部分：${part3Label}专属运势与行动建议
+请结合上述所有分析，聚焦【${aspectLine}】维度，输出针对"${part3Label}"的具体指导：
+1. 运势吉凶断言：基于流年流月${isShortPeriod ? '流日' : ''}对原局的引动，${part3Label}在以上方面最可能发生什么具体表象？各派结论如有出入，请分别列出。
+2. 实操建议：给出具体、可执行的行动建议。各派结论如有出入，分别列出供参考，不必回避分歧。`;
 }

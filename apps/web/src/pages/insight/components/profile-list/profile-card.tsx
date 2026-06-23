@@ -40,7 +40,11 @@ export function ProfileCard({ profile, selected, onClick, onEdit, onDelete }: Pr
         </div>
       </div>
       <p className="text-xs text-gray-400 dark:text-zinc-500 mt-0.5 font-mono">{preview}</p>
-      {profile.birthDate && <p className="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">{profile.birthDate}</p>}
+      {profile.birthDate && (
+        <p className="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">
+          {profile.birthDate}{profile.birthTime ? ' ' + profile.birthTime : ''}
+        </p>
+      )}
     </div>
   );
 }

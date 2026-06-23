@@ -705,3 +705,12 @@ html.dark .code-block-wrapper .hljs-built_in {
 html.dark .collaboration-carets__label {
   color: #000;
 }
+
+/* Drawer slide-in from right */
+@keyframes slideInFromRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+.animate-slide-in-right {
+  animation: slideInFromRight 0.25s ease-out;
+}
