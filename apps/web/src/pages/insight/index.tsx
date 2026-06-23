@@ -1,0 +1,1 @@
+export { InsightPage } from './insight';
