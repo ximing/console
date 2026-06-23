@@ -1,0 +1,1 @@
+ALTER TABLE `insight_profiles` ADD `birth_date` varchar(10);

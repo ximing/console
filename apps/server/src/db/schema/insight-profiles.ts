@@ -28,6 +28,7 @@ export const insightProfiles = mysqlTable(
     hourDetail: json('hour_detail').$type<PillarDetail>(),
     shenshas: json('shenshas').$type<string[]>(),
     birthYear: int('birth_year').notNull().default(1990),
+    birthDate: varchar('birth_date', { length: 10 }),
     customAspects: json('custom_aspects').$type<string[]>(),
     sortOrder: int('sort_order').notNull().default(0),
     createdAt: timestamp('created_at', { mode: 'date', fsp: 3 }).notNull().defaultNow(),
