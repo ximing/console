@@ -115,14 +115,11 @@ export const insightApi = {
   },
 
   parseBazi: async (text: string): Promise<ParsedBaziResult> => {
-    const res = await fetch('/api/v1/insight/parse-bazi', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text }),
-    });
-    const json = await res.json();
-    if (json.code !== 0) throw new Error(json.msg ?? 'AI解析失败');
-    return json.data as ParsedBaziResult;
+    const res = await request.post<{ text: string }, ApiResponse<ParsedBaziResult>>(
+      '/api/v1/insight/parse-bazi',
+      { text }
+    );
+    if (res.code !== 0) throw new Error(res.msg ?? 'AI解析失败');
+    return res.data;
   },
 };
