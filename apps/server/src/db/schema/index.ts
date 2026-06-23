@@ -19,3 +19,5 @@ export * from './blog-tag.js';
 export * from './yjs.js';
 export * from './app.js';
 export * from './app-version.js';
+export * from './insight-profiles.js';
+export * from './insight-dayun.js';
