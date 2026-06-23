@@ -39,12 +39,12 @@ export const PromptGenerator = view(() => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleAddCustomAspect = () => {
+  const handleAddCustomAspect = async () => {
     const val = customAspect.trim();
     if (!val || !profile) return;
     const next = [...(profile.customAspects ?? []), val];
-    service.updateProfile(profile.id, { customAspects: next });
-    setCustomAspect('');
+    const ok = await service.updateProfile(profile.id, { customAspects: next });
+    if (ok) setCustomAspect('');
   };
 
   if (!profile) {

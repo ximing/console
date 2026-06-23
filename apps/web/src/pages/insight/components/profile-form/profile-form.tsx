@@ -44,16 +44,34 @@ export function ProfileForm({ profile, onClose }: ProfileFormProps) {
     e.preventDefault();
     if (!name.trim()) return;
     setSaving(true);
-    const data = { name: name.trim(), birthYear, ...fields, sortOrder: 0 };
+    const data = {
+      name: name.trim(),
+      birthYear,
+      ...fields,
+      yearDetail: profile?.yearDetail ?? null,
+      monthDetail: profile?.monthDetail ?? null,
+      dayDetail: profile?.dayDetail ?? null,
+      hourDetail: profile?.hourDetail ?? null,
+      shenshas: profile?.shenshas ?? null,
+      customAspects: profile?.customAspects ?? null,
+      sortOrder: profile?.sortOrder ?? 0,
+    };
+    let success = false;
     if (isEdit) {
       const ok = await service.updateProfile(profile.id, data);
-      if (ok) await service.saveDayun(profile.id, dayunList);
+      if (ok) {
+        await service.saveDayun(profile.id, dayunList);
+        success = true;
+      }
     } else {
       const created = await service.createProfile(data);
-      if (created) await service.saveDayun(created.id, dayunList);
+      if (created) {
+        await service.saveDayun(created.id, dayunList);
+        success = true;
+      }
     }
     setSaving(false);
-    onClose();
+    if (success) onClose();
   };
 
   const inputCls = 'w-12 rounded-md border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm px-2 py-1.5 text-center focus:outline-none focus:border-green-500 dark:focus:border-green-400';
