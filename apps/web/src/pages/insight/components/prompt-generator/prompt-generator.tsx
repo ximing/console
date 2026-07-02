@@ -20,6 +20,10 @@ export const PromptGenerator = view(() => {
   const [copied, setCopied] = useState(false);
   const [copiedDayunYear, setCopiedDayunYear] = useState<number | null>(null);
   const [copiedAllDayun, setCopiedAllDayun] = useState(false);
+  const [showSaveAnalysis, setShowSaveAnalysis] = useState(false);
+  const [analysisText, setAnalysisText] = useState('');
+  const [savingAnalysis, setSavingAnalysis] = useState(false);
+  const [saveAnalysisError, setSaveAnalysisError] = useState<string | null>(null);
 
   const copyDayun = async (gan: string, zhi: string, startYear: number) => {
     await navigator.clipboard.writeText(`${gan}${zhi}`);
@@ -47,7 +51,7 @@ export const PromptGenerator = view(() => {
 
   const handleGenerate = () => {
     if (!profile) return;
-    setPrompt(buildPrompt(profile, period, selectedAspects));
+    setPrompt(buildPrompt(profile, period, selectedAspects, profile.macroAnalysis ?? undefined));
   };
 
   const handleCopy = async () => {
@@ -79,7 +83,17 @@ export const PromptGenerator = view(() => {
   return (
     <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
       <div className="space-y-3">
-        <h2 className="text-base font-semibold text-gray-800 dark:text-zinc-200">{profile.name}</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-base font-semibold text-gray-800 dark:text-zinc-200">{profile.name}</h2>
+          {profile.macroAnalysis && (
+            <span
+              title="已保存原局宏观拆解，生成 Prompt 时将自动使用"
+              className="text-[10px] font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-1.5 py-0.5 rounded"
+            >
+              ✓ 已有原局分析
+            </span>
+          )}
+        </div>
         <BaziDisplay
           yearGan={profile.yearGan} yearZhi={profile.yearZhi}
           monthGan={profile.monthGan} monthZhi={profile.monthZhi}
@@ -200,6 +214,55 @@ export const PromptGenerator = view(() => {
         <Wand2 className="w-4 h-4" />
         生成 Prompt
       </button>
+
+      <div className="space-y-2">
+        <button
+          type="button"
+          onClick={() => {
+            setAnalysisText(profile.macroAnalysis ?? '');
+            setSaveAnalysisError(null);
+            setShowSaveAnalysis((v) => !v);
+          }}
+          className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-gray-100 dark:bg-zinc-800 text-sm text-gray-600 dark:text-zinc-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
+        >
+          {showSaveAnalysis ? '收起' : '保存原局分析'}
+        </button>
+
+        {showSaveAnalysis && (
+          <div className="space-y-2">
+            <textarea
+              className="w-full rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2.5 text-xs text-gray-700 dark:text-zinc-300 focus:outline-none focus:border-green-500 font-mono leading-relaxed resize-none"
+              rows={10}
+              placeholder="粘贴 AI 返回的第一部分分析内容（原局宏观拆解）..."
+              value={analysisText}
+              onChange={(e) => setAnalysisText(e.target.value)}
+            />
+            {saveAnalysisError && (
+              <p className="text-xs text-red-500">{saveAnalysisError}</p>
+            )}
+            <button
+              type="button"
+              disabled={savingAnalysis}
+              onClick={async () => {
+                setSavingAnalysis(true);
+                setSaveAnalysisError(null);
+                const ok = await service.updateProfile(profile.id, {
+                  macroAnalysis: analysisText.trim() || null,
+                });
+                setSavingAnalysis(false);
+                if (ok) {
+                  setShowSaveAnalysis(false);
+                } else {
+                  setSaveAnalysisError('保存失败，请重试');
+                }
+              }}
+              className="w-full py-2 rounded-xl bg-gradient-to-br from-green-500 to-green-600 text-white text-sm font-medium hover:-translate-y-0.5 transition-all duration-150 shadow-[0_2px_8px_rgba(34,197,94,0.3)] disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {savingAnalysis ? '保存中…' : '保存'}
+            </button>
+          </div>
+        )}
+      </div>
 
       {prompt && (
         <div className="space-y-2">
