@@ -1,4 +1,4 @@
-import { mysqlTable, varchar, int, json, timestamp, index } from 'drizzle-orm/mysql-core';
+import { mysqlTable, varchar, int, json, timestamp, index, text } from 'drizzle-orm/mysql-core';
 
 export interface PillarDetail {
   shishen_gan?: string;
@@ -34,6 +34,7 @@ export const insightProfiles = mysqlTable(
     birthDate: varchar('birth_date', { length: 10 }),
     birthTime: varchar('birth_time', { length: 8 }),
     customAspects: json('custom_aspects').$type<string[]>(),
+    macroAnalysis: text('macro_analysis'),  // 新增
     sortOrder: int('sort_order').notNull().default(0),
     createdAt: timestamp('created_at', { mode: 'date', fsp: 3 }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { mode: 'date', fsp: 3 })
