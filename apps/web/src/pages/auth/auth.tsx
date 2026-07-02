@@ -37,9 +37,9 @@ export const AuthPage = view(() => {
   }, [authService.isAuthenticated, navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-dark-950 dark:to-dark-900 px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white dark:bg-dark-800 rounded-2xl shadow-xl dark:shadow-2xl p-8 animate-fade-in">
+    <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-zinc-950 px-4 relative overflow-hidden dark:[background:radial-gradient(ellipse_at_50%_40%,#27272a_0%,#09090b_100%)]">
+      <div className="w-full max-w-md relative">
+        <div className="bg-white/80 dark:bg-zinc-800/60 backdrop-blur-xl rounded-2xl shadow-xl dark:shadow-2xl p-8 animate-fade-in ring-1 ring-black/[0.04] dark:ring-white/[0.08]">
           {/* Logo */}
           <div className="text-center mb-6">
             <img src={logoLight} alt="Console Logo" className="h-12 w-12 mx-auto dark:hidden" />
@@ -52,11 +52,11 @@ export const AuthPage = view(() => {
 
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              {isLogin ? 'Welcome Back' : 'Create Account'}
+            <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">
+              {isLogin ? 'Welcome back' : 'Create account'}
             </h1>
-            <p className="text-gray-600 dark:text-dark-400">
-              {isLogin ? 'Sign in to continue to Console' : 'Sign up to get started with Console'}
+            <p className="text-sm text-zinc-500 dark:text-zinc-500">
+              {isLogin ? 'Sign in to your workspace' : 'Get started with your workspace'}
             </p>
           </div>
 
@@ -71,7 +71,7 @@ export const AuthPage = view(() => {
                   const nextMode = isLogin ? 'register' : 'login';
                   navigate(`/auth?mode=${nextMode}`, { replace: true });
                 }}
-                className="text-sm text-primary-600 hover:text-primary-700 font-medium transition-colors"
+                className="text-sm text-green-600 dark:text-green-400 hover:text-green-500 dark:hover:text-green-300 font-medium transition-colors"
               >
                 {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
               </button>
@@ -80,7 +80,7 @@ export const AuthPage = view(() => {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-sm text-gray-600 dark:text-dark-400 mt-8">
+        <p className="text-center text-sm text-zinc-400 dark:text-zinc-600 mt-8">
           Your personal memo assistant
         </p>
       </div>

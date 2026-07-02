@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, ChevronDown, ChevronRight } from 'lucide-react';
 import { useService } from '@rabjs/react';
 import { InsightService } from '../../insight.service';
 import { DayunEditor } from './dayun-editor';
-import type { InsightProfileDto, DayunInput, ParsedBaziResult } from '../../../../api/insight';
+import type { InsightProfileDto, DayunInput, PillarDetail } from '../../../../api/insight';
 import { insightApi } from '../../../../api/insight';
 import { TIAN_GAN, DI_ZHI } from '../../utils/ganzhi';
 
@@ -20,6 +20,8 @@ const GAN_ZHI_LABELS = [
 ] as const;
 
 type FieldKey = 'yearGan' | 'yearZhi' | 'monthGan' | 'monthZhi' | 'dayGan' | 'dayZhi' | 'hourGan' | 'hourZhi';
+type DetailKey = 'yearDetail' | 'monthDetail' | 'dayDetail' | 'hourDetail';
+const DETAIL_KEYS: DetailKey[] = ['yearDetail', 'monthDetail', 'dayDetail', 'hourDetail'];
 
 export function ProfileForm({ profile, onClose }: ProfileFormProps) {
   const service = useService(InsightService);
@@ -43,7 +45,17 @@ export function ProfileForm({ profile, onClose }: ProfileFormProps) {
     profile?.dayunList?.map((d) => ({ gan: d.gan, zhi: d.zhi, startYear: d.startYear, sortOrder: d.sortOrder })) ?? []
   );
   const [saving, setSaving] = useState(false);
-  const [parsedDetails, setParsedDetails] = useState<Partial<ParsedBaziResult> | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
+  const [details, setDetails] = useState<Record<DetailKey, PillarDetail>>({
+    yearDetail: { ...(profile?.yearDetail ?? {}) },
+    monthDetail: { ...(profile?.monthDetail ?? {}) },
+    dayDetail: { ...(profile?.dayDetail ?? {}) },
+    hourDetail: { ...(profile?.hourDetail ?? {}) },
+  });
+
+  const updateDetail = (key: DetailKey, field: keyof PillarDetail, value: string) => {
+    setDetails((prev) => ({ ...prev, [key]: { ...prev[key], [field]: value } }));
+  };
 
   // AI录入 state
   const [showAiInput, setShowAiInput] = useState(false);
@@ -70,7 +82,12 @@ export function ProfileForm({ profile, onClose }: ProfileFormProps) {
       if (result.birthYear) setBirthYear(result.birthYear);
       if (result.birthDate) setBirthDate(result.birthDate);
       if (result.birthTime) setBirthTime(result.birthTime);
-      setParsedDetails(result);
+      setDetails({
+        yearDetail: result.yearDetail ?? {},
+        monthDetail: result.monthDetail ?? {},
+        dayDetail: result.dayDetail ?? {},
+        hourDetail: result.hourDetail ?? {},
+      });
       setShowAiInput(false);
       setAiText('');
     } catch (e) {
@@ -90,11 +107,11 @@ export function ProfileForm({ profile, onClose }: ProfileFormProps) {
       birthDate: birthDate || null,
       birthTime: birthTime || null,
       ...fields,
-      yearDetail: parsedDetails?.yearDetail ?? profile?.yearDetail ?? null,
-      monthDetail: parsedDetails?.monthDetail ?? profile?.monthDetail ?? null,
-      dayDetail: parsedDetails?.dayDetail ?? profile?.dayDetail ?? null,
-      hourDetail: parsedDetails?.hourDetail ?? profile?.hourDetail ?? null,
-      shenshas: parsedDetails?.shenshas ?? profile?.shenshas ?? null,
+      yearDetail: details.yearDetail,
+      monthDetail: details.monthDetail,
+      dayDetail: details.dayDetail,
+      hourDetail: details.hourDetail,
+      shenshas: profile?.shenshas ?? null,
       customAspects: profile?.customAspects ?? null,
       sortOrder: profile?.sortOrder ?? 0,
     };
@@ -233,6 +250,87 @@ export function ProfileForm({ profile, onClose }: ProfileFormProps) {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* 四柱详情：纳音 / 星运 / 神煞 */}
+          <div className="border-t border-gray-100 dark:border-zinc-800 pt-4">
+            <button
+              type="button"
+              onClick={() => setShowDetails(!showDetails)}
+              className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200 transition-colors mb-3"
+            >
+              {showDetails ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+              四柱详情（纳音 · 星运 · 神煞）
+            </button>
+            {showDetails && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs border-collapse">
+                  <thead>
+                    <tr>
+                      <td className="pb-2 pr-2 text-gray-400 dark:text-zinc-500 w-12" />
+                      {(['年柱', '月柱', '日柱', '时柱'] as const).map((l) => (
+                        <td key={l} className="pb-2 px-1 text-center text-gray-500 dark:text-zinc-400 font-medium">{l}</td>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="space-y-1">
+                    {/* 纳音 */}
+                    <tr>
+                      <td className="py-1.5 pr-2 text-gray-400 dark:text-zinc-500 align-middle whitespace-nowrap">纳音</td>
+                      {DETAIL_KEYS.map((key) => (
+                        <td key={key} className="py-1.5 px-1">
+                          <input
+                            type="text"
+                            value={details[key].nayin ?? ''}
+                            onChange={(e) => updateDetail(key, 'nayin', e.target.value)}
+                            placeholder="—"
+                            className="w-full rounded border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-1.5 py-1 text-center focus:outline-none focus:border-green-500 dark:focus:border-green-400"
+                          />
+                        </td>
+                      ))}
+                    </tr>
+                    {/* 星运 */}
+                    <tr>
+                      <td className="py-1.5 pr-2 text-gray-400 dark:text-zinc-500 align-middle whitespace-nowrap">星运</td>
+                      {DETAIL_KEYS.map((key) => (
+                        <td key={key} className="py-1.5 px-1">
+                          <input
+                            type="text"
+                            value={details[key].xiyun ?? ''}
+                            onChange={(e) => updateDetail(key, 'xiyun', e.target.value)}
+                            placeholder="—"
+                            className="w-full rounded border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-1.5 py-1 text-center focus:outline-none focus:border-green-500 dark:focus:border-green-400"
+                          />
+                        </td>
+                      ))}
+                    </tr>
+                    {/* 神煞 */}
+                    <tr>
+                      <td className="py-1.5 pr-2 text-gray-400 dark:text-zinc-500 align-middle whitespace-nowrap">神煞</td>
+                      {DETAIL_KEYS.map((key) => (
+                        <td key={key} className="py-1.5 px-1">
+                          <input
+                            type="text"
+                            value={(details[key].shenshas ?? []).join('、')}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const arr = val ? val.split(/[、,，\s]+/).filter(Boolean) : [];
+                              setDetails((prev) => ({
+                                ...prev,
+                                [key]: { ...prev[key], shenshas: arr },
+                              }));
+                            }}
+                            placeholder="逗号分隔"
+                            className="w-full rounded border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-1.5 py-1 text-center focus:outline-none focus:border-green-500 dark:focus:border-green-400"
+                          />
+                        </td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table>
+                <p className="mt-2 text-xs text-gray-400 dark:text-zinc-500">神煞多个用顿号或逗号分隔</p>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2 border-t border-gray-100 dark:border-zinc-800 pt-4">

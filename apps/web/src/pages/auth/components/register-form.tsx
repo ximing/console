@@ -68,13 +68,13 @@ export const RegisterForm = view(() => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="bg-red-100 dark:bg-red-900/20 border border-red-300 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm animate-slide-up">
+        <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-4 py-3 rounded-xl text-sm animate-slide-up">
           {error}
         </div>
       )}
 
       {success && (
-        <div className="bg-green-100 dark:bg-green-900/20 border border-green-300 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-lg text-sm animate-slide-up">
+        <div className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-4 py-3 rounded-xl text-sm animate-slide-up">
           Registration successful! You can now sign in.
         </div>
       )}
@@ -82,16 +82,16 @@ export const RegisterForm = view(() => {
       <div>
         <label
           htmlFor="register-email"
-          className="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-2"
+          className="block text-sm font-medium text-zinc-600 dark:text-zinc-400 mb-2"
         >
-          Email <span className="text-red-500">*</span>
+          Email <span className="text-red-400">*</span>
         </label>
         <input
           id="register-email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all placeholder-gray-500 dark:placeholder-dark-400"
+          className="w-full px-4 py-3 bg-neutral-100 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 rounded-xl focus:ring-2 focus:ring-green-500/40 focus:bg-white dark:focus:bg-zinc-800 outline-none transition-all placeholder-neutral-400 dark:placeholder-zinc-600"
           placeholder="you@example.com"
           disabled={loading}
         />
@@ -100,16 +100,16 @@ export const RegisterForm = view(() => {
       <div>
         <label
           htmlFor="username"
-          className="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-2"
+          className="block text-sm font-medium text-zinc-600 dark:text-zinc-400 mb-2"
         >
-          Username <span className="text-red-500">*</span>
+          Username <span className="text-red-400">*</span>
         </label>
         <input
           id="username"
           type="text"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all placeholder-gray-500 dark:placeholder-dark-400"
+          className="w-full px-4 py-3 bg-neutral-100 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 rounded-xl focus:ring-2 focus:ring-green-500/40 focus:bg-white dark:focus:bg-zinc-800 outline-none transition-all placeholder-neutral-400 dark:placeholder-zinc-600"
           placeholder="Your name"
           disabled={loading}
         />
@@ -118,16 +118,16 @@ export const RegisterForm = view(() => {
       <div>
         <label
           htmlFor="register-password"
-          className="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-2"
+          className="block text-sm font-medium text-zinc-600 dark:text-zinc-400 mb-2"
         >
-          Password <span className="text-red-500">*</span>
+          Password <span className="text-red-400">*</span>
         </label>
         <input
           id="register-password"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all placeholder-gray-500 dark:placeholder-dark-400"
+          className="w-full px-4 py-3 bg-neutral-100 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 rounded-xl focus:ring-2 focus:ring-green-500/40 focus:bg-white dark:focus:bg-zinc-800 outline-none transition-all placeholder-neutral-400 dark:placeholder-zinc-600"
           placeholder="••••••••"
           disabled={loading}
         />
@@ -136,16 +136,16 @@ export const RegisterForm = view(() => {
       <div>
         <label
           htmlFor="confirm-password"
-          className="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-2"
+          className="block text-sm font-medium text-zinc-600 dark:text-zinc-400 mb-2"
         >
-          Confirm Password <span className="text-red-500">*</span>
+          Confirm Password <span className="text-red-400">*</span>
         </label>
         <input
           id="confirm-password"
           type="password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all placeholder-gray-500 dark:placeholder-dark-400"
+          className="w-full px-4 py-3 bg-neutral-100 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 rounded-xl focus:ring-2 focus:ring-green-500/40 focus:bg-white dark:focus:bg-zinc-800 outline-none transition-all placeholder-neutral-400 dark:placeholder-zinc-600"
           placeholder="••••••••"
           disabled={loading}
         />
@@ -154,9 +154,9 @@ export const RegisterForm = view(() => {
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+        className="w-full bg-gradient-to-br from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white font-medium py-3 px-4 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-6 shadow-[0_2px_8px_rgba(34,197,94,0.3)] hover:-translate-y-0.5 active:translate-y-0"
       >
-        {loading ? 'Creating account...' : 'Sign Up'}
+        {loading ? 'Creating account...' : 'Create account'}
       </button>
     </form>
   );

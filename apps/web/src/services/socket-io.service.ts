@@ -75,7 +75,7 @@ export class SocketIOService extends Service {
       // Server auto-joins the user room on connection — no join-room emit needed
     });
 
-    this.socket.on('disconnect', (_reason) => {
+    this.socket.on('disconnect', () => {
       // reconnection handled automatically by socket.io client
     });
 
