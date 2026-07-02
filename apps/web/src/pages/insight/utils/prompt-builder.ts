@@ -68,7 +68,8 @@ function buildBaziSection(profile: InsightProfileDto): string {
 export function buildPrompt(
   profile: InsightProfileDto,
   period: TimePeriod,
-  aspects: string[]
+  aspects: string[],
+  macroAnalysis?: string
 ): string {
   const dayun = getCurrentDayun(profile.dayunList);
   const ganzhiList = getGanzhiForPeriod(period);
@@ -112,6 +113,15 @@ export function buildPrompt(
     part3Label = periodLabel;
   }
 
+  const part1 = macroAnalysis
+    ? `## 第一部分：原局宏观拆解（已有分析，无需重复）\n${macroAnalysis}`
+    : `## 第一部分：原局宏观拆解（四大流派独立分析）
+请勿强行统一结论，如实呈现各派分歧：
+1. 子平法：判定正格或变格，分析格局的清浊成败，取用神与喜忌。
+2. 旺衰派：分析日主的客观旺衰（得令、得地、得势情况），判断是扶弱还是抑强，明确喜、用、忌、仇五行。
+3. 调候派：结合月令气候特点，判断命局寒暖燥湿，提取调候用神。
+4. 盲派（重点防混淆）：严格摒弃旺衰逻辑。明确划分"宾主"与"体用"；分析主要做功神与废神；阐述各字之间的做功方式与效率（谁在做功？用什么方式制/化？效率高低？）。`;
+
   return `# 角色设定
 你是一位精通中国传统命理学的八字大师，深谙子平法、旺衰派、调候派及盲派命理，能够客观、严谨地拆解八字，并提供切实可行的建议。请严格按照要求，各流派分别论述，切勿将不同流派的理论混杂（例如不要在盲派分析中谈论日主旺衰），各流派有分歧之处如实呈现，不强行统一。
 
@@ -125,12 +135,7 @@ ${timeBackground}
 
 # 分析框架与执行路径
 
-## 第一部分：原局宏观拆解（四大流派独立分析）
-请勿强行统一结论，如实呈现各派分歧：
-1. 子平法：判定正格或变格，分析格局的清浊成败，取用神与喜忌。
-2. 旺衰派：分析日主的客观旺衰（得令、得地、得势情况），判断是扶弱还是抑强，明确喜、用、忌、仇五行。
-3. 调候派：结合月令气候特点，判断命局寒暖燥湿，提取调候用神。
-4. 盲派（重点防混淆）：严格摒弃旺衰逻辑。明确划分"宾主"与"体用"；分析主要做功神与废神；阐述各字之间的做功方式与效率（谁在做功？用什么方式制/化？效率高低？）。
+${part1}
 
 ## 第二部分：五行刑冲合害与气势流通（动态分析）
 - 剖析原局地支之间的刑冲合害关系。
