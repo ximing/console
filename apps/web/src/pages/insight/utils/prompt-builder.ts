@@ -164,7 +164,7 @@ export function buildOutfitPrompt(
     ? `${dayun.gan}${dayun.zhi}（${dayun.startYear}年起）`
     : '（未录入，请自行推算）';
 
-  const baziFull = `日柱：${profile.dayGan}${profile.dayZhi}　原局四柱：年${profile.yearGan}${profile.yearZhi} 月${profile.monthGan}${profile.monthZhi} 日${profile.dayGan}${profile.dayZhi} 时${profile.hourGan}${profile.hourZhi}　当前大运：${dayunLine}　流年：${yearGz}　流月：${monthGz}　流日：${dayGz}`;
+  const baziFull = `日柱：${profile.dayGan}${profile.dayZhi} 原局四柱：年${profile.yearGan}${profile.yearZhi} 月${profile.monthGan}${profile.monthZhi} 日${profile.dayGan}${profile.dayZhi} 时${profile.hourGan}${profile.hourZhi} 当前大运：${dayunLine} 流年：${yearGz} 流月：${monthGz} 流日：${dayGz}`;
 
   const part1 = macroAnalysis
     ? `第一部分：易理推演（推导过程展示）
